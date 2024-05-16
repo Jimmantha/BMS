@@ -1,0 +1,19 @@
+{
+  "name": "energyoptemisation",
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "body-parse": "^0.1.0",
+    "ejs": "^3.1.10",
+    "express": "^4.19.2",
+    "fetch": "^1.1.0",
+    "mongoose": "^8.3.4",
+    "path": "^0.12.7"
+  }
+}

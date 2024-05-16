@@ -1,0 +1,62 @@
+/* Reset default styles */
+html, body {
+    margin: 0;
+    padding: 0;
+}
+
+/* Set default font and background color */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+}
+
+/* Add styles for headings */
+h1 {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+h2 {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+h3 {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* Add styles for paragraphs */
+p {
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+/* Add styles for links */
+a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+
+.navbar {
+    height: 50px;
+    background-color: #bababa!important;
+}
+
+.navbar-button{
+    background-color: transparent;
+}
+
+body { min-height: 100% }
+
+
+.mapster_el{
+    opacity: 0.7!important;
+    position: absolute!important;   
+    
+}
