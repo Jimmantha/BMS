@@ -6,6 +6,7 @@
     <title>Document</title>
     <%- include("./header") %>
   </head>
+
   <body>
     <div>
       <canvas
@@ -20,7 +21,7 @@
         "
       ></canvas>
       <img
-        src=""
+        src="https://placehold.co/600x400"
         alt=""
         id="floorplan"
         style="position: absolute; top: 0; left: 0"
@@ -28,12 +29,39 @@
       />
     </div>
     <br />
-    <button onclick="increaseTemp()">Increase temperature</button>
-    <button onclick="decreaseTemp()">Decrease temperature</button>
+    <button onclick="increaseTemp()" class="btn btn-primary">
+      Increase temperature
+    </button>
+    <button onclick="decreaseTemp()" class="btn btn-primary">
+      Decrease temperature
+    </button>
 
     <map name="testmap" id="testmap">
       <area shape="rect" id="rect1" coords="0,0,100,100" href="" alt="" />
     </map>
+
+    <!-- Modal -->
+    <div id="infoModal" class="modal p-3" tabindex="-1" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Modal title</h5>
+          </div>
+          <div class="modal-body">
+            <p>Modal body text goes here.</p>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              onclick="closeModal()"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <script>
       var temp = [23, 24, 29];
@@ -41,7 +69,7 @@
       var imagemap = document.getElementById("testmap");
       var ejsData = <%- JSON.stringify(data) %>;
       var floorplan = ejsData[0].floorplan;
-
+      var modal = document.getElementById("infoModal");
       var shadeCanvas = document.getElementById("shadeCanvas");
       var ctx = shadeCanvas.getContext("2d");
 
@@ -49,98 +77,116 @@
       image.src = floorplan;
       zones = ejsData[0].zones;
 
+      function openModal() {
+        modal.style.display = "block";
+      }
+
+      function closeModal() {
+        modal.style.display = "none";
+      }
       function createArea() {
-          for (var zone in zones) {
-              var coordinates = zones[zone];
-              var area = document.createElement("area");
-              area.setAttribute("shape", "rect");
-              area.setAttribute(
-                  "coords",
-                  coordinates.startX +
-                  "," +
-                  coordinates.startY +
-                  "," +
-                  coordinates.endX +
-                  "," +
-                  coordinates.endY
-              );
-              area.setAttribute("href", "#");
-              area.setAttribute("id", zones[zone].name);
-              imagemap.appendChild(area);
-              console.log(zone, "mapped!");
-          }
+        for (var zone in zones) {
+          var coordinates = zones[zone];
+          var area = document.createElement("area");
+          area.setAttribute("shape", "rect");
+          area.setAttribute(
+            "coords",
+            coordinates.startX +
+            "," +
+            coordinates.startY +
+            "," +
+            coordinates.endX +
+            "," +
+            coordinates.endY
+          );
+          area.setAttribute("href", "#");
+          area.setAttribute("id", zones[zone].name);
+          imagemap.appendChild(area);
+          console.log(zone, "mapped!");
+        }
       }
 
       function increaseTemp() {
-          temp[0] += 1;
-          updatetemperature();
+        temp[0] += 1;
+        updatetemperature();
       }
 
       function decreaseTemp() {
-          temp[0] -= 1;
-          updatetemperature();
+        temp[0] -= 1;
+        updatetemperature();
       }
 
       $("img").mapster({
-          showToolTip: true,
-          mapKey: "id",
-          areas: [
-              {
-                  key: "rect1",
-                  toolTip: "test tooltip",
-              },
-          ],
+        showToolTip: true,
+        mapKey: "id",
+        singleSelect: true,
+        onClick: function(e) {
+              console.log(e.key); // Access the area key through the event object
+              openModal();
+              modal.querySelector(".modal-title").textContent = e.key;
+              for(zone in zones){
+                if(e.key == zones[zone].name){
+                  modal.querySelector(".modal-body").textContent = "Temperature is " + temp[zone] + "C";
+                }
+              }
+
+            }
       });
 
+      window.onclick = function(event) {
+        if (event.target == modal) {
+          modal.style.display = "none";
+        }
+      }
+
       function updatetemperature() {
-          ctx.clearRect(0, 0, shadeCanvas.width, shadeCanvas.height);
-          for (var zone in zones) {
-              var areaOptions = {
-                  key: zones[zone].name,
-                  toolTip: "temperature is " + temp[zone] + "C"
-              };
-              $("img").mapster('set_options', {
-                  areas: [
-                      {
-                          key: areaOptions.key,
-                          toolTip: areaOptions.toolTip,
-                      },
-                  ],
-              });
+        ctx.clearRect(0, 0, shadeCanvas.width, shadeCanvas.height);
+        for (var zone in zones) {
+          var areaOptions = {
+            key: zones[zone].name,
+            toolTip: "temperature is " + temp[zone] + "C"
+          };
+          $("img").mapster('set_options', {
+            areas: [{
+              key: areaOptions.key,
+              toolTip: areaOptions.toolTip,
+            }, ],
 
-              var zonePosition = zones[zone];
-              var startX = (zonePosition.startX / 600) * shadeCanvas.width;
-              var startY = (zonePosition.startY / 400) * shadeCanvas.height;
-              var endX = (zonePosition.endX / 600) * shadeCanvas.width;
-              var endY = (zonePosition.endY / 400) * shadeCanvas.height;
+          });
 
-              var temperatureGradient = (temp[zone] - 20) / (30 - 20);
-              var red = Math.round(255 * temperatureGradient);
-              var blue = Math.round(255 * (1 - temperatureGradient));
-              ctx.fillStyle = "rgba(" + red + ", 0, " + blue + ", 0.5)";
+          var zonePosition = zones[zone];
+          var startX = (zonePosition.startX / 600) * shadeCanvas.width;
+          var startY = (zonePosition.startY / 400) * shadeCanvas.height;
+          var endX = (zonePosition.endX / 600) * shadeCanvas.width;
+          var endY = (zonePosition.endY / 400) * shadeCanvas.height;
 
-              ctx.beginPath();
-              if (endX > startX) {
-                  var width = Math.abs(endX - startX);
-                  if (endY > startY) {
-                    var height = Math.abs(endY - startY);
-                    ctx.rect(startX, startY, width, height);
-                  } else {
-                    var height = Math.abs(startY - endY);
-                    ctx.rect(startX, endY, width, height);
-                  }
-                } else {
-                  var width = Math.abs(startX - endX);
-                  if (endY > startY) {
-                    var height = Math.abs(endY - startY);
-                    ctx.rect(endX, startY, width, height);
-                  } else {
-                    var height = Math.abs(startY - endY);
-                    ctx.rect(endX, endY, width, height);
-                  }
-                }
-              ctx.fill();
+          var temperatureGradient = (temp[zone] - 10) / (30 - 10);
+          var red = Math.round(255 * temperatureGradient);
+          var blue = Math.round(255 * (1 - temperatureGradient));
+          ctx.fillStyle = "rgba(" + red + ", 0, " + blue + ", 0.5)";
+
+          ctx.beginPath();
+          if (endX > startX) {
+            var width = Math.abs(endX - startX);
+            if (endY > startY) {
+              var height = Math.abs(endY - startY);
+              ctx.rect(startX, startY, width, height);
+            } else {
+              var height = Math.abs(startY - endY);
+              ctx.rect(startX, endY, width, height);
+            }
+          } else {
+            var width = Math.abs(startX - endX);
+            if (endY > startY) {
+              var height = Math.abs(endY - startY);
+              ctx.rect(endX, startY, width, height);
+            } else {
+              var height = Math.abs(startY - endY);
+              ctx.rect(endX, endY, width, height);
+            }
           }
+          ctx.fill();
+        }
       }
 
       createArea();
