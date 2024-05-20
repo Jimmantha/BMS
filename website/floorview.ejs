@@ -163,7 +163,7 @@
           var temperatureGradient = (temp[zone] - 10) / (30 - 10);
           var red = Math.round(255 * temperatureGradient);
           var blue = Math.round(255 * (1 - temperatureGradient));
-          ctx.fillStyle = "rgba(" + red + ", 0, " + blue + ", 0.5)";
+          ctx.fillStyle = "rgba(" + red + ", 255, " + blue + ", 0.5)";
 
           ctx.beginPath();
           if (endX > startX) {
