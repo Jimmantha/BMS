@@ -68,6 +68,7 @@
           </div>
           <div class="modal-body">
             <p>Modal body text goes here.</p>
+            <canvas id="tempChart"></canvas>
           </div>
           <div class="modal-footer">
             <button
@@ -83,7 +84,7 @@
     </div>
 
     <script>
-        var zoneData = [{temperature: 25, humidity: 50, name: "zone1",setTemperature:25,margin:3, time:new Date()}, {temperature: 28, humidity: 50,setTemperature:25,margin:3, name: "zone2",time:new Date()}, {temperature: 22, humidity: 50,setTemperature:25,margin:3, name: "zone3",time:new Date()}];
+        var zoneData = [{temperature: 20, humidity: 50, name: "zone1",setTemperature:25,margin:3, time:new Date()}, {temperature: 30, humidity: 50,setTemperature:25,margin:3, name: "zone2",time:new Date()}, {temperature: 10, humidity: 50,setTemperature:25,margin:3, name: "zone3",time:new Date()}];
       var zones;
       var imagemap = document.getElementById("testmap");
       var ejsData = <%- JSON.stringify(data) %>;
@@ -122,7 +123,6 @@
           area.setAttribute("href", "#");
           area.setAttribute("id", zones[zone].name);
           imagemap.appendChild(area);
-          console.log(zone, "mapped!");
         }
       }
 
@@ -148,9 +148,15 @@
               for(zone in zones){
                 if(e.key == zones[zone].name){
                   modal.querySelector(".modal-body").textContent = "Temperature is " + zoneData[zone].temperature + "C";
+                  var canvas = document.createElement("canvas");
+              canvas.id = "tempChart";
+              canvas.style.width = "100%";
+              canvas.style.height = "300px";
+              modal.querySelector(".modal-body").appendChild(canvas);
+
                 }
               }
-
+              loadTempChart(e.key);
             }
       });
 
@@ -185,7 +191,7 @@
           var temperatureGradient = (zoneData[zone].temperature - 10) / (30 - 10);
           var red = Math.round(255 * temperatureGradient);
           var blue = Math.round(255 * (1 - temperatureGradient));
-          ctx.fillStyle = "rgba(" + red + ", 255, " + blue + ", 0.5)";
+          ctx.fillStyle = "rgba(" + (red/2) + ", 255, " + blue + ", 0.5)";
 
           ctx.beginPath();
           if (endX > startX) {
@@ -251,7 +257,6 @@
           const widthSlice = (outerRadius - innerRadius) / 2;
           const radius = 15;
           const angle = Math.PI / 180;
-          console.log(widthSlice);
 
           const needleValue = data.datasets[0].needleValue;
 
@@ -261,8 +266,6 @@
               Math.PI /
               data.datasets[0].data[0]) *
             data.datasets[0].needle;
-
-          console.log(dataTotal);
 
           ctx.translate(xCenter, yCenter);
           ctx.rotate(Math.PI * (circumference + 1.5));
@@ -299,7 +302,7 @@
               Math.PI /
               data.datasets[0].data[0]) *
             data.datasets[0].needle;
-          console.log(circumference);
+
           //flowmeter
           ctx.fillStyle = "black";
           ctx.font = "30px Arial";
@@ -342,6 +345,37 @@
         plugins: [gaugeNeedle, gaugeFlowMeter],
       };
 
+      function loadTempChart(key) {
+        for (zone in zones) {
+          console.log(zones[zone].name, key);
+          if (zones[zone].name == key) {
+            var ChartValue = zoneData[zone];
+            console.log(zoneData);
+            var tempChart = document.getElementById("tempChart");
+            var tempCtx = tempChart.getContext("2d");
+            var labels = ["January"];
+            var time = new Date().toISOString().split("T")[1].substring(0, 8);
+            var data = {
+              labels: [time],
+              datasets: [
+                {
+                  label: "temperature",
+                  data: [ChartValue.temperature],
+                  fill: false,
+                  hoverBackgroundColor: "rgba(75, 192, 192, 0.4)",
+                  borderColor: "rgb(75, 192, 192)",
+                  tension: 0.1,
+                },
+              ],
+            };
+            var tempConfig = {
+              type: "line",
+              data: data,
+            };
+            var tsdf = new Chart(tempCtx, tempConfig);
+          }
+        }
+      }
       createArea();
       updatetemperature();
       var ctx1 = document.getElementById("myChart1").getContext("2d");

@@ -1,4 +1,5 @@
 const express = require('express');
+const mqtt = require('mqtt');
 const mongoose = require('mongoose');
 const bodyparser = require('body-parser');
 const path = require('path');
@@ -48,6 +49,12 @@ app.get('/', async (req, res) => {
     console.log("data:", data)
 });
 
+app.get('/publish', (req, res) => {
+    res.render('publish');
+});
+
 app.listen(port, () => {
     console.log('server running on port', port);
 });
+
+
