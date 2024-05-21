@@ -8,26 +8,45 @@
   </head>
 
   <body>
-    <div>
-      <canvas
-        id="shadeCanvas"
-        style="
-          position: absolute;
-          top: 50px;
-          left: 2px;
-          z-index: -5;
-          width: 600px;
-          height: 400px;
-        "
-      ></canvas>
-      <img
-        src="https://placehold.co/600x400"
-        alt=""
-        id="floorplan"
-        style="position: absolute; top: 0; left: 0"
-        usemap="#testmap"
-      />
+    <div class="table">
+      <div class="row" style="height: 50vh">
+        <div class="col-4 m-3">
+          <canvas
+            class="p-0"
+            id="shadeCanvas"
+            style="position: absolute; z-index: -1; width: 600px; height: 400px"
+          ></canvas>
+          <img
+            src="https://placehold.co/600x400"
+            alt=""
+            id="floorplan"
+            style="position: absolute; top: 0; left: 0"
+            usemap="#testmap"
+          />
+        </div>
+        <div class="col-4" style="overflow: auto; height: 100%">
+          <div class="table">
+            <div class="row">
+              <div class="col">
+                <canvas
+                  class="p-0"
+                  id="myChart1"
+                  style="width: 200px; height: 300px"
+                ></canvas>
+              </div>
+              <div class="col">
+                <canvas
+                  class="p-0"
+                  id="myChar2t"
+                  style="width: 200px; height: 300px"
+                ></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
+
     <br />
     <button onclick="increaseTemp()" class="btn btn-primary">
       Increase temperature
@@ -64,7 +83,7 @@
     </div>
 
     <script>
-      var temp = [23, 24, 29];
+        var zoneData = [{temperature: 25, humidity: 50, name: "zone1",setTemperature:25,margin:3, time:new Date()}, {temperature: 28, humidity: 50,setTemperature:25,margin:3, name: "zone2",time:new Date()}, {temperature: 22, humidity: 50,setTemperature:25,margin:3, name: "zone3",time:new Date()}];
       var zones;
       var imagemap = document.getElementById("testmap");
       var ejsData = <%- JSON.stringify(data) %>;
@@ -84,6 +103,7 @@
       function closeModal() {
         modal.style.display = "none";
       }
+
       function createArea() {
         for (var zone in zones) {
           var coordinates = zones[zone];
@@ -107,12 +127,12 @@
       }
 
       function increaseTemp() {
-        temp[0] += 1;
+        zoneData[0].temperature += 1;
         updatetemperature();
       }
 
       function decreaseTemp() {
-        temp[0] -= 1;
+        zoneData[0].temperature -= 1;
         updatetemperature();
       }
 
@@ -120,13 +140,14 @@
         showToolTip: true,
         mapKey: "id",
         singleSelect: true,
+        fillOpacity : 0.2,
         onClick: function(e) {
               console.log(e.key); // Access the area key through the event object
               openModal();
               modal.querySelector(".modal-title").textContent = e.key;
               for(zone in zones){
                 if(e.key == zones[zone].name){
-                  modal.querySelector(".modal-body").textContent = "Temperature is " + temp[zone] + "C";
+                  modal.querySelector(".modal-body").textContent = "Temperature is " + zoneData[zone].temperature + "C";
                 }
               }
 
@@ -136,6 +157,7 @@
       window.onclick = function(event) {
         if (event.target == modal) {
           modal.style.display = "none";
+          $('#Zone1').mapster('deselect');
         }
       }
 
@@ -144,7 +166,7 @@
         for (var zone in zones) {
           var areaOptions = {
             key: zones[zone].name,
-            toolTip: "temperature is " + temp[zone] + "C"
+            toolTip: "temperature is " + zoneData[zone].temperature + "C"
           };
           $("img").mapster('set_options', {
             areas: [{
@@ -160,7 +182,7 @@
           var endX = (zonePosition.endX / 600) * shadeCanvas.width;
           var endY = (zonePosition.endY / 400) * shadeCanvas.height;
 
-          var temperatureGradient = (temp[zone] - 10) / (30 - 10);
+          var temperatureGradient = (zoneData[zone].temperature - 10) / (30 - 10);
           var red = Math.round(255 * temperatureGradient);
           var blue = Math.round(255 * (1 - temperatureGradient));
           ctx.fillStyle = "rgba(" + red + ", 255, " + blue + ", 0.5)";
@@ -191,6 +213,139 @@
 
       createArea();
       updatetemperature();
+    </script>
+    <script>
+      const gaugeData = {
+        datasets: [
+          {
+            data: [200, 200, 200],
+            backgroundColor: [
+              "rgba(255, 0, 0, 0.2)",
+              "rgba(0, 255, 0, 0.2)",
+              "rgba(0, 0, 255, 0.2)",
+            ],
+            borderColor: [
+              "rgba(255, 0, 0, 0.2)",
+              "rgba(0, 255, 0, 0.2)",
+              "rgba(0, 0, 255, 0.2)",
+            ],
+            borderWidth: 1,
+            circumference: 180,
+            rotation: -90,
+            cutout: "80%",
+            needle: 300,
+          },
+        ],
+      };
+
+      const gaugeNeedle = {
+        id: "gaugeNeedle",
+        afterDatasetsDraw(chart, args, plugins) {
+          const { ctx, data } = chart;
+          ctx.save();
+          const xCenter = chart.getDatasetMeta(0).data[0].x;
+          const yCenter = chart.getDatasetMeta(0).data[0].y;
+
+          const outerRadius = chart.getDatasetMeta(0).data[0].outerRadius;
+          const innerRadius = chart.getDatasetMeta(0).data[0].innerRadius;
+          const widthSlice = (outerRadius - innerRadius) / 2;
+          const radius = 15;
+          const angle = Math.PI / 180;
+          console.log(widthSlice);
+
+          const needleValue = data.datasets[0].needleValue;
+
+          const dataTotal = data.datasets[0].data.reduce((a, b) => a + b, 0);
+          const circumference =
+            (chart.getDatasetMeta(0).data[0].circumference /
+              Math.PI /
+              data.datasets[0].data[0]) *
+            data.datasets[0].needle;
+
+          console.log(dataTotal);
+
+          ctx.translate(xCenter, yCenter);
+          ctx.rotate(Math.PI * (circumference + 1.5));
+          //needle
+          ctx.beginPath();
+          ctx.strokeStyle = "grey";
+          ctx.fillStyle = "grey";
+          ctx.moveTo(0 - 15, 0);
+          ctx.lineTo(0, 0 - innerRadius - widthSlice);
+          ctx.lineTo(0 + 15, 0);
+          ctx.closePath();
+          ctx.stroke();
+          ctx.fill();
+
+          //dot
+          ctx.beginPath();
+          ctx.arc(0, 0, radius, 0, angle * 360, false);
+          ctx.fill();
+          ctx.restore();
+        },
+      };
+      const gaugeFlowMeter = {
+        id: "gaugeFlowMeter",
+        afterDatasetsDraw(chart, args, plugins) {
+          const { ctx, data } = chart;
+
+          ctx.save();
+          const needleValue = data.datasets[0].needleValue;
+          const xCenter = chart.getDatasetMeta(0).data[0].x;
+          const yCenter = chart.getDatasetMeta(0).data[0].y;
+
+          const circumference =
+            (chart.getDatasetMeta(0).data[0].circumference /
+              Math.PI /
+              data.datasets[0].data[0]) *
+            data.datasets[0].needle;
+          console.log(circumference);
+          //flowmeter
+          ctx.fillStyle = "black";
+          ctx.font = "30px Arial";
+          ctx.textAlign = "center";
+          ctx.fillText(data.datasets[0].needle, xCenter, yCenter + 40);
+        },
+      };
+      const gaugeLabels = {
+        id: "gaugeLabels",
+        afterDatasetsDraw(chart, args, plugins) {
+          const { ctx } = chart;
+          ctx.save();
+          const xCenter = chart.getDatasetMeta(0).data[0].x;
+          const yCenter = chart.getDatasetMeta(0).data[0].y;
+
+          ctx.fillStyle = "black";
+          ctx.font = "30px Arial";
+          ctx.textAlign = "center";
+          ctx.fillText("Danger".needle, xCenter, yCenter);
+          ctx.restore();
+        },
+      };
+      const gaugeConfig = {
+        type: "doughnut",
+        data: gaugeData,
+        options: {
+          layout: {
+            padding: 20,
+          },
+          aspectRatio: 1.2,
+          plugins: {
+            legend: {
+              display: false,
+            },
+            tooltip: {
+              enabled: false,
+            },
+          },
+        },
+        plugins: [gaugeNeedle, gaugeFlowMeter],
+      };
+
+      createArea();
+      updatetemperature();
+      var ctx1 = document.getElementById("myChart1").getContext("2d");
+      var myChart1 = new Chart(ctx1, gaugeConfig);
     </script>
   </body>
 </html>
