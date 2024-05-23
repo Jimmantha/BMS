@@ -48,13 +48,6 @@
     </div>
 
     <br />
-    <button onclick="increaseTemp()" class="btn btn-primary">
-      Increase temperature
-    </button>
-    <button onclick="decreaseTemp()" class="btn btn-primary">
-      Decrease temperature
-    </button>
-
     <map name="testmap" id="testmap">
       <area shape="rect" id="rect1" coords="0,0,100,100" href="" alt="" />
     </map>
@@ -84,7 +77,8 @@
     </div>
 
     <script>
-        var zoneData = [{temperature: 20, humidity: 50, name: "zone1",setTemperature:25,margin:3, time:new Date()}, {temperature: 30, humidity: 50,setTemperature:25,margin:3, name: "zone2",time:new Date()}, {temperature: 10, humidity: 50,setTemperature:25,margin:3, name: "zone3",time:new Date()}];
+      var zonedata = [{ temperature: 20, humidity: 50, metadata:{name: "zone1",floor:"floor1"} }];
+      var zoneData = [{temperature: 20, humidity: 50, name: "zone1",setTemperature:25,margin:3, time:new Date()}, {temperature: 30, humidity: 50,setTemperature:25,margin:3, name: "zone2",time:new Date()}, {temperature: 10, humidity: 50,setTemperature:25,margin:3, name: "zone3",time:new Date()}];
       var zones;
       var imagemap = document.getElementById("testmap");
       var ejsData = <%- JSON.stringify(data) %>;
@@ -125,17 +119,6 @@
           imagemap.appendChild(area);
         }
       }
-
-      function increaseTemp() {
-        zoneData[0].temperature += 1;
-        updatetemperature();
-      }
-
-      function decreaseTemp() {
-        zoneData[0].temperature -= 1;
-        updatetemperature();
-      }
-
       $("img").mapster({
         showToolTip: true,
         mapKey: "id",
@@ -221,9 +204,10 @@
       updatetemperature();
     </script>
     <script>
-      const gaugeData = {
+      var gaugeData = {
         datasets: [
           {
+            label: "Zone 1",
             data: [200, 200, 200],
             backgroundColor: [
               "rgba(255, 0, 0, 0.2)",
@@ -244,7 +228,7 @@
         ],
       };
 
-      const gaugeNeedle = {
+      var gaugeNeedle = {
         id: "gaugeNeedle",
         afterDatasetsDraw(chart, args, plugins) {
           const { ctx, data } = chart;
@@ -296,6 +280,7 @@
           const needleValue = data.datasets[0].needleValue;
           const xCenter = chart.getDatasetMeta(0).data[0].x;
           const yCenter = chart.getDatasetMeta(0).data[0].y;
+          const chartMetaData = chart.getDatasetMeta(0);
 
           const circumference =
             (chart.getDatasetMeta(0).data[0].circumference /
@@ -307,21 +292,22 @@
           ctx.fillStyle = "black";
           ctx.font = "30px Arial";
           ctx.textAlign = "center";
-          ctx.fillText(data.datasets[0].needle, xCenter, yCenter + 40);
+          ctx.fillText(data.datasets[0].needle + " kwh", xCenter, yCenter + 40);
         },
       };
       const gaugeLabels = {
         id: "gaugeLabels",
         afterDatasetsDraw(chart, args, plugins) {
-          const { ctx } = chart;
+          const { ctx, data } = chart;
           ctx.save();
           const xCenter = chart.getDatasetMeta(0).data[0].x;
           const yCenter = chart.getDatasetMeta(0).data[0].y;
-
+          const outer = chart.getDatasetMeta(0).data[0].outerRadius;
+          const inner = chart.getDatasetMeta(0).data[0].innerRadius;
           ctx.fillStyle = "black";
           ctx.font = "30px Arial";
           ctx.textAlign = "center";
-          ctx.fillText("Danger".needle, xCenter, yCenter);
+          ctx.fillText(data.datasets[0].label, xCenter, yCenter - outer - 10);
           ctx.restore();
         },
       };
@@ -342,7 +328,7 @@
             },
           },
         },
-        plugins: [gaugeNeedle, gaugeFlowMeter],
+        plugins: [gaugeNeedle, gaugeFlowMeter, gaugeLabels],
       };
 
       function loadTempChart(key) {
