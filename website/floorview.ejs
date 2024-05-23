@@ -395,41 +395,43 @@
         },
         plugins: [gaugeNeedle, gaugeFlowMeter, gaugeLabels],
       };
-
       function loadTempChart(key) {
         var temp = [];
         var labels = [];
-        for (zone in zones) {
-          for (data in sensordata) {
-            if (zones[zone].name == key) {
-              temp.push(sensordata[zones[zone].name][data].temperature);
-              labels.push(sensordata[zones[zone].name][data].timestamp);
-            }
-          }
-          if (zones[zone].name == key) {
-            var tempChart = document.getElementById("tempChart");
-            var tempCtx = tempChart.getContext("2d");
-            var time = new Date().toISOString().split("T")[1].substring(0, 8);
-            var data = {
-              labels: labels,
-              datasets: [
-                {
-                  label: "temperature",
-                  data: temp,
-                  fill: false,
-                  hoverBackgroundColor: "rgba(75, 192, 192, 0.4)",
-                  borderColor: "rgb(75, 192, 192)",
-                  tension: 0.1,
-                },
-              ],
-            };
-            var tempConfig = {
-              type: "line",
-              data: data,
-            };
-            var tsdf = new Chart(tempCtx, tempConfig);
+
+        // Get the sensor data for the given zone key
+        var zoneData = sensordata[key];
+        if (zoneData) {
+          // Iterate over the sensor data and push to temp and labels arrays
+          for (var i = 0; i < zoneData.length; i++) {
+            temp.push(zoneData[i].temperature);
+            labels.push(zoneData[i].timestamp);
           }
         }
+        temp.reverse();
+        labels.reverse();
+
+        var tempChart = document.getElementById("tempChart");
+        var tempCtx = tempChart.getContext("2d");
+        var time = new Date().toISOString().split("T")[1].substring(0, 8);
+        var data = {
+          labels: labels,
+          datasets: [
+            {
+              label: "temperature",
+              data: temp,
+              fill: false,
+              hoverBackgroundColor: "rgba(75, 192, 192, 0.4)",
+              borderColor: "rgb(75, 192, 192)",
+              tension: 0.1,
+            },
+          ],
+        };
+        var tempConfig = {
+          type: "line",
+          data: data,
+        };
+        var tsdf = new Chart(tempCtx, tempConfig);
       }
       createArea();
       updatetemperature();
