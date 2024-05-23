@@ -3,9 +3,14 @@ const mqtt = require('mqtt');
 const mongoose = require('mongoose');
 const bodyparser = require('body-parser');
 const path = require('path');
+const http = require('http');
 const app = express();
+const socketIO = require('socket.io');
 const port = 8000;
 var data
+
+const server = http.createServer(app);
+const io = socketIO(server);
 
 const Schema = mongoose.Schema;
 
@@ -34,7 +39,7 @@ async function fetchFloorDetails() {
     }
 }
 
-mongoose.connect('mongodb://localhost:27017/').then(() => {
+mongoose.connect('mongodb+srv://pleasepeople123:VfLWNiTsHAUOZjkY@cluster0.75o7lsi.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0').then(() => {
     console.log('connected to db');
 }).catch(err => console.log(err));
 
@@ -46,7 +51,7 @@ const client = mqtt.connect('mqtt://172.23.18.169');
 const sensorDataSchema = new mongoose.Schema({
     metaData: {
         floor: Number,
-        zone: Number
+        zone: String
     },
     temperature: Number,
     timestamp: Date,
@@ -57,37 +62,44 @@ const sensorDataSchema = new mongoose.Schema({
 });
 
 // Create a model for the sensor data
-const SensorData = mongoose.model('SensorData', sensorDataSchema);
+const SensorData = mongoose.model('SensorDatas', sensorDataSchema);
 
-// Handle connection event
-client.on('connect', () => {
-    console.log('Connected to MQTT broker');
-
-    client.subscribe('sensorReadings');
+io.on('connection', (socket) => {
+    SensorData.watch().on('change', async () => {
+        io.emit('data');
+    });
 });
 
-
+client.on('connect', () => {
+    client.subscribe('sensorReadings');
+    console.log('connected to MQTT broker');
+});
 
 client.on('message', (topic, message) => {
-    data = JSON.parse(message);
-    const newSensorData = new SensorData({
-        metaData: {
-            floor: 1,
-            zone: 1
-        },
-        temperature: data.temperature,
-        timestamp: new Date(),
-        setTemperature: data.temperature_set_to,
-        upperMargin: data.upper_margin,
-        lowerMargin: data.lower_margin,
-    });
 
-    // Save the sensor data to MongoDB
-    newSensorData.save();
+    if (topic == 'sensorReadings') {
+        data = JSON.parse(message);
+        const newSensorData = new SensorData({
+            metaData: {
+                floor: 1,
+                zone: data.zone
+            },
+            temperature: data.temperature,
+            timestamp: new Date(),
+            setTemperature: data.temperature_set_to,
+            upperMargin: data.upper_margin,
+            lowerMargin: data.lower_margin,
+        });
+
+        // Save the sensor data to MongoDB  
+
+        newSensorData.save();
+    }
+
 });
 
-function getSensorData() {
-    const data = SensorData.find({ metaData: { floor: 1, zone: 1 } });
+async function getSensorData() {
+    const data = await SensorData.find().sort({ timestamp: -1 }).limit(50);
     return data;
 }
 
@@ -99,17 +111,20 @@ app.set('view engine', 'ejs');
 app.use(bodyparser.json());
 
 app.get('/', async (req, res) => {
-    const floorDetails = await fetchFloorDetails();
-    const sensorData = await getSensorData();
+    var floorDetails = await fetchFloorDetails();
+    var sensorData = await getSensorData();
+    // Sort sensor data based on metaData
+
     res.render('floorview', { data: floorDetails, sensorData: sensorData });
 });
+
 
 app.get('/publish', (req, res) => {
     res.render('publish');
 });
 
-app.listen(port, () => {
-    console.log('server running on port', port);
+
+
+server.listen(port, () => {
+    console.log('server running on port 3000');
 });
-
-

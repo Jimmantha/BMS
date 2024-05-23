@@ -75,13 +75,42 @@
         </div>
       </div>
     </div>
-
     <script>
-      var zonedata = [{ temperature: 20, humidity: 50, metadata:{name: "zone1",floor:"floor1"} }];
-      var zoneData = [{temperature: 20, humidity: 50, name: "zone1",setTemperature:25,margin:3, time:new Date()}, {temperature: 30, humidity: 50,setTemperature:25,margin:3, name: "zone2",time:new Date()}, {temperature: 10, humidity: 50,setTemperature:25,margin:3, name: "zone3",time:new Date()}];
+      var ejsData = <%- JSON.stringify(data) %>;
+    </script>
+    <script>
+      var sensorData = <%- JSON.stringify(sensorData) %>;
+    </script>
+    <script>
+      var timestampTemperaturePairs = [];
+      var zoneData = [
+        {
+          temperature: 20,
+          humidity: 50,
+          name: "zone1",
+          setTemperature: 25,
+          margin: 3,
+          time: new Date(),
+        },
+        {
+          temperature: 30,
+          humidity: 50,
+          setTemperature: 25,
+          margin: 3,
+          name: "zone2",
+          time: new Date(),
+        },
+        {
+          temperature: 10,
+          humidity: 50,
+          setTemperature: 25,
+          margin: 3,
+          name: "zone3",
+          time: new Date(),
+        },
+      ];
       var zones;
       var imagemap = document.getElementById("testmap");
-      var ejsData = <%- JSON.stringify(data) %>;
       var floorplan = ejsData[0].floorplan;
       var modal = document.getElementById("infoModal");
       var shadeCanvas = document.getElementById("shadeCanvas");
@@ -91,6 +120,26 @@
       image.src = floorplan;
       zones = ejsData[0].zones;
 
+      var sensordata = {};
+      for (zone in zones) {
+        var timestampTemperaturePairs = []; // Changed from timestampZonePairs
+        for (data in sensorData) {
+          if (sensorData[data].metaData.zone == zones[zone].name) {
+            timestampTemperaturePairs.push({
+              zone: zones[zone].name,
+              temperature: sensorData[data].temperature,
+              timestamp: sensorData[data].timestamp,
+              setTemperature: sensorData[data].setTemperature,
+              upperMargin:
+                sensorData[data].setTemperature + sensorData[data].upperMargin,
+              lowerMargin:
+                sensorData[data].setTemperature - sensorData[data].lowerMargin,
+            });
+          }
+          sensordata[zones[zone].name] = timestampTemperaturePairs; // Correct variable name
+        }
+      }
+      console.log(sensordata);
       function openModal() {
         modal.style.display = "block";
       }
@@ -107,12 +156,12 @@
           area.setAttribute(
             "coords",
             coordinates.startX +
-            "," +
-            coordinates.startY +
-            "," +
-            coordinates.endX +
-            "," +
-            coordinates.endY
+              "," +
+              coordinates.startY +
+              "," +
+              coordinates.endX +
+              "," +
+              coordinates.endY
           );
           area.setAttribute("href", "#");
           area.setAttribute("id", zones[zone].name);
@@ -123,58 +172,71 @@
         showToolTip: true,
         mapKey: "id",
         singleSelect: true,
-        fillOpacity : 0.2,
-        onClick: function(e) {
-              console.log(e.key); // Access the area key through the event object
-              openModal();
-              modal.querySelector(".modal-title").textContent = e.key;
-              for(zone in zones){
-                if(e.key == zones[zone].name){
-                  modal.querySelector(".modal-body").textContent = "Temperature is " + zoneData[zone].temperature + "C";
-                  var canvas = document.createElement("canvas");
+        fillOpacity: 0.2,
+        onClick: function (e) {
+          console.log(e.key); // Access the area key through the event object
+          openModal();
+          modal.querySelector(".modal-title").textContent = e.key;
+          for (zone in zones) {
+            if (e.key == zones[zone].name) {
+              modal.querySelector(".modal-body").textContent =
+                "Temperature is " + zoneData[zone].temperature + "C";
+              var canvas = document.createElement("canvas");
               canvas.id = "tempChart";
               canvas.style.width = "100%";
               canvas.style.height = "300px";
               modal.querySelector(".modal-body").appendChild(canvas);
-
-                }
-              }
-              loadTempChart(e.key);
             }
+          }
+          loadTempChart(e.key);
+        },
       });
 
-      window.onclick = function(event) {
+      window.onclick = function (event) {
         if (event.target == modal) {
           modal.style.display = "none";
-          $('#Zone1').mapster('deselect');
+          $("#Zone1").mapster("deselect");
         }
-      }
+      };
 
       function updatetemperature() {
         ctx.clearRect(0, 0, shadeCanvas.width, shadeCanvas.height);
+        var temp;
         for (var zone in zones) {
+          for (var data in sensorData) {
+            if (sensorData[data].zone == zones[zone].name) {
+              temp = sensorData[data].temperature;
+            }
+          }
           var areaOptions = {
             key: zones[zone].name,
-            toolTip: "temperature is " + zoneData[zone].temperature + "C"
+            toolTip:
+              "temperature is " +
+              sensordata[zones[zone].name][0].temperature +
+              "C",
           };
-          $("img").mapster('set_options', {
-            areas: [{
-              key: areaOptions.key,
-              toolTip: areaOptions.toolTip,
-            }, ],
-
+          $("img").mapster("set_options", {
+            areas: [
+              {
+                key: areaOptions.key,
+                toolTip: areaOptions.toolTip,
+              },
+            ],
           });
-
           var zonePosition = zones[zone];
           var startX = (zonePosition.startX / 600) * shadeCanvas.width;
           var startY = (zonePosition.startY / 400) * shadeCanvas.height;
           var endX = (zonePosition.endX / 600) * shadeCanvas.width;
           var endY = (zonePosition.endY / 400) * shadeCanvas.height;
 
-          var temperatureGradient = (zoneData[zone].temperature - 10) / (30 - 10);
+          var temperatureGradient =
+            (sensordata[zones[zone].name][0].temperature -
+              sensordata[zones[zone].name][0].lowerMargin) /
+            (sensordata[zones[zone].name][0].upperMargin -
+              sensordata[zones[zone].name][0].lowerMargin);
           var red = Math.round(255 * temperatureGradient);
           var blue = Math.round(255 * (1 - temperatureGradient));
-          ctx.fillStyle = "rgba(" + (red/2) + ", 255, " + blue + ", 0.5)";
+          ctx.fillStyle = "rgba(" + red / 2 + ", 255, " + blue + ", 0.5)";
 
           ctx.beginPath();
           if (endX > startX) {
@@ -318,6 +380,9 @@
           layout: {
             padding: 20,
           },
+          animation: {
+            animateRotate: false, // Disable rotation animation
+          },
           aspectRatio: 1.2,
           plugins: {
             legend: {
@@ -332,21 +397,25 @@
       };
 
       function loadTempChart(key) {
+        var temp = [];
+        var labels = [];
         for (zone in zones) {
-          console.log(zones[zone].name, key);
+          for (data in sensordata) {
+            if (zones[zone].name == key) {
+              temp.push(sensordata[zones[zone].name][data].temperature);
+              labels.push(sensordata[zones[zone].name][data].timestamp);
+            }
+          }
           if (zones[zone].name == key) {
-            var ChartValue = zoneData[zone];
-            console.log(zoneData);
             var tempChart = document.getElementById("tempChart");
             var tempCtx = tempChart.getContext("2d");
-            var labels = ["January"];
             var time = new Date().toISOString().split("T")[1].substring(0, 8);
             var data = {
-              labels: [time],
+              labels: labels,
               datasets: [
                 {
                   label: "temperature",
-                  data: [ChartValue.temperature],
+                  data: temp,
                   fill: false,
                   hoverBackgroundColor: "rgba(75, 192, 192, 0.4)",
                   borderColor: "rgb(75, 192, 192)",
