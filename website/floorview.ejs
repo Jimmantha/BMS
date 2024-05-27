@@ -58,6 +58,13 @@
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">Modal title</h5>
+            <button
+              class="btn btn-secondary"
+              style="position: absolute; top: 10px; right: 10px"
+              id="editButton"
+            >
+              Edit
+            </button>
           </div>
           <div class="modal-body">
             <p>Modal body text goes here.</p>
@@ -150,6 +157,7 @@
           console.log(e.key);
           openModal();
           modal.querySelector(".modal-title").textContent = "Zone " + 1;
+
           for (zone in zones) {
             if (e.key == zones[zone].name) {
               modal.querySelector(".modal-body").textContent =
@@ -208,7 +216,7 @@
             key: zones[zone].name,
             toolTip:
               "temperature is " +
-              sensordata[zones[zone].name][0].temperature.toFixed(2) +
+              sensordata[zones[zone].name][0].setTemperature.toFixed(2) +
               "C",
           };
           $("img").mapster("set_options", {
@@ -257,6 +265,10 @@
           ctx.fill();
         }
       }
+      $("#editButton").click(function () {
+        modal.querySelector(".modal-title").textContent = "Zone 1 Edit";
+      });
+
       createArea();
       updatetemperature();
     </script>
@@ -445,6 +457,7 @@
               hoverBackgroundColor: "rgba(75, 192, 192, 0.4)",
               borderColor: "rgb(75, 192, 192)",
               tension: 0.1,
+              pointstyle: "dash",
             },
             {
               label: "uppermargin",
@@ -452,6 +465,7 @@
               fill: false,
               borderColor: "red",
               tension: 0.1,
+              pointStyle: "dash",
             },
             {
               label: "lowermargin",
@@ -459,6 +473,7 @@
               fill: false,
               borderColor: "blue",
               tension: 0.1,
+              pointstyle: "dash",
             },
             {
               label: "set Temperature",
@@ -466,6 +481,7 @@
               fill: false,
               borderColor: "green",
               tension: 0.1,
+              pointstyle: "dash",
             },
           ],
         };
