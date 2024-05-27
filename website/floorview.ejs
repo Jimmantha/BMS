@@ -83,32 +83,6 @@
     </script>
     <script>
       var timestampTemperaturePairs = [];
-      var zoneData = [
-        {
-          temperature: 20,
-          humidity: 50,
-          name: "zone1",
-          setTemperature: 25,
-          margin: 3,
-          time: new Date(),
-        },
-        {
-          temperature: 30,
-          humidity: 50,
-          setTemperature: 25,
-          margin: 3,
-          name: "zone2",
-          time: new Date(),
-        },
-        {
-          temperature: 10,
-          humidity: 50,
-          setTemperature: 25,
-          margin: 3,
-          name: "zone3",
-          time: new Date(),
-        },
-      ];
       var zones;
       var imagemap = document.getElementById("testmap");
       var floorplan = ejsData[0].floorplan;
@@ -139,7 +113,6 @@
           sensordata[zones[zone].name] = timestampTemperaturePairs; // Correct variable name
         }
       }
-      console.log(sensordata);
       function openModal() {
         modal.style.display = "block";
       }
@@ -180,7 +153,9 @@
           for (zone in zones) {
             if (e.key == zones[zone].name) {
               modal.querySelector(".modal-body").textContent =
-                "Temperature is " + zoneData[zone].temperature + "C";
+                "Temperature is " +
+                sensordata[zones[zone].name][0].temperature.toFixed(2) +
+                "C";
               var canvas = document.createElement("canvas");
               canvas.id = "tempChart";
               canvas.style.width = "100%";
@@ -212,7 +187,7 @@
             key: zones[zone].name,
             toolTip:
               "temperature is " +
-              sensordata[zones[zone].name][0].temperature +
+              sensordata[zones[zone].name][0].temperature.toFixed(2) +
               "C",
           };
           $("img").mapster("set_options", {
@@ -373,6 +348,23 @@
           ctx.restore();
         },
       };
+      const chartAreaBorder = {
+        id: "chartAreaBorder",
+        beforeDraw(chart, args, options) {
+          const {
+            ctx,
+            chartArea: { left, top, width, height },
+          } = chart;
+          const margin = 10;
+          const leftMargin = left - margin;
+          const topMargin = top - margin;
+          const widthMargin = width + 2 * margin;
+          const heightMargin = height + 2 * margin;
+          ctx.strokeRect(leftMargin, topMargin, widthMargin, heightMargin);
+          ctx.save();
+          ctx.restore();
+        },
+      };
       const gaugeConfig = {
         type: "doughnut",
         data: gaugeData,
@@ -393,10 +385,13 @@
             },
           },
         },
-        plugins: [gaugeNeedle, gaugeFlowMeter, gaugeLabels],
+        plugins: [gaugeNeedle, gaugeFlowMeter, gaugeLabels, chartAreaBorder],
       };
       function loadTempChart(key) {
         var temp = [];
+        var upper = [];
+        var lower = [];
+        var set = [];
         var labels = [];
 
         // Get the sensor data for the given zone key
@@ -404,12 +399,18 @@
         if (zoneData) {
           // Iterate over the sensor data and push to temp and labels arrays
           for (var i = 0; i < zoneData.length; i++) {
-            temp.push(zoneData[i].temperature);
-            labels.push(zoneData[i].timestamp);
+            temp.push(zoneData[i].temperature.toFixed(2));
+            labels.push(zoneData[i].timestamp.split("T")[1].substring(0, 8));
+            upper.push(zoneData[i].upperMargin);
+            lower.push(zoneData[i].lowerMargin);
+            set.push(zoneData[i].setTemperature);
           }
         }
         temp.reverse();
         labels.reverse();
+        upper.reverse();
+        lower.reverse();
+        set.reverse();
 
         var tempChart = document.getElementById("tempChart");
         var tempCtx = tempChart.getContext("2d");
@@ -425,6 +426,27 @@
               borderColor: "rgb(75, 192, 192)",
               tension: 0.1,
             },
+            {
+              label: "uppermargin",
+              data: upper,
+              fill: false,
+              borderColor: "red",
+              tension: 0.1,
+            },
+            {
+              label: "lowermargin",
+              data: lower,
+              fill: false,
+              borderColor: "blue",
+              tension: 0.1,
+            },
+            {
+              label: "set Temperature",
+              data: set,
+              fill: false,
+              borderColor: "green",
+              tension: 0.1,
+            },
           ],
         };
         var tempConfig = {
@@ -437,6 +459,7 @@
       updatetemperature();
       var ctx1 = document.getElementById("myChart1").getContext("2d");
       var myChart1 = new Chart(ctx1, gaugeConfig);
+      console.log(sensorData.length);
     </script>
   </body>
 </html>

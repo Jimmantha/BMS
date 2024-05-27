@@ -64,17 +64,21 @@ const sensorDataSchema = new mongoose.Schema({
 // Create a model for the sensor data
 const SensorData = mongoose.model('SensorDatas', sensorDataSchema);
 
+
+//watch for changes on mongodb and emit the changes to the client
 io.on('connection', (socket) => {
     SensorData.watch().on('change', async () => {
         io.emit('data');
     });
 });
 
+// Subscribe to the sensorReadings topic
 client.on('connect', () => {
     client.subscribe('sensorReadings');
     console.log('connected to MQTT broker');
 });
 
+// Listen for messages on the sensorReadings topic
 client.on('message', (topic, message) => {
 
     if (topic == 'sensorReadings') {
@@ -98,8 +102,9 @@ client.on('message', (topic, message) => {
 
 });
 
+// Fetch 50 latest sensor data from MongoDB 
 async function getSensorData() {
-    const data = await SensorData.find().sort({ timestamp: -1 }).limit(50);
+    const data = await SensorData.find().sort({ timestamp: -1 });
     return data;
 }
 
@@ -110,10 +115,10 @@ app.set('view engine', 'ejs');
 
 app.use(bodyparser.json());
 
+
 app.get('/', async (req, res) => {
     var floorDetails = await fetchFloorDetails();
     var sensorData = await getSensorData();
-    // Sort sensor data based on metaData
 
     res.render('floorview', { data: floorDetails, sensorData: sensorData });
 });
@@ -124,7 +129,16 @@ app.get('/publish', (req, res) => {
 });
 
 
-
+// start server on port 8000
 server.listen(port, () => {
-    console.log('server running on port 3000');
+    console.log('server running on port ' + port);
+});
+
+
+
+app.post('/command', (req, res) => {
+    // Handle sending command to MQTT broker
+    // from req.body
+    // Send the command to the MQTT broker using the appropriate method
+    // Return the response to the client
 });
