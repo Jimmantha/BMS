@@ -147,15 +147,38 @@
         singleSelect: true,
         fillOpacity: 0.2,
         onClick: function (e) {
-          console.log(e.key); // Access the area key through the event object
+          console.log(e.key);
           openModal();
-          modal.querySelector(".modal-title").textContent = e.key;
+          modal.querySelector(".modal-title").textContent = "Zone " + 1;
           for (zone in zones) {
             if (e.key == zones[zone].name) {
               modal.querySelector(".modal-body").textContent =
                 "Temperature is " +
                 sensordata[zones[zone].name][0].temperature.toFixed(2) +
                 "C";
+              // create modal body elements
+              var div = document.createElement("div");
+              modal.querySelector(".modal-body").appendChild(div);
+              var div = document.createElement("div");
+              div.textContent = "set temp: ";
+              var input = document.createElement("input");
+              input.id = "setInput";
+              input.type = "number";
+              input.value = sensordata[zones[zone].name][0].setTemperature;
+              var button = document.createElement("button");
+              button.classList.add("btn", "ms-3", "btn-primary");
+              button.textContent = "update";
+              button.addEventListener("click", function () {
+                var newTemp = input.value; // get the value from the input field
+                // now you can use newTemp to set the temperature
+                // this will depend on how your application is set up
+                // for example, you can emit a socket event to set the temperature
+                socket.emit("setTemperature", { temperature: newTemp });
+              });
+              div.appendChild(input);
+              div.appendChild(button);
+              modal.querySelector(".modal-body").appendChild(div);
+
               var canvas = document.createElement("canvas");
               canvas.id = "tempChart";
               canvas.style.width = "100%";
@@ -236,7 +259,6 @@
           ctx.fill();
         }
       }
-
       createArea();
       updatetemperature();
     </script>
@@ -452,6 +474,13 @@
         var tempConfig = {
           type: "line",
           data: data,
+          options: {
+            plugins: {
+              legend: {
+                display: false, // Remove legend
+              },
+            },
+          },
         };
         var tsdf = new Chart(tempCtx, tempConfig);
       }

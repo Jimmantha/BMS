@@ -64,11 +64,25 @@ const sensorDataSchema = new mongoose.Schema({
 // Create a model for the sensor data
 const SensorData = mongoose.model('SensorDatas', sensorDataSchema);
 
+// Handle sending command to MQTT broker
+// from req.body
+// Send the command to the MQTT broker
+// To Include:
+//topic message pairs
+//"Increase temperature" "up"
+//"Decrease temperature" "down"
+//"Set temperature" "number" "max 30 min 16" DONE
+//  "Set upper margin" "set_error_high_"
+//  "Set lower margin" "set_error_low_" 
 
 //watch for changes on mongodb and emit the changes to the client
 io.on('connection', (socket) => {
     SensorData.watch().on('change', async () => {
         io.emit('data');
+    });
+    socket.on('setTemperature', (data) => {
+        console.log(data);
+        client.publish('Set temperature', "set_temp" + JSON.stringify(data));
     });
 });
 
@@ -136,9 +150,4 @@ server.listen(port, () => {
 
 
 
-app.post('/command', (req, res) => {
-    // Handle sending command to MQTT broker
-    // from req.body
-    // Send the command to the MQTT broker using the appropriate method
-    // Return the response to the client
-});
+
