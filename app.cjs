@@ -116,10 +116,9 @@ client.on('message', (topic, message) => {
 
     if (topic == 'sensorReadings') {
         data = JSON.parse(message);
-        var date = moment().tz('Asia/Singapore').toDate();
-        date = moment(data).local().toDate();
-        console.log('Data:', date); // This logs the date in Singapore time
-
+        var date = new Date(Date.now());
+        date.setHours(date.getHours() + 8);
+        // issue inserting date.now() into mongodb changes back to gmt tho the date is correct for now manually add 8 hours to get the correct time
         const newSensorData = new SensorData({
             metaData: {
                 floor: 1,
