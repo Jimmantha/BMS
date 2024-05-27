@@ -45,7 +45,7 @@ mongoose.connect('mongodb+srv://pleasepeople123:VfLWNiTsHAUOZjkY@cluster0.75o7ls
 
 
 // Connect to the MQTT broker
-const client = mqtt.connect('mqtt://172.23.18.169');
+const client = mqtt.connect('mqtt://172.22.38.236');
 
 // Create a schema for the sensor data
 const sensorDataSchema = new mongoose.Schema({
@@ -68,7 +68,7 @@ const SensorData = mongoose.model('SensorDatas', sensorDataSchema);
 // from req.body
 // Send the command to the MQTT broker
 // To Include:
-//topic message pairs
+// message pairs (topic: :"coolerControl")
 //"Increase temperature" "up"
 //"Decrease temperature" "down"
 //"Set temperature" "number" "max 30 min 16" DONE
@@ -81,9 +81,28 @@ io.on('connection', (socket) => {
         io.emit('data');
     });
     socket.on('setTemperature', (data) => {
-        console.log(data);
-        client.publish('Set temperature', "set_temp" + JSON.stringify(data));
+        setTemp = JSON.parse(JSON.stringify(data));
+        //{"temperature":"25"}
+        dataSend = "set_temp_" + setTemp.temperature;
+        console.log('Temperature:', data.temperature);
+        client.publish('coolerControl', dataSend);
     });
+    socket.on('setUpperMargin', (data) => {
+        setUpper = JSON.parse(JSON.stringify(data));
+        //{"upperMargin":"25"}
+        dataSend = "set_error_high_" + setUpper.upperMargin;
+        console.log('Upper Margin:', data.upperMargin);
+        client.publish('coolerControl', dataSend);
+    }
+    );
+    socket.on('setLowerMargin', (data) => {
+        setLower = JSON.parse(JSON.stringify(data));
+        //{"lowerMargin":"25"}
+        dataSend = "set_error_low_" + setLower.lowerMargin;
+        console.log('Lower Margin:', data.lowerMargin);
+        client.publish('coolerControl', dataSend);
+    }
+    );
 });
 
 // Subscribe to the sensorReadings topic
@@ -118,7 +137,8 @@ client.on('message', (topic, message) => {
 
 // Fetch 50 latest sensor data from MongoDB 
 async function getSensorData() {
-    const data = await SensorData.find().sort({ timestamp: -1 });
+    //limit to 1200 for 
+    const data = await SensorData.find().sort({ timestamp: -1 }).limit(1200);
     return data;
 }
 
