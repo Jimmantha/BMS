@@ -8,7 +8,7 @@ const app = express();
 const socketIO = require('socket.io');
 const port = 8000;
 var data
-
+var moment = require('moment-timezone');
 const server = http.createServer(app);
 const io = socketIO(server);
 
@@ -45,7 +45,7 @@ mongoose.connect('mongodb+srv://pleasepeople123:VfLWNiTsHAUOZjkY@cluster0.75o7ls
 
 
 // Connect to the MQTT broker
-const client = mqtt.connect('mqtt://172.22.38.236');
+const client = mqtt.connect('mqtt://172.23.18.169');
 
 // Create a schema for the sensor data
 const sensorDataSchema = new mongoose.Schema({
@@ -116,13 +116,17 @@ client.on('message', (topic, message) => {
 
     if (topic == 'sensorReadings') {
         data = JSON.parse(message);
+        var date = moment().tz('Asia/Singapore').toDate();
+        date = moment(data).local().toDate();
+        console.log('Data:', date); // This logs the date in Singapore time
+
         const newSensorData = new SensorData({
             metaData: {
                 floor: 1,
                 zone: data.zone
             },
             temperature: data.temperature,
-            timestamp: new Date(),
+            timestamp: date,
             setTemperature: data.temperature_set_to,
             upperMargin: data.upper_margin,
             lowerMargin: data.lower_margin,
@@ -138,7 +142,7 @@ client.on('message', (topic, message) => {
 // Fetch 50 latest sensor data from MongoDB 
 async function getSensorData() {
     //limit to 1200 for 
-    const data = await SensorData.find().sort({ timestamp: -1 }).limit(1200);
+    const data = await SensorData.find().sort({ timestamp: -1 }).limit(50);
     return data;
 }
 
