@@ -161,21 +161,19 @@
               modal.querySelector(".modal-body").appendChild(div);
               var div = document.createElement("div");
               div.textContent = "set temp: ";
-              var input = document.createElement("input");
-              input.id = "setInput";
-              input.type = "number";
-              input.value = sensordata[zones[zone].name][0].setTemperature;
+              var setTempInput = document.createElement("input");
+              setTempInput.id = "setInput";
+              setTempInput.type = "number";
+              setTempInput.value =
+                sensordata[zones[zone].name][0].setTemperature;
               var button = document.createElement("button");
               button.classList.add("btn", "ms-3", "btn-primary");
               button.textContent = "update";
               button.addEventListener("click", function () {
-                var newTemp = input.value; // get the value from the input field
-                // now you can use newTemp to set the temperature
-                // this will depend on how your application is set up
-                // for example, you can emit a socket event to set the temperature
+                var newTemp = setTempInput.value;
                 socket.emit("setTemperature", { temperature: newTemp });
               });
-              div.appendChild(input);
+              div.appendChild(setTempInput);
               div.appendChild(button);
               modal.querySelector(".modal-body").appendChild(div);
 
