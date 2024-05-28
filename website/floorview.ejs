@@ -142,6 +142,9 @@
         for (var zone in zones) {
           var coordinates = zones[zone];
           var area = document.createElement("area");
+          while (imagemap.firstChild) {
+            imagemap.removeChild(imagemap.firstChild);
+          }
           area.setAttribute("shape", "rect");
           area.setAttribute(
             "coords",

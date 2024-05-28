@@ -76,7 +76,7 @@ const SensorData = mongoose.model('SensorDatas', sensorDataSchema);
 //  "Set lower margin" "set_error_low_" 
 
 //watch for changes on mongodb and emit the changes to the client
-io.on('connection', (socket) => {
+io.on('connection', async (socket) => {
     SensorData.watch().on('change', async () => {
         io.emit('data');
     });
@@ -101,6 +101,10 @@ io.on('connection', (socket) => {
         client.publish('coolerControl', dataSend);
     }
     );
+    sensorData = await getSensorData();
+    socket.emit('sensorData', { sensorData: sensorData }, () => {
+        console.log('emitted');
+    });
 });
 
 // Subscribe to the sensorReadings topic
