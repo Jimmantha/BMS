@@ -102,9 +102,7 @@ io.on('connection', async (socket) => {
     }
     );
     sensorData = await getSensorData();
-    socket.emit('sensorData', { sensorData: sensorData }, () => {
-        console.log('emitted');
-    });
+    io.emit('sensorData', { sensorData: sensorData });
 });
 
 // Subscribe to the sensorReadings topic

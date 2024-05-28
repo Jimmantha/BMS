@@ -49,7 +49,7 @@
 
     <br />
     <map name="testmap" id="testmap">
-      <area shape="rect" id="rect1" coords="0,0,100,100" href="" alt="" />
+
     </map>
 
     <!-- Modal -->
@@ -88,7 +88,6 @@
     <script>
         var orginalSensorData = <%- JSON.stringify(sensorData) %>;
       function loadData() {
-
              zones = ejsData[0].zones;
              for (zone in zones) {
                var timestampTemperaturePairs = []; // Changed from timestampZonePairs
@@ -126,10 +125,14 @@
       var sensorData = {};
       loadData();
       socket.on("sensorData", function (data) {
-        sensorData = data.sensorData;
+        orginalSensorData = data.sensorData;
         loadData();
+        createArea();
         updatetemperature();
       });
+
+      createArea();
+      updatetemperature();
       function openModal() {
         modal.style.display = "block";
       }
@@ -142,9 +145,9 @@
         for (var zone in zones) {
           var coordinates = zones[zone];
           var area = document.createElement("area");
-          while (imagemap.firstChild) {
+            while (imagemap.firstChild) {
             imagemap.removeChild(imagemap.firstChild);
-          }
+            }
           area.setAttribute("shape", "rect");
           area.setAttribute(
             "coords",
@@ -160,8 +163,7 @@
           area.setAttribute("id", zones[zone].name);
           imagemap.appendChild(area);
         }
-      }
-      $("img").mapster({
+        $("img").mapster({
         showToolTip: true,
         mapKey: "id",
         singleSelect: true,
@@ -208,6 +210,8 @@
           loadTempChart(e.key);
         },
       });
+      }
+    
 
       window.onclick = function (event) {
         if (event.target == modal) {
@@ -281,8 +285,6 @@
       $("#editButton").click(function () {
         modal.querySelector(".modal-title").textContent = "Zone 1 Edit";
       });
-
-      createArea();
       updatetemperature();
     </script>
     <script>
@@ -511,7 +513,6 @@
         };
         var tsdf = new Chart(tempCtx, tempConfig);
       }
-      createArea();
       updatetemperature();
       var ctx1 = document.getElementById("myChart1").getContext("2d");
       var myChart1 = new Chart(ctx1, gaugeConfig);
