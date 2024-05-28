@@ -175,7 +175,7 @@ app.set('view engine', 'ejs');
 app.use(bodyparser.json());
 
 
-app.get('/', async (req, res) => {
+app.get('/Floorview', async (req, res) => {
     var floorDetails = await fetchFloorDetails();
     var sensorData = await getSensorData();
 
