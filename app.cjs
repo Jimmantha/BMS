@@ -9,9 +9,10 @@ const socketIO = require('socket.io');
 const port = 8000;
 var data
 var moment = require('moment-timezone');
+const EventEmitter = require('events');
 const server = http.createServer(app);
 const io = socketIO(server);
-
+const emitter = new EventEmitter();
 const Schema = mongoose.Schema;
 
 const ZoneSchema = new Schema({
@@ -29,7 +30,7 @@ const floorplan = new Schema({
 });
 
 const floorDetails = mongoose.model('floors', floorplan);
-
+EventEmitter.defaultMaxListeners = 20;
 async function fetchFloorDetails() {
     try {
         const data = await floorDetails.find({});
@@ -45,7 +46,7 @@ mongoose.connect('mongodb+srv://pleasepeople123:VfLWNiTsHAUOZjkY@cluster0.75o7ls
 
 
 // Connect to the MQTT broker
-const client = mqtt.connect('mqtt://localhost:1883');
+const client = mqtt.connect('mqtt://172.23.18.169:1883');
 
 // Create a schema for the sensor data
 const sensorDataSchema = new mongoose.Schema({
@@ -102,7 +103,6 @@ io.on('connection', async (socket) => {
     }
     );
     sensorData = await getSensorData();
-    io.emit('sensorData', { sensorData: sensorData });
 });
 
 // Subscribe to the sensorReadings topic
@@ -113,7 +113,7 @@ client.on('connect', () => {
 
 var savetime
 // Listen for messages on the sensorReadings topic
-client.on('message', (topic, message) => {
+client.on('message', async (topic, message) => {
     if (topic == 'sensorReadings') {
         data = JSON.parse(message);
         var date = new Date(Date.now());
@@ -133,22 +133,29 @@ client.on('message', (topic, message) => {
 
         // Save the sensor data to MongoDB  
         var currenttime = new Date();
-        if (currenttime - savetime < 5 * 300000) { //300000ms = 5 minutes
+        if (currenttime - savetime > 60000) { //300000ms = 5 minutes
             newSensorData.save().then(() => {
                 savetime = new Date();
             });
-        } else if (saveTime == null) {
+            sensorData = await SensorData.find().sort({ timestamp: -1 }).limit(50);
+            dynoSensorData = sensorData;
+            io.emit('sensorData', { sensorData: sensorData });
+            console.log('saved');
+        } else if (savetime == undefined) {
             newSensorData.save().then(() => {
                 savetime = new Date();
             });
+            sensorData = await SensorData.find().sort({ timestamp: -1 }).limit(50);
+            dynoSensorData = sensorData;
+            io.emit('sensorData', { sensorData: sensorData });
+            console.log('saved undefined');
         } else {
-            sensorData = SensorData.find().sort({ timestamp: 1 }).limit(50);
-            sensorData.push(newSensorData);
-            sensorData.sort({ timestamp: -1 });
-            io.on('connection', (socket) => {
-                socket.emit('sensorData', { sensorData: sensorData });
-            }
-            );
+            const newSensorDataObject = newSensorData.toObject();
+            dynoSensorData.unshift(newSensorDataObject);
+            console.log(sensorData.length - dynoSensorData.length);
+            io.emit('sensorData', { sensorData: dynoSensorData });
+                console.log('emitted');
+
         }
     }
 });
