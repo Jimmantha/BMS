@@ -111,9 +111,9 @@ client.on('connect', () => {
     console.log('connected to MQTT broker');
 });
 
+var savetime
 // Listen for messages on the sensorReadings topic
 client.on('message', (topic, message) => {
-
     if (topic == 'sensorReadings') {
         data = JSON.parse(message);
         var date = new Date(Date.now());
@@ -132,10 +132,15 @@ client.on('message', (topic, message) => {
         });
 
         // Save the sensor data to MongoDB  
-
-        newSensorData.save();
+        var currenttime = new Date();
+        if (currenttime - savetime < 5 * 300000) { //300000ms = 5 minutes
+            newSensorData.save().then(() => {
+                savetime = new Date();
+            });
+        } else {
+            io.emit('data', { data: newSensorData });
+        }
     }
-
 });
 
 // Fetch 50 latest sensor data from MongoDB 
