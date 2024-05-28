@@ -7,9 +7,9 @@ html, body {
 /* Set default font and background color */
 body {
     font-family: Arial, sans-serif;
-    background-color: #f0f0f0;
+    background-color: #ffffff;
 }
-
+/*f0f0f0
 /* Add styles for headings */
 h1 {
     font-size: 24px;
@@ -64,3 +64,8 @@ body { min-height: 100% }
 #mapster_wrap_0{
     opacity: 0.7!important;
 }
+
+.title {
+    background-color: #f0f0f0!important;
+}
+

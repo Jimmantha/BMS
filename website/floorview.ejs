@@ -1,176 +1,166 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
-    <%- include("./header") %>
-  </head>
 
-  <body>
-    <div class="table">
-      <div class="row" style="height: 50vh">
-        <div class="col-4 m-3">
-          <canvas
-            class="p-0"
-            id="shadeCanvas"
-            style="position: absolute; z-index: -1; width: 600px; height: 400px"
-          ></canvas>
-          <img
-            src="https://placehold.co/600x400"
-            alt=""
-            id="floorplan"
-            style="position: absolute; top: 0; left: 0"
-            usemap="#testmap"
-          />
-        </div>
-        <div class="col-4" style="overflow: auto; height: 100%">
-          <div class="table">
-            <div class="row">
-              <div class="col">
-                <canvas
-                  class="p-0"
-                  id="myChart1"
-                  style="width: 200px; height: 300px"
-                ></canvas>
-              </div>
-              <div class="col">
-                <canvas
-                  class="p-0"
-                  id="myChar2t"
-                  style="width: 200px; height: 300px"
-                ></canvas>
-              </div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Document</title>
+  <%- include("./header") %>
+</head>
+
+<body>
+  <div class="table">
+    <div class="row title" style="height: 4vh">
+      <div class="col-4 text-center justify-text-center ">
+        <h3>Floorplan</h3>
+      </div>
+      <div class="col-4 text-center justify-text-center ">
+        <h3>Floorplan</h3>
+      </div>
+    </div>
+
+    <div class="row" style="height: 50vh">
+      <div class="col-4 m-3">
+        <canvas class="p-0" id="shadeCanvas" style="position: absolute; z-index: -1; width: 600px; height: 400px"></canvas>
+        <img src="https://placehold.co/600x400" alt="" id="floorplan" style="position: absolute; top: 0; left: 0" usemap="#testmap" />
+      </div>
+      <div class="col-4 m-3" style="overflow: auto; height: 100%">
+        <div class="table">
+          <div class="row">
+            <div class="col">
+              <canvas class="p-0" id="myChart1" style="width: 200px; height: 300px"></canvas>
+            </div>
+            <div class="col">
+              <canvas class="p-0" id="myChar2t" style="width: 200px; height: 300px"></canvas>
             </div>
           </div>
         </div>
       </div>
     </div>
+  </div>
 
-    <br />
-    <map name="testmap" id="testmap">
+  <br />
+  <map name="testmap" id="testmap">
 
-    </map>
+  </map>
 
-    <!-- Modal -->
-    <div id="infoModal" class="modal p-3" tabindex="-1" role="dialog">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Modal title</h5>
-            <button
-              class="btn btn-secondary"
-              style="position: absolute; top: 10px; right: 10px"
-              id="editButton"
-            >
-              Edit
-            </button>
-          </div>
-          <div class="modal-body">
-            <p>Modal body text goes here.</p>
-            <canvas id="tempChart"></canvas>
-          </div>
-          <div class="modal-footer">
-            <button
-              type="button"
-              class="btn btn-secondary"
-              onclick="closeModal()"
-            >
-              Close
-            </button>
-          </div>
+  <!-- Modal -->
+  <div id="infoModal" class="modal p-3" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Modal title</h5>
+          <button class="btn btn-secondary" style="position: absolute; top: 10px; right: 10px" id="editButton">
+            Edit
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>Modal body text goes here.</p>
+          <canvas id="tempChart"></canvas>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal()">
+            Close
+          </button>
         </div>
       </div>
     </div>
-    <script>
-      var ejsData = <%- JSON.stringify(data) %>;
-    </script>
-    <script>
-        var orginalSensorData = <%- JSON.stringify(sensorData) %>;
-      function loadData() {
-             zones = ejsData[0].zones;
-             for (zone in zones) {
-               var timestampTemperaturePairs = []; // Changed from timestampZonePairs
-               for (data in orginalSensorData) {
-                 if (orginalSensorData[data].metaData.zone == zones[zone].name) {
-                   timestampTemperaturePairs.push({
-                     zone: zones[zone].name,
-                     temperature: orginalSensorData[data].temperature,
-                     timestamp: orginalSensorData[data].timestamp,
-                     setTemperature: orginalSensorData[data].setTemperature,
-                     upperMargin:
-                       orginalSensorData[data].setTemperature +
-                       orginalSensorData[data].upperMargin,
-                     lowerMargin:
-                       orginalSensorData[data].setTemperature -
-                       orginalSensorData[data].lowerMargin,
-                   });
-                 }
-                 sensorData[zones[zone].name] = timestampTemperaturePairs; // Correct variable name
-               }
-             }
-           }
-    </script>
-    <script>
-      var timestampTemperaturePairs = [];
-      var zones;
-      var imagemap = document.getElementById("testmap");
-      var floorplan = ejsData[0].floorplan;
-      var modal = document.getElementById("infoModal");
-      var shadeCanvas = document.getElementById("shadeCanvas");
-      var ctx = shadeCanvas.getContext("2d");
+  </div>
+  <script>
+    var ejsData = <%- JSON.stringify(data) %>;
+  </script>
+  <script>
+    var orginalSensorData = <%- JSON.stringify(sensorData) %>;
 
-      var image = document.querySelector("img");
-      image.src = floorplan;
-      var sensorData = {};
+    function loadData() {
+      zones = ejsData[0].zones;
+      for (zone in zones) {
+        var timestampTemperaturePairs = []; // Changed from timestampZonePairs
+        for (data in orginalSensorData) {
+          if (orginalSensorData[data].metaData.zone == zones[zone].name) {
+            timestampTemperaturePairs.push({
+              zone: zones[zone].name,
+              temperature: orginalSensorData[data].temperature,
+              timestamp: orginalSensorData[data].timestamp,
+              setTemperature: orginalSensorData[data].setTemperature,
+              upperMargin: orginalSensorData[data].setTemperature +
+                orginalSensorData[data].upperMargin,
+              lowerMargin: orginalSensorData[data].setTemperature -
+                orginalSensorData[data].lowerMargin,
+            });
+          }
+          sensorData[zones[zone].name] = timestampTemperaturePairs; // Correct variable name
+        }
+      }
+    }
+  </script>
+  <script>
+    var timestampTemperaturePairs = [];
+    var zones;
+    var imagemap = document.getElementById("testmap");
+    var floorplan = ejsData[0].floorplan;
+    var modal = document.getElementById("infoModal");
+    var shadeCanvas = document.getElementById("shadeCanvas");
+    var ctx = shadeCanvas.getContext("2d");
+    var dynamicCharts = {};
+    var image = document.querySelector("img");
+    image.src = floorplan;
+    var sensorData = {};
+    loadData();
+    socket.on("sensorData", function(data) {
+      orginalSensorData = data.sensorData;
+      console.log("received sensor data");
       loadData();
-      socket.on("sensorData", function (data) {
-        orginalSensorData = data.sensorData;
-        console.log("received sensor data");
-        loadData();
-        createArea();
-        updatetemperature();
-        
-      });
-
       createArea();
       updatetemperature();
-      function openModal() {
-        modal.style.display = "block";
+      console.log(dynamicCharts);
+    });
+
+    createArea();
+    updatetemperature();
+
+    function openModal() {
+      modal.style.display = "block";
+    }
+
+    function closeModal() {
+      document.getElementById("editButton").style.display = "block";
+      var updateElement = document.getElementById("update");
+      if (updateElement) {
+        updateElement.remove();
       }
 
-      function closeModal() {
-        modal.style.display = "none";
-      }
+      modal.style.display = "none";
+    }
 
-      function createArea() {
-        for (var zone in zones) {
-          var coordinates = zones[zone];
-          var area = document.createElement("area");
-            while (imagemap.firstChild) {
-            imagemap.removeChild(imagemap.firstChild);
-            }
-          area.setAttribute("shape", "rect");
-          area.setAttribute(
-            "coords",
-            coordinates.startX +
-              "," +
-              coordinates.startY +
-              "," +
-              coordinates.endX +
-              "," +
-              coordinates.endY
-          );
-          area.setAttribute("href", "#");
-          area.setAttribute("id", zones[zone].name);
-          imagemap.appendChild(area);
+    function createArea() {
+      for (var zone in zones) {
+        var coordinates = zones[zone];
+        var area = document.createElement("area");
+        while (imagemap.firstChild) {
+          imagemap.removeChild(imagemap.firstChild);
         }
-        $("img").mapster({
+        area.setAttribute("shape", "rect");
+        area.setAttribute(
+          "coords",
+          coordinates.startX +
+          "," +
+          coordinates.startY +
+          "," +
+          coordinates.endX +
+          "," +
+          coordinates.endY
+        );
+        area.setAttribute("href", "#");
+        area.setAttribute("id", zones[zone].name);
+        imagemap.appendChild(area);
+      }
+      $("img").mapster({
         showToolTip: true,
         mapKey: "id",
         singleSelect: true,
         fillOpacity: 0.2,
-        onClick: function (e) {
+        onClick: function(e) {
           console.log(e.key);
           openModal();
           modal.querySelector(".modal-title").textContent = "Zone " + 1;
@@ -185,21 +175,8 @@
               var div = document.createElement("div");
               modal.querySelector(".modal-body").appendChild(div);
               var div = document.createElement("div");
-              div.textContent = "set temp: ";
-              var setTempInput = document.createElement("input");
-              setTempInput.id = "setInput";
-              setTempInput.type = "number";
-              setTempInput.value =
-                sensorData[zones[zone].name][0].setTemperature;
-              var button = document.createElement("button");
-              button.classList.add("btn", "ms-3", "btn-primary");
-              button.textContent = "update";
-              button.addEventListener("click", function () {
-                var newTemp = setTempInput.value;
-                socket.emit("setTemperature", { temperature: newTemp });
-              });
-              div.appendChild(setTempInput);
-              div.appendChild(button);
+
+
               modal.querySelector(".modal-body").appendChild(div);
 
               var canvas = document.createElement("canvas");
@@ -213,318 +190,357 @@
         },
       });
       var areaOptions = {
-            key: zones[zone].name,
-            toolTip:
-              "temperature Set: " +
-              sensorData[zones[zone].name][0].setTemperature +
-              "C",
-          };
+        key: zones[zone].name,
+        toolTip: "temperature Set: " +
+          sensorData[zones[zone].name][0].setTemperature +
+          "C",
+      };
       $("img").mapster("set_options", {
-            areas: [
-              {
-                key: areaOptions.key,
-                toolTip: areaOptions.toolTip,
-              },
-            ],
-          });
-      }
-  
-      function updatetemperature() {
-        ctx.clearRect(0, 0, shadeCanvas.width, shadeCanvas.height);
-        var temp;
-        for (var zone in zones) {
-          for (var data in sensorData) {
-            if (sensorData[data].zone == zones[zone].name) {
-              temp = sensorData[data].temperature;
-            }
+        areas: [{
+          key: areaOptions.key,
+          toolTip: areaOptions.toolTip,
+        }, ],
+      });
+    }
+
+    function updatetemperature() {
+      ctx.clearRect(0, 0, shadeCanvas.width, shadeCanvas.height);
+      var temp;
+      for (var zone in zones) {
+        for (var data in sensorData) {
+          if (sensorData[data].zone == zones[zone].name) {
+            temp = sensorData[data].temperature;
           }
-          var areaOptions = {
-            key: zones[zone].name,
-            toolTip:
-              "temperature Set: " +
-              sensorData[zones[zone].name][0].setTemperature +
-              "C",
-          };
-          $("img").mapster("set_options", {
-            areas: [
-              {
-                key: areaOptions.key,
-                toolTip: areaOptions.toolTip,
-              },
-            ],
-          });
-          var zonePosition = zones[zone];
-          var startX = (zonePosition.startX / 600) * shadeCanvas.width;
-          var startY = (zonePosition.startY / 400) * shadeCanvas.height;
-          var endX = (zonePosition.endX / 600) * shadeCanvas.width;
-          var endY = (zonePosition.endY / 400) * shadeCanvas.height;
+        }
+        var areaOptions = {
+          key: zones[zone].name,
+          toolTip: "temperature Set: " +
+            sensorData[zones[zone].name][0].setTemperature +
+            "C",
+        };
+        $("img").mapster("set_options", {
+          areas: [{
+            key: areaOptions.key,
+            toolTip: areaOptions.toolTip,
+          }, ],
+        });
+        var zonePosition = zones[zone];
+        var startX = (zonePosition.startX / 600) * shadeCanvas.width;
+        var startY = (zonePosition.startY / 400) * shadeCanvas.height;
+        var endX = (zonePosition.endX / 600) * shadeCanvas.width;
+        var endY = (zonePosition.endY / 400) * shadeCanvas.height;
 
-          var temperatureGradient =
-            (sensorData[zones[zone].name][0].temperature -
-              sensorData[zones[zone].name][0].lowerMargin) /
-            (sensorData[zones[zone].name][0].upperMargin -
-              sensorData[zones[zone].name][0].lowerMargin);
-          var red = Math.round(255 * temperatureGradient);
-          var blue = Math.round(255 * (1 - temperatureGradient));
-          ctx.fillStyle = "rgba(" + red / 2 + ", 255, " + blue + ", 0.5)";
+        var temperatureGradient =
+          (sensorData[zones[zone].name][0].temperature -
+            sensorData[zones[zone].name][0].lowerMargin) /
+          (sensorData[zones[zone].name][0].upperMargin -
+            sensorData[zones[zone].name][0].lowerMargin);
+        var red = Math.round(255 * temperatureGradient);
+        var blue = Math.round(255 * (1 - temperatureGradient));
+        ctx.fillStyle = "rgba(" + red / 2 + ", 255, " + blue + ", 0.5)";
 
-          ctx.beginPath();
-          if (endX > startX) {
-            var width = Math.abs(endX - startX);
-            if (endY > startY) {
-              var height = Math.abs(endY - startY);
-              ctx.rect(startX, startY, width, height);
-            } else {
-              var height = Math.abs(startY - endY);
-              ctx.rect(startX, endY, width, height);
-            }
+        ctx.beginPath();
+        if (endX > startX) {
+          var width = Math.abs(endX - startX);
+          if (endY > startY) {
+            var height = Math.abs(endY - startY);
+            ctx.rect(startX, startY, width, height);
           } else {
-            var width = Math.abs(startX - endX);
-            if (endY > startY) {
-              var height = Math.abs(endY - startY);
-              ctx.rect(endX, startY, width, height);
-            } else {
-              var height = Math.abs(startY - endY);
-              ctx.rect(endX, endY, width, height);
-            }
+            var height = Math.abs(startY - endY);
+            ctx.rect(startX, endY, width, height);
           }
-          ctx.fill();
+        } else {
+          var width = Math.abs(startX - endX);
+          if (endY > startY) {
+            var height = Math.abs(endY - startY);
+            ctx.rect(endX, startY, width, height);
+          } else {
+            var height = Math.abs(startY - endY);
+            ctx.rect(endX, endY, width, height);
+          }
+        }
+        ctx.fill();
+      }
+    }
+
+
+
+    $("#editButton").click(function() {
+      modal.querySelector(".modal-title").textContent = "Zone 1 Edit";
+      modal.querySelector(".modal-header");
+      document.getElementById("editButton").style.display = "none";
+      var div = document.createElement("div");
+      div.textContent = "set temp: ";
+      var setTempInput = document.createElement("input");
+      setTempInput.id = "setInput";
+      setTempInput.type = "number";
+      setTempInput.value =
+        sensorData[zones[zone].name][0].setTemperature;
+      var button = document.createElement("button");
+      button.classList.add("btn", "ms-3", "btn-primary");
+      button.textContent = "update";
+      button.id = "update";
+      button.addEventListener("click", function() {
+        var newTemp = setTempInput.value;
+        socket.emit("setTemperature", {
+          temperature: newTemp
+        });
+        modal.querySelector(".modal-footer").removeChild(button);
+        closeModal();
+      });
+      div.appendChild(setTempInput);
+      modal.querySelector(".modal-footer").appendChild(button);
+      modal.querySelector(".modal-body").innerHTML = "";
+      modal.querySelector(".modal-body").appendChild(div);
+    });
+    updatetemperature();
+  </script>
+  <script>
+    var gaugeData = {
+      datasets: [{
+        label: "Zone 1",
+        data: [200, 200, 200],
+        backgroundColor: [
+          "rgba(255, 0, 0, 0.2)",
+          "rgba(0, 255, 0, 0.2)",
+          "rgba(0, 0, 255, 0.2)",
+        ],
+        borderColor: [
+          "rgba(255, 0, 0, 0.2)",
+          "rgba(0, 255, 0, 0.2)",
+          "rgba(0, 0, 255, 0.2)",
+        ],
+        borderWidth: 1,
+        circumference: 180,
+        rotation: -90,
+        cutout: "80%",
+        needle: 300,
+      }, ],
+    };
+
+    var gaugeNeedle = {
+      id: "gaugeNeedle",
+      afterDatasetsDraw(chart, args, plugins) {
+        const {
+          ctx,
+          data
+        } = chart;
+        ctx.save();
+        const xCenter = chart.getDatasetMeta(0).data[0].x;
+        const yCenter = chart.getDatasetMeta(0).data[0].y;
+
+        const outerRadius = chart.getDatasetMeta(0).data[0].outerRadius;
+        const innerRadius = chart.getDatasetMeta(0).data[0].innerRadius;
+        const widthSlice = (outerRadius - innerRadius) / 2;
+        const radius = 15;
+        const angle = Math.PI / 180;
+
+        const needleValue = data.datasets[0].needleValue;
+
+        const dataTotal = data.datasets[0].data.reduce((a, b) => a + b, 0);
+        const circumference =
+          (chart.getDatasetMeta(0).data[0].circumference /
+            Math.PI /
+            data.datasets[0].data[0]) *
+          data.datasets[0].needle;
+
+        ctx.translate(xCenter, yCenter);
+        ctx.rotate(Math.PI * (circumference + 1.5));
+        //needle
+        ctx.beginPath();
+        ctx.strokeStyle = "grey";
+        ctx.fillStyle = "grey";
+        ctx.moveTo(0 - 15, 0);
+        ctx.lineTo(0, 0 - innerRadius - widthSlice);
+        ctx.lineTo(0 + 15, 0);
+        ctx.closePath();
+        ctx.stroke();
+        ctx.fill();
+
+        //dot
+        ctx.beginPath();
+        ctx.arc(0, 0, radius, 0, angle * 360, false);
+        ctx.fill();
+        ctx.restore();
+      },
+    };
+    const gaugeFlowMeter = {
+      id: "gaugeFlowMeter",
+      afterDatasetsDraw(chart, args, plugins) {
+        const {
+          ctx,
+          data
+        } = chart;
+
+        ctx.save();
+        const needleValue = data.datasets[0].needleValue;
+        const xCenter = chart.getDatasetMeta(0).data[0].x;
+        const yCenter = chart.getDatasetMeta(0).data[0].y;
+        const chartMetaData = chart.getDatasetMeta(0);
+
+        const circumference =
+          (chart.getDatasetMeta(0).data[0].circumference /
+            Math.PI /
+            data.datasets[0].data[0]) *
+          data.datasets[0].needle;
+
+        //flowmeter
+        ctx.fillStyle = "black";
+        ctx.font = "30px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText(data.datasets[0].needle + " kwh", xCenter, yCenter + 40);
+      },
+    };
+    const gaugeLabels = {
+      id: "gaugeLabels",
+      afterDatasetsDraw(chart, args, plugins) {
+        const {
+          ctx,
+          data
+        } = chart;
+        ctx.save();
+        const xCenter = chart.getDatasetMeta(0).data[0].x;
+        const yCenter = chart.getDatasetMeta(0).data[0].y;
+        const outer = chart.getDatasetMeta(0).data[0].outerRadius;
+        const inner = chart.getDatasetMeta(0).data[0].innerRadius;
+        ctx.fillStyle = "black";
+        ctx.font = "30px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText(data.datasets[0].label, xCenter, yCenter - outer - 10);
+        ctx.restore();
+      },
+    };
+    const chartAreaBorder = {
+      id: "chartAreaBorder",
+      beforeDraw(chart, args, options) {
+        const {
+          ctx,
+          chartArea: {
+            left,
+            top,
+            width,
+            height
+          },
+        } = chart;
+        const margin = 10;
+        const leftMargin = left - margin;
+        const topMargin = top - margin;
+        const widthMargin = width + 2 * margin;
+        const heightMargin = height + 2 * margin;
+        ctx.strokeRect(leftMargin, topMargin, widthMargin, heightMargin);
+        ctx.save();
+        ctx.restore();
+      },
+    };
+    const gaugeConfig = {
+      type: "doughnut",
+      data: gaugeData,
+      options: {
+        layout: {
+          padding: 20,
+        },
+        animation: {
+          animateRotate: false, // Disable rotation animation
+        },
+        aspectRatio: 1.2,
+        plugins: {
+          legend: {
+            display: false,
+          },
+          tooltip: {
+            enabled: false,
+          },
+        },
+      },
+      plugins: [gaugeNeedle, gaugeFlowMeter, gaugeLabels, chartAreaBorder],
+    };
+
+    function loadTempChart(key) {
+      var temp = [];
+      var upper = [];
+      var lower = [];
+      var set = [];
+      var labels = [];
+
+      var dynamicChartName = "myChart1_" + key;
+
+      // Get the sensor data for the given zone key
+      var zoneData = sensorData[key];
+      if (zoneData) {
+        // Iterate over the sensor data and push to temp and labels arrays
+        for (var i = 0; i < zoneData.length; i++) {
+          temp.push(zoneData[i].temperature.toFixed(2));
+          labels.push(zoneData[i].timestamp.split("T")[1].substring(0, 8));
+          upper.push(zoneData[i].upperMargin);
+          lower.push(zoneData[i].lowerMargin);
+          set.push(zoneData[i].setTemperature);
         }
       }
-      $("#editButton").click(function () {
-        modal.querySelector(".modal-title").textContent = "Zone 1 Edit";
-      });
-      updatetemperature();
-    </script>
-    <script>
-      var gaugeData = {
-        datasets: [
+      temp.reverse();
+      labels.reverse();
+      upper.reverse();
+      lower.reverse();
+      set.reverse();
+
+      var tempChart = document.getElementById("tempChart");
+      var tempCtx = tempChart.getContext("2d");
+      var time = new Date().toISOString().split("T")[1].substring(0, 8);
+      var data = {
+        labels: labels,
+        datasets: [{
+            label: "temperature",
+            data: temp,
+            fill: false,
+            hoverBackgroundColor: "rgba(75, 192, 192, 0.4)",
+            borderColor: "rgb(75, 192, 192)",
+            tension: 0.1,
+            pointstyle: "dash",
+          },
           {
-            label: "Zone 1",
-            data: [200, 200, 200],
-            backgroundColor: [
-              "rgba(255, 0, 0, 0.2)",
-              "rgba(0, 255, 0, 0.2)",
-              "rgba(0, 0, 255, 0.2)",
-            ],
-            borderColor: [
-              "rgba(255, 0, 0, 0.2)",
-              "rgba(0, 255, 0, 0.2)",
-              "rgba(0, 0, 255, 0.2)",
-            ],
-            borderWidth: 1,
-            circumference: 180,
-            rotation: -90,
-            cutout: "80%",
-            needle: 300,
+            label: "uppermargin",
+            data: upper,
+            fill: false,
+            borderColor: "red",
+            tension: 0.1,
+            pointStyle: "dash",
+          },
+          {
+            label: "lowermargin",
+            data: lower,
+            fill: false,
+            borderColor: "blue",
+            tension: 0.1,
+            pointstyle: "dash",
+          },
+          {
+            label: "set Temperature",
+            data: set,
+            fill: false,
+            borderColor: "green",
+            tension: 0.1,
+            pointstyle: "dash",
           },
         ],
       };
-
-      var gaugeNeedle = {
-        id: "gaugeNeedle",
-        afterDatasetsDraw(chart, args, plugins) {
-          const { ctx, data } = chart;
-          ctx.save();
-          const xCenter = chart.getDatasetMeta(0).data[0].x;
-          const yCenter = chart.getDatasetMeta(0).data[0].y;
-
-          const outerRadius = chart.getDatasetMeta(0).data[0].outerRadius;
-          const innerRadius = chart.getDatasetMeta(0).data[0].innerRadius;
-          const widthSlice = (outerRadius - innerRadius) / 2;
-          const radius = 15;
-          const angle = Math.PI / 180;
-
-          const needleValue = data.datasets[0].needleValue;
-
-          const dataTotal = data.datasets[0].data.reduce((a, b) => a + b, 0);
-          const circumference =
-            (chart.getDatasetMeta(0).data[0].circumference /
-              Math.PI /
-              data.datasets[0].data[0]) *
-            data.datasets[0].needle;
-
-          ctx.translate(xCenter, yCenter);
-          ctx.rotate(Math.PI * (circumference + 1.5));
-          //needle
-          ctx.beginPath();
-          ctx.strokeStyle = "grey";
-          ctx.fillStyle = "grey";
-          ctx.moveTo(0 - 15, 0);
-          ctx.lineTo(0, 0 - innerRadius - widthSlice);
-          ctx.lineTo(0 + 15, 0);
-          ctx.closePath();
-          ctx.stroke();
-          ctx.fill();
-
-          //dot
-          ctx.beginPath();
-          ctx.arc(0, 0, radius, 0, angle * 360, false);
-          ctx.fill();
-          ctx.restore();
-        },
-      };
-      const gaugeFlowMeter = {
-        id: "gaugeFlowMeter",
-        afterDatasetsDraw(chart, args, plugins) {
-          const { ctx, data } = chart;
-
-          ctx.save();
-          const needleValue = data.datasets[0].needleValue;
-          const xCenter = chart.getDatasetMeta(0).data[0].x;
-          const yCenter = chart.getDatasetMeta(0).data[0].y;
-          const chartMetaData = chart.getDatasetMeta(0);
-
-          const circumference =
-            (chart.getDatasetMeta(0).data[0].circumference /
-              Math.PI /
-              data.datasets[0].data[0]) *
-            data.datasets[0].needle;
-
-          //flowmeter
-          ctx.fillStyle = "black";
-          ctx.font = "30px Arial";
-          ctx.textAlign = "center";
-          ctx.fillText(data.datasets[0].needle + " kwh", xCenter, yCenter + 40);
-        },
-      };
-      const gaugeLabels = {
-        id: "gaugeLabels",
-        afterDatasetsDraw(chart, args, plugins) {
-          const { ctx, data } = chart;
-          ctx.save();
-          const xCenter = chart.getDatasetMeta(0).data[0].x;
-          const yCenter = chart.getDatasetMeta(0).data[0].y;
-          const outer = chart.getDatasetMeta(0).data[0].outerRadius;
-          const inner = chart.getDatasetMeta(0).data[0].innerRadius;
-          ctx.fillStyle = "black";
-          ctx.font = "30px Arial";
-          ctx.textAlign = "center";
-          ctx.fillText(data.datasets[0].label, xCenter, yCenter - outer - 10);
-          ctx.restore();
-        },
-      };
-      const chartAreaBorder = {
-        id: "chartAreaBorder",
-        beforeDraw(chart, args, options) {
-          const {
-            ctx,
-            chartArea: { left, top, width, height },
-          } = chart;
-          const margin = 10;
-          const leftMargin = left - margin;
-          const topMargin = top - margin;
-          const widthMargin = width + 2 * margin;
-          const heightMargin = height + 2 * margin;
-          ctx.strokeRect(leftMargin, topMargin, widthMargin, heightMargin);
-          ctx.save();
-          ctx.restore();
-        },
-      };
-      const gaugeConfig = {
-        type: "doughnut",
-        data: gaugeData,
+      var tempConfig = {
+        type: "line",
+        data: data,
         options: {
-          layout: {
-            padding: 20,
-          },
-          animation: {
-            animateRotate: false, // Disable rotation animation
-          },
-          aspectRatio: 1.2,
           plugins: {
             legend: {
-              display: false,
-            },
-            tooltip: {
-              enabled: false,
+              display: false, // Remove legend
             },
           },
         },
-        plugins: [gaugeNeedle, gaugeFlowMeter, gaugeLabels, chartAreaBorder],
       };
-      function loadTempChart(key) {
-        var temp = [];
-        var upper = [];
-        var lower = [];
-        var set = [];
-        var labels = [];
 
-        // Get the sensor data for the given zone key
-        var zoneData = sensorData[key];
-        if (zoneData) {
-          // Iterate over the sensor data and push to temp and labels arrays
-          for (var i = 0; i < zoneData.length; i++) {
-            temp.push(zoneData[i].temperature.toFixed(2));
-            labels.push(zoneData[i].timestamp.split("T")[1].substring(0, 8));
-            upper.push(zoneData[i].upperMargin);
-            lower.push(zoneData[i].lowerMargin);
-            set.push(zoneData[i].setTemperature);
-          }
-        }
-        temp.reverse();
-        labels.reverse();
-        upper.reverse();
-        lower.reverse();
-        set.reverse();
+      dynamicCharts[dynamicChartName] = new Chart(tempCtx, tempConfig);
 
-        var tempChart = document.getElementById("tempChart");
-        var tempCtx = tempChart.getContext("2d");
-        var time = new Date().toISOString().split("T")[1].substring(0, 8);
-        var data = {
-          labels: labels,
-          datasets: [
-            {
-              label: "temperature",
-              data: temp,
-              fill: false,
-              hoverBackgroundColor: "rgba(75, 192, 192, 0.4)",
-              borderColor: "rgb(75, 192, 192)",
-              tension: 0.1,
-              pointstyle: "dash",
-            },
-            {
-              label: "uppermargin",
-              data: upper,
-              fill: false,
-              borderColor: "red",
-              tension: 0.1,
-              pointStyle: "dash",
-            },
-            {
-              label: "lowermargin",
-              data: lower,
-              fill: false,
-              borderColor: "blue",
-              tension: 0.1,
-              pointstyle: "dash",
-            },
-            {
-              label: "set Temperature",
-              data: set,
-              fill: false,
-              borderColor: "green",
-              tension: 0.1,
-              pointstyle: "dash",
-            },
-          ],
-        };
-        var tempConfig = {
-          type: "line",
-          data: data,
-          options: {
-            plugins: {
-              legend: {
-                display: false, // Remove legend
-              },
-            },
-          },
-        };
-        var tsdf = new Chart(tempCtx, tempConfig);
-      }
-      updatetemperature();
-      var ctx1 = document.getElementById("myChart1").getContext("2d");
-      var myChart1 = new Chart(ctx1, gaugeConfig);
-    </script>
-  </body>
+    }
+    updatetemperature();
+    var ctx1 = document.getElementById("myChart1").getContext("2d");
+    var myChart1 = new Chart(ctx1, gaugeConfig);
+  </script>
+</body>
+
 </html>
