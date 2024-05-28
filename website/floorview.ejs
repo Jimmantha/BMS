@@ -86,7 +86,7 @@
       var ejsData = <%- JSON.stringify(data) %>;
     </script>
     <script>
-      var sensorData = <%- JSON.stringify(sensorData) %>;
+      var orginalSensorData = <%- JSON.stringify(sensorData) %>;
     </script>
     <script>
       var timestampTemperaturePairs = [];
@@ -99,27 +99,32 @@
 
       var image = document.querySelector("img");
       image.src = floorplan;
-      zones = ejsData[0].zones;
-
-      var sensordata = {};
-      for (zone in zones) {
-        var timestampTemperaturePairs = []; // Changed from timestampZonePairs
-        for (data in sensorData) {
-          if (sensorData[data].metaData.zone == zones[zone].name) {
-            timestampTemperaturePairs.push({
-              zone: zones[zone].name,
-              temperature: sensorData[data].temperature,
-              timestamp: sensorData[data].timestamp,
-              setTemperature: sensorData[data].setTemperature,
-              upperMargin:
-                sensorData[data].setTemperature + sensorData[data].upperMargin,
-              lowerMargin:
-                sensorData[data].setTemperature - sensorData[data].lowerMargin,
-            });
+      var sensorData = {};
+      function loadData() {
+        zones = ejsData[0].zones;
+        for (zone in zones) {
+          var timestampTemperaturePairs = []; // Changed from timestampZonePairs
+          for (data in orginalSensorData) {
+            if (orginalSensorData[data].metaData.zone == zones[zone].name) {
+              timestampTemperaturePairs.push({
+                zone: zones[zone].name,
+                temperature: orginalSensorData[data].temperature,
+                timestamp: orginalSensorData[data].timestamp,
+                setTemperature: orginalSensorData[data].setTemperature,
+                upperMargin:
+                  orginalSensorData[data].setTemperature +
+                  orginalSensorData[data].upperMargin,
+                lowerMargin:
+                  orginalSensorData[data].setTemperature -
+                  orginalSensorData[data].lowerMargin,
+              });
+            }
+            sensorData[zones[zone].name] = timestampTemperaturePairs; // Correct variable name
           }
-          sensordata[zones[zone].name] = timestampTemperaturePairs; // Correct variable name
         }
       }
+      loadData();
+
       function openModal() {
         modal.style.display = "block";
       }
@@ -161,8 +166,8 @@
           for (zone in zones) {
             if (e.key == zones[zone].name) {
               modal.querySelector(".modal-body").textContent =
-                "Temperature is " +
-                sensordata[zones[zone].name][0].temperature.toFixed(2) +
+                "Temperature Set: " +
+                sensorData[zones[zone].name][0].setTemperature +
                 "C";
               // create modal body elements
               var div = document.createElement("div");
@@ -173,7 +178,7 @@
               setTempInput.id = "setInput";
               setTempInput.type = "number";
               setTempInput.value =
-                sensordata[zones[zone].name][0].setTemperature;
+                sensorData[zones[zone].name][0].setTemperature;
               var button = document.createElement("button");
               button.classList.add("btn", "ms-3", "btn-primary");
               button.textContent = "update";
@@ -215,8 +220,8 @@
           var areaOptions = {
             key: zones[zone].name,
             toolTip:
-              "temperature is " +
-              sensordata[zones[zone].name][0].setTemperature.toFixed(2) +
+              "temperature Set: " +
+              sensorData[zones[zone].name][0].setTemperature +
               "C",
           };
           $("img").mapster("set_options", {
@@ -234,10 +239,10 @@
           var endY = (zonePosition.endY / 400) * shadeCanvas.height;
 
           var temperatureGradient =
-            (sensordata[zones[zone].name][0].temperature -
-              sensordata[zones[zone].name][0].lowerMargin) /
-            (sensordata[zones[zone].name][0].upperMargin -
-              sensordata[zones[zone].name][0].lowerMargin);
+            (sensorData[zones[zone].name][0].temperature -
+              sensorData[zones[zone].name][0].lowerMargin) /
+            (sensorData[zones[zone].name][0].upperMargin -
+              sensorData[zones[zone].name][0].lowerMargin);
           var red = Math.round(255 * temperatureGradient);
           var blue = Math.round(255 * (1 - temperatureGradient));
           ctx.fillStyle = "rgba(" + red / 2 + ", 255, " + blue + ", 0.5)";
@@ -427,7 +432,7 @@
         var labels = [];
 
         // Get the sensor data for the given zone key
-        var zoneData = sensordata[key];
+        var zoneData = sensorData[key];
         if (zoneData) {
           // Iterate over the sensor data and push to temp and labels arrays
           for (var i = 0; i < zoneData.length; i++) {
@@ -502,7 +507,6 @@
       updatetemperature();
       var ctx1 = document.getElementById("myChart1").getContext("2d");
       var myChart1 = new Chart(ctx1, gaugeConfig);
-      console.log(sensorData.length);
     </script>
   </body>
 </html>
