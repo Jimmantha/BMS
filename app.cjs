@@ -80,16 +80,15 @@ io.on('connection', (socket) => {
     SensorData.watch().on('change', async () => {
         io.emit('data');
     });
+
     socket.on('setTemperature', (data) => {
         setTemp = JSON.parse(JSON.stringify(data));
-        //{"temperature":"25"}
         dataSend = "set_temp_" + setTemp.temperature;
         console.log('Temperature:', data.temperature);
         client.publish('coolerControl', dataSend);
     });
     socket.on('setUpperMargin', (data) => {
         setUpper = JSON.parse(JSON.stringify(data));
-        //{"upperMargin":"25"}
         dataSend = "set_error_high_" + setUpper.upperMargin;
         console.log('Upper Margin:', data.upperMargin);
         client.publish('coolerControl', dataSend);
@@ -97,7 +96,6 @@ io.on('connection', (socket) => {
     );
     socket.on('setLowerMargin', (data) => {
         setLower = JSON.parse(JSON.stringify(data));
-        //{"lowerMargin":"25"}
         dataSend = "set_error_low_" + setLower.lowerMargin;
         console.log('Lower Margin:', data.lowerMargin);
         client.publish('coolerControl', dataSend);
@@ -137,8 +135,18 @@ client.on('message', (topic, message) => {
             newSensorData.save().then(() => {
                 savetime = new Date();
             });
+        } else if (saveTime == null) {
+            newSensorData.save().then(() => {
+                savetime = new Date();
+            });
         } else {
-            io.emit('data', { data: newSensorData });
+            sensorData = SensorData.find().sort({ timestamp: 1 }).limit(50);
+            sensorData.push(newSensorData);
+            sensorData.sort({ timestamp: -1 });
+            io.on('connection', (socket) => {
+                socket.emit('sensorData', { sensorData: sensorData });
+            }
+            );
         }
     }
 });
@@ -146,7 +154,7 @@ client.on('message', (topic, message) => {
 // Fetch 50 latest sensor data from MongoDB 
 async function getSensorData() {
     //limit to 1200 for 
-    const data = await SensorData.find().sort({ timestamp: -1 }).limit(50);
+    var data = await SensorData.find().sort({ timestamp: -1 }).limit(50);
     return data;
 }
 

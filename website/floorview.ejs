@@ -86,7 +86,31 @@
       var ejsData = <%- JSON.stringify(data) %>;
     </script>
     <script>
-      var orginalSensorData = <%- JSON.stringify(sensorData) %>;
+        var orginalSensorData = <%- JSON.stringify(sensorData) %>;
+      function loadData() {
+
+             zones = ejsData[0].zones;
+             for (zone in zones) {
+               var timestampTemperaturePairs = []; // Changed from timestampZonePairs
+               for (data in orginalSensorData) {
+                 if (orginalSensorData[data].metaData.zone == zones[zone].name) {
+                   timestampTemperaturePairs.push({
+                     zone: zones[zone].name,
+                     temperature: orginalSensorData[data].temperature,
+                     timestamp: orginalSensorData[data].timestamp,
+                     setTemperature: orginalSensorData[data].setTemperature,
+                     upperMargin:
+                       orginalSensorData[data].setTemperature +
+                       orginalSensorData[data].upperMargin,
+                     lowerMargin:
+                       orginalSensorData[data].setTemperature -
+                       orginalSensorData[data].lowerMargin,
+                   });
+                 }
+                 sensorData[zones[zone].name] = timestampTemperaturePairs; // Correct variable name
+               }
+             }
+           }
     </script>
     <script>
       var timestampTemperaturePairs = [];
@@ -100,31 +124,12 @@
       var image = document.querySelector("img");
       image.src = floorplan;
       var sensorData = {};
-      function loadData() {
-        zones = ejsData[0].zones;
-        for (zone in zones) {
-          var timestampTemperaturePairs = []; // Changed from timestampZonePairs
-          for (data in orginalSensorData) {
-            if (orginalSensorData[data].metaData.zone == zones[zone].name) {
-              timestampTemperaturePairs.push({
-                zone: zones[zone].name,
-                temperature: orginalSensorData[data].temperature,
-                timestamp: orginalSensorData[data].timestamp,
-                setTemperature: orginalSensorData[data].setTemperature,
-                upperMargin:
-                  orginalSensorData[data].setTemperature +
-                  orginalSensorData[data].upperMargin,
-                lowerMargin:
-                  orginalSensorData[data].setTemperature -
-                  orginalSensorData[data].lowerMargin,
-              });
-            }
-            sensorData[zones[zone].name] = timestampTemperaturePairs; // Correct variable name
-          }
-        }
-      }
       loadData();
-
+      socket.on("sensorData", function (data) {
+        sensorData = data.sensorData;
+        loadData();
+        updatetemperature();
+      });
       function openModal() {
         modal.style.display = "block";
       }
