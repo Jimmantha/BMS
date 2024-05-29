@@ -64,15 +64,16 @@
   <script>
     var orginalSensorData = <%- JSON.stringify(sensorData) %>;
 
-
-    function loadData() {
-      for (var data in ejsData) {
+    $("#floorSelector").empty(); 
+      for (var data in ejsData) {   
         var option = document.createElement('option');
         option.value = ejsData[data].floorlevel;
         option.text = "Floor " + ejsData[data].floorlevel; // Assuming you want to use the same value for the display text
-        $("#zoneSelector").append(option);
+        $("#floorSelector").append(option);
       }
-      floorlevel = $("#zoneSelector").val();
+    function loadData() {
+
+      floorlevel = $("#floorSelector").val();
       zones = ejsData[floorlevel - 1].zones;
       for (zone in zones) {
         var timestampTemperaturePairs = []; // Changed from timestampZonePairs
@@ -179,7 +180,6 @@
                 "C";
               modal.querySelector(".modal-body").innerHTML += "&#177";
               modal.querySelector(".modal-body").textContent +=
-              
                 (sensorData[zones[zone].name][0].setTemperature - sensorData[zones[zone].name][0].lowerMargin) + "C";
               // create modal body elements
               var div = document.createElement("div");
@@ -679,7 +679,11 @@
     })
     document.body.appendChild(testbutton);
     createGauge();
-
+    $('#floorSelector').on('change', ()=>{
+      loadData();
+      createArea();
+      updatetemperature();
+    })  
     function loadTempChart(key) {
       var temp = [];
       var upper = [];
