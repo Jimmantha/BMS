@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DWG to JPEG Conversion</title>
+    <%-include("./header")%>
+  </head>
+
+  <body>
+    <button
+      type="button"
+      class="btn btn-primary mt-5 ms-3"
+      data-bs-toggle="modal"
+      data-bs-target="#uploadModal"
+    >
+      upload floorplan
+    </button>
+    <input
+    type="button"
+    class="btn btn-info mt-5"
+    style="margin-left: 450px !important"
+    id="zoneLevel"
+  >
+    
+  </input>
+    <button
+      type="button"
+      class="btn btn-info mt-5"
+      style="margin-left: 450px !important"
+      id="clear"
+    >
+      clear
+    </button>
+
+    <!-- Modal -->
+    <div
+      class="modal fade flex"
+      id="uploadModal"
+      tabindex="-1"
+      aria-labelledby="uploadModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="uploadModalLabel">
+              FloorPlan import
+            </h1>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div>
+              <div class="flex">
+                <input type="file" id="fileInput" accept=".pdf" />
+                Page Number:
+                <input
+                  type="number"
+                  id="pageNumber"
+                  onchange="convertTojpg()"
+                />
+                <div class="justify-content-end"></div>
+                <img src="#" class="mt-3" alt="upload Image" id="picture" />
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <div class="hstack">
+              <div class="hstack gap-3">
+                <button class="btn btn-warning" id="rotateLeft">
+                  rotate left
+                </button>
+                <button id="rotateRight" class="btn btn-warning">
+                  rotate Right
+                </button>
+              </div>
+            </div>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+              onclick="cropImage()"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!--table-->
+    <div class="table">
+      <div class="row">
+        <div class="col-6">
+          <div>
+            <div class="col-6 ms-5 mt-5">
+              <img
+                id="new-floorplan"
+                class="p-6 m-6 z-0"
+                src="https://placehold.co/600x400"
+                usemap="#imagemap"
+                style="opacity: 0.5; position: absolute"
+              />
+              <canvas
+                id="shadecanvas"
+                style="
+                  position: relative;
+                  background-color: white;
+                  height: 400px;
+                  width: 600px;
+                  z-index: -1;
+                "
+              ></canvas>
+              <div class="table" style="position: relative">
+                <div class="row">
+                  <div class="col">
+                    <form>
+                      <div style="height: 30px"><b>Zone selection</b></div>
+                      <input
+                        type="radio"
+                        id="Zone1"
+                        name="zone"
+                        value="Zone1"
+                      />
+                      <label for="Zone1">Zone1</label><br />
+                      <input
+                        type="radio"
+                        id="Zone2"
+                        name="zone"
+                        value="Zone2"
+                      />
+                      <label for="Zone2">Zone2</label><br />
+                      <input
+                        type="radio"
+                        id="Zone3"
+                        name="zone"
+                        value="Zone3"
+                      />
+                      <label for="Zone3">Zone3</label>
+                    </form>
+                  </div>
+                  <div class="col">
+                    <h2 id="mouseCoordinates">
+                      Mouse is positioned at X:<span id="x"></span>, Y:<span
+                        id="y"
+                      ></span>
+                    </h2>
+                  </div>
+                </div>
+                <div>
+                  <input
+                    type="button"
+                    style="width: 200px"
+                    value="update"
+                    id="update"
+                  />
+                  <span class="row justify-content-end">
+                    <input
+                      type="button"
+                      style="width: 200px"
+                      value="submit"
+                      id="submit"
+                    />
+                  </span>
+                </div>
+              </div>
+            </div>
+            <span style="opacity: 0">s</span>
+            <map name="imagemap" id="map" class="opacity"> </map>
+          </div>
+        </div>
+        <div class="col-5">
+          <table class="table m-5" id="mytable">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Type</th>
+                <th>Graph type</th>
+                <th>Category</th>
+              </tr>
+            </thead>
+          </table>
+          <button class="ms-5" onclick="updateVar()">Table update</button>
+        </div>
+      </div>
+    </div>
+    <!--end of table-->
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+      crossorigin="anonymous"
+    ></script>
+    <!--upload modal scripts-->
+    <script>
+      var zonelist;
+      var imageData;
+      var zoneLevel = document.getElementById("zoneLevel");
+      var floor = zoneLevel.value;
+      function reinitializeMapster() {
+        $("img").mapster(
+          (options = {
+            stroke: true,
+            fillColor: "222222",
+            fillOpacity: 0.3,
+            singleSelect: true,
+            onClick: function (e) {
+              $("input[name='zone']").prop("checked", false);
+              $("input[name='zone'][value='" + zonelist[e.key] + "']").prop(
+                "checked",
+                true
+              );
+              run(zonelist[e.key]);
+            },
+          })
+        );
+        $("#mapster_el").css("opacity", "0.5");
+      }
+      var el = document.getElementById("picture");
+      var vanilla = new Croppie(el, {
+        viewport: { width: 600, height: 400 },
+        boundary: { width: 1000, height: 800 },
+        showZoomer: true,
+        enableResize: false,
+        enableOrientation: true,
+      });
+      var newImage;
+      $(".cr-slider").attr({ min: 0.5, max: 4.0 });
+
+      //ties new image to variable newImage to be use when modal closes
+      function cropImage() {
+        vanilla
+          .result({
+            type: "blob", // Use canvas for better quality
+            size: "viewport", // Use original size of the cropped image
+          })
+          .then(function (croppedImage) {
+            newImage = croppedImage;
+          });
+      }
+      $("#rotateLeft").click(function () {
+        vanilla.rotate(-90);
+      });
+      $("#rotateRight").click(function () {
+        vanilla.rotate(90);
+      });
+      $("#upload").click(function () {
+        floorDetails = { zones: {} };
+
+        console.log("uploading");
+        convertTojpg();
+      });
+
+      function convertTojpg() {
+        var fileInput = document.getElementById("fileInput");
+        var pageNumberInput = document.getElementById("pageNumber");
+        var pageNumber = parseInt(pageNumberInput.value);
+        var file = fileInput.files[0];
+
+        var url = URL.createObjectURL(file);
+        var pdf = new pdfjsLib.getDocument(url);
+        pdf.promise.then(function (pdf) {
+          console.log("Number of pages: " + pdf.numPages);
+
+          pdf.getPage(pageNumber).then(function (page) {
+            var viewport = page.getViewport({ scale: 1 });
+            var canvas = document.createElement("canvas");
+            var context = canvas.getContext("2d");
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+
+            var renderContext = {
+              canvasContext: context,
+              viewport: viewport,
+            };
+            var renderTask = page.render(renderContext);
+
+            renderTask.promise.then(function () {
+              var imageData = canvas.toDataURL("image/jpeg");
+              // Use the imageData as needed
+              console.log(imageData);
+              uploadImage(imageData);
+            });
+          });
+        });
+      }
+
+      function uploadImage(imageData) {
+        try {
+          var imageBase64 = imageData; //image data base 64
+          imageView = document.getElementById("picture");
+          picture.setAttribute("src", imageBase64);
+          reinitializeMapster();
+
+          vanilla.bind({
+            url: imageBase64,
+          });
+          $("#uploadModal").off("hidden.bs.modal");
+          $("#uploadModal").on("hidden.bs.modal", function () {
+            floorDetails = {};
+            var url = URL.createObjectURL(newImage);
+            document.getElementById("new-floorplan").src = url;
+
+            var reader = new FileReader();
+            reader.onload = function () {
+              var b64 = reader.result;
+              console.log(b64);
+              floorDetails = { floorplan: b64, zones: {} };
+            };
+            reader.readAsDataURL(newImage);
+            reinitializeMapster();
+          });
+        } catch (error) {}
+        console.log(newImage);
+      }
+    </script>
+    <!--zone creation scripts-->
+    <script>
+      var selectedZone;
+      var option;
+      floorDetails = { floor: 1, zones: {} };
+      img = document.getElementById("new-floorplan");
+      $(document).on("click", "img", function (event) {
+        if (selectedZone == null) {
+          alert("please select a zone");
+          return;
+        }
+        getCoordinates(event);
+      });
+      $("input[name='zone']").on("change", function () {
+        selectedZone = $("input[name='zone']:checked").val();
+      });
+      function getCoordinates(event) {
+        var imgRect = img.getBoundingClientRect();
+
+        // Calculate the offset of the mouse click within the image
+        var offsetX = event.clientX - imgRect.left;
+        var offsetY = event.clientY - imgRect.top;
+
+        // Update the coordinates displayed in the HTML
+        $("#x").text(offsetX.toFixed(0));
+        $("#y").text(offsetY.toFixed(0));
+
+        if (
+          floorDetails.zones.hasOwnProperty(selectedZone) &&
+          "startX" in floorDetails.zones[selectedZone] &&
+          "endX" in floorDetails.zones[selectedZone]
+        ) {
+          delete floorDetails.zones[selectedZone];
+        }
+
+        if (
+          floorDetails.zones.hasOwnProperty(selectedZone) &&
+          "startX" in floorDetails.zones[selectedZone]
+        ) {
+          floorDetails.zones[selectedZone].endX = offsetX.toFixed(0);
+          floorDetails.zones[selectedZone].endY = offsetY.toFixed(0);
+        } else {
+          floorDetails.zones[selectedZone] = {
+            startX: offsetX.toFixed(0),
+            startY: offsetY.toFixed(0),
+          };
+          console.log(floorDetails);
+        }
+      }
+      $(document).ready(function () {
+        $("#update").click(function () {
+          console.log(floorDetails);
+          var imagemap = document.getElementById("map");
+          var floorplanWrap = document.getElementById("shadecanvas");
+          var ctx = floorplanWrap.getContext("2d");
+          ctx.clearRect(0, 0, floorplanWrap.width, floorplanWrap.height);
+          floorplanWrap.innerHTML = ""; // Clear any existing content
+          zonelist = [];
+          for (var zone in floorDetails.zones) {
+            if (zone.startsWith("Zone")) {
+              var zonePosition = floorDetails.zones[zone];
+              ctx.beginPath(); // Start a new path
+              ctx.fillStyle = "red";
+              ctx.imageSmoothingEnabled = false;
+              ctx.strokeStyle = "black"; // Set the color of the border
+              ctx.lineWidth = 3;
+              if (
+                zonePosition.startX !== undefined &&
+                zonePosition.startY !== undefined &&
+                zonePosition.endX !== undefined &&
+                zonePosition.endY !== undefined
+              ) {
+                var startX = (zonePosition.startX / 600) * floorplanWrap.width; // Assuming portview width is 600
+                var startY = (zonePosition.startY / 400) * floorplanWrap.height; // Assuming portview height is 400
+                var endX = (zonePosition.endX / 600) * floorplanWrap.width; // Assuming portview width is 600
+                var endY = (zonePosition.endY / 400) * floorplanWrap.height; // Assuming portview height is 400
+                if (endX > startX) {
+                  var width = Math.abs(endX - startX);
+                  if (endY > startY) {
+                    var height = Math.abs(endY - startY);
+                    ctx.rect(startX, startY, width, height);
+                  } else {
+                    var height = Math.abs(startY - endY);
+                    ctx.rect(startX, endY, width, height);
+                  }
+                } else {
+                  var width = Math.abs(startX - endX);
+                  if (endY > startY) {
+                    var height = Math.abs(endY - startY);
+                    ctx.rect(endX, startY, width, height);
+                  } else {
+                    var height = Math.abs(startY - endY);
+                    ctx.rect(endX, endY, width, height);
+                  }
+                }
+                ctx.fill();
+              }
+
+              if (floorDetails.zones.hasOwnProperty(zone)) {
+                var existingArea = imagemap.querySelector(
+                  'area[alt="' + zone + '"]'
+                );
+                if (existingArea) {
+                  // Remove the existing area
+                  existingArea.remove();
+                }
+                // Create <area> elements for each zone
+                var area = document.createElement("area");
+                area.setAttribute("shape", "rect");
+                area.setAttribute(
+                  "coords",
+                  floorDetails.zones[zone].startX +
+                    "," +
+                    floorDetails.zones[zone].startY +
+                    "," +
+                    floorDetails.zones[zone].endX +
+                    "," +
+                    floorDetails.zones[zone].endY
+                );
+                area.setAttribute("href", "#"); // Set the href attribute as needed
+                area.setAttribute("alt", zone);
+                area.setAttribute("data-mapkey", zone);
+                area.setAttribute("id", zone);
+
+                // Append <new area> element to the <map> element
+                imagemap.appendChild(area);
+                zonelist.push(zone);
+              }
+            }
+          }
+          console.log(zonelist);
+          // Update the usemap attribute of the <img> element
+          document
+            .getElementById("new-floorplan")
+            .setAttribute("usemap", "#imagemap");
+          reinitializeMapster();
+        });
+      });
+      $(document).ready(function () {
+        $("#submit").click(function (event) {
+          event.preventDefault(); // Prevent the default form submission
+          floorDetails.floorLevel = 2;
+          floorDetails.buildingName = "building-1";
+          var formData = floorDetails;
+
+          // Make the POST request
+          fetch("submit", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(formData),
+          });
+        });
+      });
+      $("#clear").click(function () {
+        clear();
+      });
+
+      function clear() {
+        floorDetails = { floor: 1 };
+
+        $("#map").empty();
+        reinitializeMapster();
+        console.log("cleared", floorDetails);
+        floorplanWrap = document.getElementById("shadecanvas");
+        ctx = floorplanWrap.getContext("2d");
+        ctx.clearRect(0, 0, floorplanWrap.width, floorplanWrap.height);
+      }
+
+      reinitializeMapster();
+    </script>
+    <!--table creation scripts-->
+    <script>
+      var x = 0;
+      var zonedatas = {
+        Zone1: {
+          sensor1: {
+            sensorID: 1,
+            sensorType: "temperature",
+            graphType: "line",
+            category: "temperature",
+          },
+          sensor2: {
+            sensorID: 2,
+            sensorType: "humidity",
+            graphType: "line",
+            category: "humidity",
+          },
+        },
+        Zone2: {
+          sensor1: {
+            sensorID: 3,
+            sensorType: "temperature",
+            graphType: "line",
+            category: "temperature",
+          },
+          sensor2: {
+            sensorID: 4,
+            sensorType: "humidity",
+            graphType: "line",
+            category: "humidity",
+          },
+        },
+        Zone3: {
+          sensor1: {
+            sensorID: 5,
+            sensorType: "temperature",
+            graphType: "line",
+            category: "temperature",
+          },
+        },
+      };
+      var selectedZone;
+      function run(selected) {
+        if (selected != null) {
+          selectedZone = zonedatas[selected];
+        }
+
+        console.log(selectedZone);
+        var table = document.getElementById("mytable");
+        var rowCount = table.rows.length;
+
+        for (var i = rowCount - 1; i > 0; i--) {
+          table.deleteRow(i);
+        }
+
+        for (var sensor in selectedZone) {
+          var row = table.insertRow(-1);
+          var cell1 = row.insertCell(0);
+          var cell2 = row.insertCell(1);
+          var cell3 = row.insertCell(2);
+          var cell4 = row.insertCell(3);
+          cell1.innerHTML = selectedZone[sensor].sensorID;
+          cell2.innerHTML = selectedZone[sensor].sensorType;
+          cell3.innerHTML = selectedZone[sensor].graphType;
+          cell4.innerHTML = selectedZone[sensor].category;
+          console.log(sensor);
+        }
+        var typeDropDown = `
+        <select id="_type">
+          <option value="temperature">temperature</option>
+          <option value="humidity">humidity</option>
+          <option value="pressure">pressure</option>
+          <option value="light">light</option>
+          <option value="motion">motion</option>
+        </select>
+          `;
+
+        var graphTypeDropDown = `
+        <select id="_graph">
+          <option value="line">line</option>
+          <option value="bar">bar</option>
+          <option value="pie">pie</option>
+          <option value="scatter">scatter</option>
+          <option value="area">area</option>
+        </select>
+        `;
+
+        var categoryDropDown = `
+        <select id="_category">
+          <option value="Aircon">Aircon</option>
+          <option value="Lighting">Lighting</option>
+          <option value="others">others</option>
+        </select>
+        `;
+
+        var row = table.insertRow(-1);
+        var cell1 = row.insertCell(0);
+        var cell2 = row.insertCell(1);
+        var cell3 = row.insertCell(2);
+        var cell4 = row.insertCell(3);
+        cell1.innerHTML = '<input type="text" value="" id="_id">';
+        cell2.innerHTML = typeDropDown;
+        cell3.innerHTML = graphTypeDropDown;
+        cell4.innerHTML = categoryDropDown;
+      }
+
+      function updateVar() {
+        id = document.getElementById("_id");
+        type = document.getElementById("_type");
+        graph = document.getElementById("_graph");
+        category = document.getElementById("_category");
+        x = 0;
+        for (datas in selectedZone) {
+          x = x + 1;
+          console.log(x);
+        }
+        _id = id.value;
+        if (_id == "") {
+          alert("Please enter an ID");
+          return;
+        }
+        _type = type.value;
+        _graph = graph.value;
+        _category = category.value;
+        selectedZone["sensor" + (x + 1)] = {
+          sensorID: _id,
+          sensorType: _type,
+          graphType: _graph,
+          category: _category,
+        };
+        run(null);
+      }
+      $(document).ready(function () {
+        $("#link1").click(function () {
+          $("#link1child").toggle();
+        });
+      });
+      $(document).ready(function () {
+        $("#link2").click(function () {
+          $("#link2child").toggle();
+        });
+      });
+      $(document).ready(function () {
+        $("#link3").click(function () {
+          $("#link3child").toggle();
+        });
+      });
+    </script>
+  </body>
+</html>
