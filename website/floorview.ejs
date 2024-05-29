@@ -177,6 +177,10 @@
                 "Temperature Set: " +
                 sensorData[zones[zone].name][0].setTemperature +
                 "C";
+              modal.querySelector(".modal-body").innerHTML += "&#177";
+              modal.querySelector(".modal-body").textContent +=
+              
+                (sensorData[zones[zone].name][0].setTemperature - sensorData[zones[zone].name][0].lowerMargin) + "C";
               // create modal body elements
               var div = document.createElement("div");
               modal.querySelector(".modal-body").appendChild(div);
