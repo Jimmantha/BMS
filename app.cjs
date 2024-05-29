@@ -82,28 +82,12 @@ io.on('connection', async (socket) => {
         io.emit('data');
     });
 
-    
-
-    socket.on('setTemperature', (data) => {
+    socket.on('change', (data) => {
         setTemp = JSON.parse(JSON.stringify(data));
-        dataSend = "set_temp_" + setTemp.temperature;
+        dataSend = "set_temp_" + setTemp.temperature + ',' + "set_error_high_" + setTemp.margin + ',' + "set_error_low_" + setTemp.margin;
         console.log('Temperature:', data.temperature);
         client.publish('coolerControl', dataSend);
     });
-    socket.on('setUpperMargin', (data) => {
-        setUpper = JSON.parse(JSON.stringify(data));
-        dataSend = "set_error_high_" + setUpper.upperMargin;
-        console.log('Upper Margin:', data.upperMargin);
-        client.publish('coolerControl', dataSend);
-    }
-    );
-    socket.on('setLowerMargin', (data) => {
-        setLower = JSON.parse(JSON.stringify(data));
-        dataSend = "set_error_low_" + setLower.lowerMargin;
-        console.log('Lower Margin:', data.lowerMargin);
-        client.publish('coolerControl', dataSend);
-    }
-    );
     sensorData = await getSensorData();
 });
 

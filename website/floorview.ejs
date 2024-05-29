@@ -299,7 +299,7 @@
       button.addEventListener("click", function() {
         var newTemp = setTempInput.value;
         var newMargin = marginInput.value;
-        socket.emit("setTemperature", {
+        socket.emit("change", {
           temperature: newTemp,
           margin: newMargin
         });
