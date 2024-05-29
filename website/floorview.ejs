@@ -78,9 +78,10 @@
       for (zone in zones) {
         var timestampTemperaturePairs = []; // Changed from timestampZonePairs
         for (data in orginalSensorData) {
-          if (orginalSensorData[data].metaData.zone == zones[zone].name) {
+          if (orginalSensorData[data].metaData.zone == zones[zone].name && orginalSensorData[data].metaData.floor == floorlevel) {
             timestampTemperaturePairs.push({
-              zone: zones[zone].name,
+              floor: orginalSensorData[data].metaData.floor,
+              zone:orginalSensorData[data].metaData.zone,
               temperature: orginalSensorData[data].temperature,
               timestamp: orginalSensorData[data].timestamp,
               setTemperature: orginalSensorData[data].setTemperature,
@@ -656,8 +657,7 @@
     var testbutton = document.createElement("button");
     testbutton.textContent = "test";
     testbutton.addEventListener("click", function() {
-    
-     dynamicCharts.gauge0.data.datasets[0].needle = 100;
+    dynamicCharts.gauge0.data.datasets[0].needle = (Math.floor(Math.random() * 601)).toFixed(2);
       dynamicCharts.gauge0.update();
       console.log(dynamicCharts.gauge0.data.datasets[0].needle);
     })
