@@ -160,6 +160,9 @@ app.set('view engine', 'ejs');
 
 app.use(bodyparser.json());
 
+app.get('/', (req, res) => {
+    res.render('converter');
+});
 
 app.get('/Floorview', async (req, res) => {
     var floorDetails = await fetchFloorDetails();
@@ -180,5 +183,25 @@ server.listen(port, () => {
 });
 
 
+var FinZone = [];
+app.post('/submit', async (req, res) => {
+    console.log('upload read', req.body)
+    const { floorplan, floorLevel, buildingName, zones } = req.body;
+
+    for (var zone in zones) {
+        var tempZone = zones[zone];
+        tempZone.name = zone;
+        console.log('tempZone', tempZone)
+        FinZone.push(tempZone)
+    }
+    console.log('zone', FinZone)
+    const newFloor = new floorDetails({
+        zones: FinZone,
+        floorplan: floorplan,
+        floorlevel: floorLevel,
+    })
+    newFloor.save();
+    res.send('Data saved successfully');
+});
 
 
