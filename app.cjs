@@ -82,6 +82,8 @@ io.on('connection', async (socket) => {
         io.emit('data');
     });
 
+    
+
     socket.on('setTemperature', (data) => {
         setTemp = JSON.parse(JSON.stringify(data));
         dataSend = "set_temp_" + setTemp.temperature;

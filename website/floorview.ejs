@@ -18,18 +18,17 @@
         <h3>Energy Usage</h3>
       </div>
     </div>
-    <div class="row" style="height: 50vh">
+    <div class="row" style="height: 44vh">
       <div class="col-4 m-3">
         <canvas class="p-0" id="shadeCanvas" style="position: absolute; z-index: -1; width: 600px; height: 400px"></canvas>
         <img src="https://placehold.co/600x400" alt="" id="floorplan" style="position: absolute; top: 0; left: 0" usemap="#testmap" />
       </div>
       <div class="col-4 m-3" style="overflow: auto; height: 100%">
         <div class="table" id="gaugeTable">
-
-
         </div>
       </div>
     </div>
+    <div class="row title" style="height:5vh"></div>
   </div>
 
   <br />
@@ -273,6 +272,7 @@
 
 
     $("#editButton").click(function() {
+      var name = modal.querySelector(".modal-title").textContent;
       modal.querySelector(".modal-title").textContent = "Edit " + modal.querySelector(".modal-title").textContent;
       modal.querySelector(".modal-header");
       document.getElementById("editButton").style.display = "none";
@@ -282,23 +282,35 @@
       setTempInput.id = "setInput";
       setTempInput.type = "number";
       setTempInput.value =
-        sensorData[zones[zone].name][0].setTemperature;
+        sensorData[name][0].setTemperature;
+
+      var margin = document.createElement("div");
+      margin.textContent = "margin: ";
+      var marginInput = document.createElement("input");
+      marginInput.id = "Margin";
+      marginInput.type = "number";
+      marginInput.value = (-(sensorData[name][0].setTemperature - sensorData[name][0].upperMargin));
+      margin.appendChild(marginInput);
+
       var button = document.createElement("button");
       button.classList.add("btn", "ms-3", "btn-primary");
       button.textContent = "update";
       button.id = "update";
       button.addEventListener("click", function() {
         var newTemp = setTempInput.value;
+        var newMargin = marginInput.value;
         socket.emit("setTemperature", {
-          temperature: newTemp
+          temperature: newTemp,
+          margin: newMargin
         });
         modal.querySelector(".modal-footer").removeChild(button);
         closeModal();
-      });
-      div.appendChild(setTempInput);
-      modal.querySelector(".modal-footer").appendChild(button);
+      }); 
       modal.querySelector(".modal-body").innerHTML = "";
       modal.querySelector(".modal-body").appendChild(div);
+      div.appendChild(setTempInput);
+      div.appendChild(margin);
+      modal.querySelector(".modal-footer").appendChild(button);
     });
     updatetemperature();
   </script>
