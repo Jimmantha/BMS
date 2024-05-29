@@ -36,11 +36,8 @@
       <ul class="navbar-nav justify-content-between" style="width: 100%">
         <li class="nav-item"></li>
         <li class="nav-item" id="form" style="display: hidden;">
-          <select class="form-control" style="margin-left: 150px !important;">
-            <option value="">Select an option</option>
-            <option value="option1">Floor 1</option>
-            <option value="option2">Floor 2</option>
-            <option value="option3">Floor 3</option>
+          <select class="form-control" id="zoneSelector" style="margin-left: 150px !important;">
+           
           </select>
         </li>
         <li class="nav-item"></li>
@@ -80,7 +77,8 @@
     console.log(currentPage);
     if (currentPage.includes("/Floorview")) {
       console.log("at floorview")
-      doccuemnt.getElementById("form").style.display = "block";
+      var form = document.getElementById("form");
+      form.style.display = "block";
     }
   }
   currentLocation();

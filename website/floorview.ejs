@@ -18,28 +18,21 @@
         <h3>Energy Usage</h3>
       </div>
     </div>
-
     <div class="row" style="height: 50vh">
       <div class="col-4 m-3">
         <canvas class="p-0" id="shadeCanvas" style="position: absolute; z-index: -1; width: 600px; height: 400px"></canvas>
         <img src="https://placehold.co/600x400" alt="" id="floorplan" style="position: absolute; top: 0; left: 0" usemap="#testmap" />
       </div>
       <div class="col-4 m-3" style="overflow: auto; height: 100%">
-        <div class="table">
-          <div class="row">
-            <div class="col">
-              <canvas class="p-0" id="myChart1" style="width: 200px; height: 300px"></canvas>
-            </div>
-            <div class="col">
-              <canvas class="p-0" id="myChar2t" style="width: 200px; height: 300px"></canvas>
-            </div>
-          </div>
+        <div class="table" id="gaugeTable">
+
+
         </div>
       </div>
     </div>
   </div>
 
-  <br/>
+  <br />
   <map name="testmap" id="testmap">
 
   </map>
@@ -72,8 +65,16 @@
   <script>
     var orginalSensorData = <%- JSON.stringify(sensorData) %>;
 
+
     function loadData() {
-      zones = ejsData[0].zones;
+      for (var data in ejsData) {
+        var option = document.createElement('option');
+        option.value = ejsData[data].floorlevel;
+        option.text = "Floor " + ejsData[data].floorlevel; // Assuming you want to use the same value for the display text
+        $("#zoneSelector").append(option);
+      }
+      floorlevel = $("#zoneSelector").val();
+      zones = ejsData[floorlevel - 1].zones;
       for (zone in zones) {
         var timestampTemperaturePairs = []; // Changed from timestampZonePairs
         for (data in orginalSensorData) {
@@ -115,7 +116,11 @@
       updatetemperature();
       console.log(dynamicCharts);
     });
-
+    window.addEventListener("click", function(event) {
+      if (event.target == modal) {
+        closeModal();
+      }
+    });
     createArea();
     updatetemperature();
 
@@ -134,12 +139,13 @@
     }
 
     function createArea() {
+      while (imagemap.firstChild) {
+        imagemap.removeChild(imagemap.firstChild);
+      }
       for (var zone in zones) {
         var coordinates = zones[zone];
         var area = document.createElement("area");
-        while (imagemap.firstChild) {
-          imagemap.removeChild(imagemap.firstChild);
-        }
+
         area.setAttribute("shape", "rect");
         area.setAttribute(
           "coords",
@@ -163,7 +169,7 @@
         onClick: function(e) {
           console.log(e.key);
           openModal();
-          modal.querySelector(".modal-title").textContent = "Zone " + 1;
+          modal.querySelector(".modal-title").textContent = e.key;
 
           for (zone in zones) {
             if (e.key == zones[zone].name) {
@@ -266,7 +272,7 @@
 
 
     $("#editButton").click(function() {
-      modal.querySelector(".modal-title").textContent = "Zone 1 Edit";
+      modal.querySelector(".modal-title").textContent = "Edit " + modal.querySelector(".modal-title").textContent;
       modal.querySelector(".modal-header");
       document.getElementById("editButton").style.display = "none";
       var div = document.createElement("div");
@@ -296,164 +302,367 @@
     updatetemperature();
   </script>
   <script>
-    var gaugeData = {
-      datasets: [{
-        label: "Zone 1",
-        data: [200, 200, 200],
-        backgroundColor: [
-          "rgba(255, 0, 0, 0.2)",
-          "rgba(0, 255, 0, 0.2)",
-          "rgba(0, 0, 255, 0.2)",
-        ],
-        borderColor: [
-          "rgba(255, 0, 0, 0.2)",
-          "rgba(0, 255, 0, 0.2)",
-          "rgba(0, 0, 255, 0.2)",
-        ],
-        borderWidth: 1,
-        circumference: 180,
-        rotation: -90,
-        cutout: "80%",
-        needle: 300,
-      }, ],
-    };
+    function createGauge() {
+      count = 0;
+      for (var zone in zones) {
+        if (count % 2 == 0) {
+          var row = document.createElement("div");
+          row.classList.add("row");
+          row.id = "row" + count;
+          $("#gaugeTable").append(row);
+          var gaugeData = {
+            datasets: [{
+              label: zones[zone].name,
+              data: [200, 200, 200],
+              backgroundColor: [
+                "rgba(255, 0, 0, 0.2)",
+                "rgba(0, 255, 0, 0.2)",
+                "rgba(0, 0, 255, 0.2)",
+              ],
+              borderColor: [
+                "rgba(255, 0, 0, 0.2)",
+                "rgba(0, 255, 0, 0.2)",
+                "rgba(0, 0, 255, 0.2)",
+              ],
+              borderWidth: 1,
+              circumference: 180,
+              rotation: -90,
+              cutout: "80%",
+              needle: 300,
+            }, ],
+          };
+          var gaugeNeedle = {
+            id: "gaugeNeedle",
+            afterDatasetsDraw(chart, args, plugins) {
+              const {
+                ctx,
+                data
+              } = chart;
+              ctx.save();
+              const xCenter = chart.getDatasetMeta(0).data[0].x;
+              const yCenter = chart.getDatasetMeta(0).data[0].y;
 
-    var gaugeNeedle = {
-      id: "gaugeNeedle",
-      afterDatasetsDraw(chart, args, plugins) {
-        const {
-          ctx,
-          data
-        } = chart;
-        ctx.save();
-        const xCenter = chart.getDatasetMeta(0).data[0].x;
-        const yCenter = chart.getDatasetMeta(0).data[0].y;
+              const outerRadius = chart.getDatasetMeta(0).data[0].outerRadius;
+              const innerRadius = chart.getDatasetMeta(0).data[0].innerRadius;
+              const widthSlice = (outerRadius - innerRadius) / 2;
+              const radius = 15;
+              const angle = Math.PI / 180;
 
-        const outerRadius = chart.getDatasetMeta(0).data[0].outerRadius;
-        const innerRadius = chart.getDatasetMeta(0).data[0].innerRadius;
-        const widthSlice = (outerRadius - innerRadius) / 2;
-        const radius = 15;
-        const angle = Math.PI / 180;
+              const needleValue = data.datasets[0].needleValue;
 
-        const needleValue = data.datasets[0].needleValue;
+              const dataTotal = data.datasets[0].data.reduce((a, b) => a + b, 0);
+              const circumference =
+                (chart.getDatasetMeta(0).data[0].circumference /
+                  Math.PI /
+                  data.datasets[0].data[0]) *
+                data.datasets[0].needle;
 
-        const dataTotal = data.datasets[0].data.reduce((a, b) => a + b, 0);
-        const circumference =
-          (chart.getDatasetMeta(0).data[0].circumference /
-            Math.PI /
-            data.datasets[0].data[0]) *
-          data.datasets[0].needle;
+              ctx.translate(xCenter, yCenter);
+              ctx.rotate(Math.PI * (circumference + 1.5));
+              //needle
+              ctx.beginPath();
+              ctx.strokeStyle = "grey";
+              ctx.fillStyle = "grey";
+              ctx.moveTo(0 - 15, 0);
+              ctx.lineTo(0, 0 - innerRadius - widthSlice);
+              ctx.lineTo(0 + 15, 0);
+              ctx.closePath();
+              ctx.stroke();
+              ctx.fill();
 
-        ctx.translate(xCenter, yCenter);
-        ctx.rotate(Math.PI * (circumference + 1.5));
-        //needle
-        ctx.beginPath();
-        ctx.strokeStyle = "grey";
-        ctx.fillStyle = "grey";
-        ctx.moveTo(0 - 15, 0);
-        ctx.lineTo(0, 0 - innerRadius - widthSlice);
-        ctx.lineTo(0 + 15, 0);
-        ctx.closePath();
-        ctx.stroke();
-        ctx.fill();
+              //dot
+              ctx.beginPath();
+              ctx.arc(0, 0, radius, 0, angle * 360, false);
+              ctx.fill();
+              ctx.restore();
+            },
+          };
+          const gaugeFlowMeter = {
+            id: "gaugeFlowMeter",
+            afterDatasetsDraw(chart, args, plugins) {
+              const {
+                ctx,
+                data
+              } = chart;
 
-        //dot
-        ctx.beginPath();
-        ctx.arc(0, 0, radius, 0, angle * 360, false);
-        ctx.fill();
-        ctx.restore();
-      },
-    };
-    const gaugeFlowMeter = {
-      id: "gaugeFlowMeter",
-      afterDatasetsDraw(chart, args, plugins) {
-        const {
-          ctx,
-          data
-        } = chart;
+              ctx.save();
+              const needleValue = data.datasets[0].needleValue;
+              const xCenter = chart.getDatasetMeta(0).data[0].x;
+              const yCenter = chart.getDatasetMeta(0).data[0].y;
+              const chartMetaData = chart.getDatasetMeta(0);
 
-        ctx.save();
-        const needleValue = data.datasets[0].needleValue;
-        const xCenter = chart.getDatasetMeta(0).data[0].x;
-        const yCenter = chart.getDatasetMeta(0).data[0].y;
-        const chartMetaData = chart.getDatasetMeta(0);
+              const circumference =
+                (chart.getDatasetMeta(0).data[0].circumference /
+                  Math.PI /
+                  data.datasets[0].data[0]) *
+                data.datasets[0].needle;
 
-        const circumference =
-          (chart.getDatasetMeta(0).data[0].circumference /
-            Math.PI /
-            data.datasets[0].data[0]) *
-          data.datasets[0].needle;
+              //flowmeter
+              ctx.fillStyle = "black";
+              ctx.font = "30px Arial";
+              ctx.textAlign = "center";
+              ctx.fillText(data.datasets[0].needle + " kwh", xCenter, yCenter + 40);
+            },
+          };
+          const gaugeLabels = {
+            id: "gaugeLabels",
+            afterDatasetsDraw(chart, args, plugins) {
+              const {
+                ctx,
+                data
+              } = chart;
+              ctx.save();
+              const xCenter = chart.getDatasetMeta(0).data[0].x;
+              const yCenter = chart.getDatasetMeta(0).data[0].y;
+              const outer = chart.getDatasetMeta(0).data[0].outerRadius;
+              const inner = chart.getDatasetMeta(0).data[0].innerRadius;
+              ctx.fillStyle = "black";
+              ctx.font = "30px Arial";
+              ctx.textAlign = "center";
+              ctx.fillText(data.datasets[0].label, xCenter, yCenter - outer - 10);
+              ctx.restore();
+            },
+          };
+          const chartAreaBorder = {
+            id: "chartAreaBorder",
+            beforeDraw(chart, args, options) {
+              const {
+                ctx,
+                chartArea: {
+                  left,
+                  top,
+                  width,
+                  height
+                },
+              } = chart;
+              const margin = 10;
+              const leftMargin = left - margin;
+              const topMargin = top - margin;
+              const widthMargin = width + 2 * margin;
+              const heightMargin = height + 2 * margin;
+              ctx.strokeRect(leftMargin, topMargin, widthMargin, heightMargin);
+              ctx.save();
+              ctx.restore();
+            },
+          };
+          const gaugeConfig = {
+            type: "doughnut",
+            data: gaugeData,
+            options: {
+              layout: {
+                padding: 20,
+              },
+              animation: {
+                animateRotate: false, // Disable rotation animation
+              },
+              aspectRatio: 1.2,
+              plugins: {
+                legend: {
+                  display: false,
+                },
+                tooltip: {
+                  enabled: false,
+                },
+              },
+            },
+            plugins: [gaugeNeedle, gaugeFlowMeter, gaugeLabels, chartAreaBorder],
+          };
+          var canvas = document.createElement("canvas");
+          var col = document.createElement("div");
+          canvas.id = "gauge" + zones[zone].name;
+          canvas.style.width = "100%";
+          canvas.style.height = "300px";
+          var row = document.getElementById("row" + count);
+          col.classList.add("col-6");
+          col.appendChild(canvas);
+          row.appendChild(col);
+          var ctx = canvas.getContext("2d");
+          dynamicCharts["gauge" + count] = new Chart(ctx, gaugeConfig);
+          count++;
+        } else {
+          var gaugeData = {
+            datasets: [{
+              label: zones[zone].name,
+              data: [200, 200, 200],
+              backgroundColor: [
+                "rgba(255, 0, 0, 0.2)",
+                "rgba(0, 255, 0, 0.2)",
+                "rgba(0, 0, 255, 0.2)",
+              ],
+              borderColor: [
+                "rgba(255, 0, 0, 0.2)",
+                "rgba(0, 255, 0, 0.2)",
+                "rgba(0, 0, 255, 0.2)",
+              ],
+              borderWidth: 1,
+              circumference: 180,
+              rotation: -90,
+              cutout: "80%",
+              needle: 300,
+            }, ],
+          };
+          var gaugeNeedle = {
+            id: "gaugeNeedle",
+            afterDatasetsDraw(chart, args, plugins) {
+              const {
+                ctx,
+                data
+              } = chart;
+              ctx.save();
+              const xCenter = chart.getDatasetMeta(0).data[0].x;
+              const yCenter = chart.getDatasetMeta(0).data[0].y;
 
-        //flowmeter
-        ctx.fillStyle = "black";
-        ctx.font = "30px Arial";
-        ctx.textAlign = "center";
-        ctx.fillText(data.datasets[0].needle + " kwh", xCenter, yCenter + 40);
-      },
-    };
-    const gaugeLabels = {
-      id: "gaugeLabels",
-      afterDatasetsDraw(chart, args, plugins) {
-        const {
-          ctx,
-          data
-        } = chart;
-        ctx.save();
-        const xCenter = chart.getDatasetMeta(0).data[0].x;
-        const yCenter = chart.getDatasetMeta(0).data[0].y;
-        const outer = chart.getDatasetMeta(0).data[0].outerRadius;
-        const inner = chart.getDatasetMeta(0).data[0].innerRadius;
-        ctx.fillStyle = "black";
-        ctx.font = "30px Arial";
-        ctx.textAlign = "center";
-        ctx.fillText(data.datasets[0].label, xCenter, yCenter - outer - 10);
-        ctx.restore();
-      },
-    };
-    const chartAreaBorder = {
-      id: "chartAreaBorder",
-      beforeDraw(chart, args, options) {
-        const {
-          ctx,
-          chartArea: {
-            left,
-            top,
-            width,
-            height
-          },
-        } = chart;
-        const margin = 10;
-        const leftMargin = left - margin;
-        const topMargin = top - margin;
-        const widthMargin = width + 2 * margin;
-        const heightMargin = height + 2 * margin;
-        ctx.strokeRect(leftMargin, topMargin, widthMargin, heightMargin);
-        ctx.save();
-        ctx.restore();
-      },
-    };
-    const gaugeConfig = {
-      type: "doughnut",
-      data: gaugeData,
-      options: {
-        layout: {
-          padding: 20,
-        },
-        animation: {
-          animateRotate: false, // Disable rotation animation
-        },
-        aspectRatio: 1.2,
-        plugins: {
-          legend: {
-            display: false,
-          },
-          tooltip: {
-            enabled: false,
-          },
-        },
-      },
-      plugins: [gaugeNeedle, gaugeFlowMeter, gaugeLabels, chartAreaBorder],
-    };
+              const outerRadius = chart.getDatasetMeta(0).data[0].outerRadius;
+              const innerRadius = chart.getDatasetMeta(0).data[0].innerRadius;
+              const widthSlice = (outerRadius - innerRadius) / 2;
+              const radius = 15;
+              const angle = Math.PI / 180;
+
+              const needleValue = data.datasets[0].needleValue;
+
+              const dataTotal = data.datasets[0].data.reduce((a, b) => a + b, 0);
+              const circumference =
+                (chart.getDatasetMeta(0).data[0].circumference /
+                  Math.PI /
+                  data.datasets[0].data[0]) *
+                data.datasets[0].needle;
+
+              ctx.translate(xCenter, yCenter);
+              ctx.rotate(Math.PI * (circumference + 1.5));
+              //needle
+              ctx.beginPath();
+              ctx.strokeStyle = "grey";
+              ctx.fillStyle = "grey";
+              ctx.moveTo(0 - 15, 0);
+              ctx.lineTo(0, 0 - innerRadius - widthSlice);
+              ctx.lineTo(0 + 15, 0);
+              ctx.closePath();
+              ctx.stroke();
+              ctx.fill();
+
+              //dot
+              ctx.beginPath();
+              ctx.arc(0, 0, radius, 0, angle * 360, false);
+              ctx.fill();
+              ctx.restore();
+            },
+          };
+          const gaugeFlowMeter = {
+            id: "gaugeFlowMeter",
+            afterDatasetsDraw(chart, args, plugins) {
+              const {
+                ctx,
+                data
+              } = chart;
+
+              ctx.save();
+              const needleValue = data.datasets[0].needleValue;
+              const xCenter = chart.getDatasetMeta(0).data[0].x;
+              const yCenter = chart.getDatasetMeta(0).data[0].y;
+              const chartMetaData = chart.getDatasetMeta(0);
+
+              const circumference =
+                (chart.getDatasetMeta(0).data[0].circumference /
+                  Math.PI /
+                  data.datasets[0].data[0]) *
+                data.datasets[0].needle;
+
+              //flowmeter
+              ctx.fillStyle = "black";
+              ctx.font = "30px Arial";
+              ctx.textAlign = "center";
+              ctx.fillText(data.datasets[0].needle + " kwh", xCenter, yCenter + 40);
+            },
+          };
+          const gaugeLabels = {
+            id: "gaugeLabels",
+            afterDatasetsDraw(chart, args, plugins) {
+              const {
+                ctx,
+                data
+              } = chart;
+              ctx.save();
+              const xCenter = chart.getDatasetMeta(0).data[0].x;
+              const yCenter = chart.getDatasetMeta(0).data[0].y;
+              const outer = chart.getDatasetMeta(0).data[0].outerRadius;
+              const inner = chart.getDatasetMeta(0).data[0].innerRadius;
+              ctx.fillStyle = "black";
+              ctx.font = "30px Arial";
+              ctx.textAlign = "center";
+              ctx.fillText(data.datasets[0].label, xCenter, yCenter - outer - 10);
+              ctx.restore();
+            },
+          };
+          const chartAreaBorder = {
+            id: "chartAreaBorder",
+            beforeDraw(chart, args, options) {
+              const {
+                ctx,
+                chartArea: {
+                  left,
+                  top,
+                  width,
+                  height
+                },
+              } = chart;
+              const margin = 10;
+              const leftMargin = left - margin;
+              const topMargin = top - margin;
+              const widthMargin = width + 2 * margin;
+              const heightMargin = height + 2 * margin;
+              ctx.strokeRect(leftMargin, topMargin, widthMargin, heightMargin);
+              ctx.save();
+              ctx.restore();
+            },
+          };
+          const gaugeConfig = {
+            type: "doughnut",
+            data: gaugeData,
+            options: {
+              layout: {
+                padding: 20,
+              },
+              animation: {
+                animateRotate: false, // Disable rotation animation
+              },
+              aspectRatio: 1.2,
+              plugins: {
+                legend: {
+                  display: false,
+                },
+                tooltip: {
+                  enabled: false,
+                },
+              },
+            },
+            plugins: [gaugeNeedle, gaugeFlowMeter, gaugeLabels, chartAreaBorder],
+          };
+          var canvas = document.createElement("canvas");
+          var col = document.createElement("div");
+          canvas.id = "gauge" + zones[zone].name;
+          canvas.style.width = "100%";
+          canvas.style.height = "300px";
+          var row = document.getElementById("row" + (count - 1));
+          col.classList.add("col-6");
+          col.appendChild(canvas);
+          row.appendChild(col);
+          var ctx = canvas.getContext("2d");
+          dynamicCharts["gauge" + count] = new Chart(ctx, gaugeConfig);
+          count++;
+        }
+      }
+    }
+    console.log(dynamicCharts);
+    var testbutton = document.createElement("button");
+    testbutton.textContent = "test";
+    testbutton.addEventListener("click", function() {
+    
+     dynamicCharts.gauge0.data.datasets[0].needle = 100;
+      dynamicCharts.gauge0.update();
+      console.log(dynamicCharts.gauge0.data.datasets[0].needle);
+    })
+    document.body.appendChild(testbutton);
+    createGauge();
 
     function loadTempChart(key) {
       var temp = [];
@@ -538,8 +747,6 @@
 
     }
     updatetemperature();
-    var ctx1 = document.getElementById("myChart1").getContext("2d");
-    var myChart1 = new Chart(ctx1, gaugeConfig);
   </script>
 </body>
 
