@@ -77,39 +77,39 @@
                  width: 600px;
                  z-index: -1;
                "></canvas>
-            <div class="table border border-black" style="position: absoulte">
-              <div class="row m-3">
+            <div class="table border border-black" style="position: absoulte;height: 40vh; overflow-y: scroll;">
+              <div class="row m-3 sticky-top" style="background-color: white;">
                 <div class="col">
                   <b style="font-size: 20px;"> Zones: </b>
                 </div>
                 <div class="col text-end">
                   <button id="addZone" class="btn btn-secondary">+ </button>
                 </div>
-                <script>
-                  $("#addZone").on("click",() => {
-                    console.log("add zone clicked")
-                  })
-                </script>
               </div>
+              <div id="zoneList" class="p-3"></div>
               <div class="row m-3">
-                <div class="col">
-                  <input class="btn btn-secondary" type="button" style="width: 200px" value="update" id="update" />
-                </div>
-                <div class="col">
-                  <input class="btn btn-secondary" type="button" style="width: 200px" value="submit" id="submit" />
+                <div class="col-6"></div>
+                <div id="buttonHolder">
+                  <div class="row m-3">
+                    <div class="col">
+                      <input class="btn btn-secondary" type="button" style="width: 200px" value="update" id="update" />
+                    </div>
+                    <div class="col">
+                      <input class="btn btn-secondary" type="button" style="width: 200px" value="submit" id="submit" />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-          <div>
+            <div>
 
+            </div>
           </div>
         </div>
-      </div>
 
-      <map name="imagemap" id="map" class="opacity"> </map>
+        <map name="imagemap" id="map" class="opacity"> </map>
+      </div>
     </div>
-  </div>
 
   </div>
   </div>
@@ -258,6 +258,64 @@
   <!--zone creation scripts-->
 
   <script>
+    zonesRadio = [];
+    var zoneCounter = 1;
+    $("#addZone").on("click", () => {
+
+
+      var radioGroup = document.createElement("div");
+      radioGroup.classList.add("row", "m-3");
+
+      var col1 = document.createElement("div");
+      col1.classList.add("col-1");
+
+      var col2 = document.createElement("div");
+      col2.classList.add("col");
+
+      var col3 = document.createElement("div");
+      col3.classList.add("col", "text-end");
+
+      var radioInput = document.createElement("input");
+      radioInput.type = "radio";
+      radioInput.name = "zone";
+      radioInput.value = "zone" + zoneCounter;
+      zoneCounter++;
+
+      var inputName = document.createElement("input");
+      inputName.type = "text";
+      inputName.placeholder = "Enter name";
+      inputName.classList.add("form-control");
+
+      inputName.addEventListener("change", function() {
+        radioInput.id = inputName.value;
+        radioInput.value = inputName.value;
+      });
+
+      var deleteButton = document.createElement("button");
+      deleteButton.type = "button";
+      deleteButton.classList.add("btn", "btn-danger");
+      deleteButton.innerText = "Delete";
+      deleteButton.addEventListener("click", function() {
+        radioGroup.remove();
+      });
+
+      col1.appendChild(radioInput);
+      col2.appendChild(inputName);
+      col3.appendChild(deleteButton);
+
+      radioGroup.appendChild(col1);
+      radioGroup.appendChild(col2);
+      radioGroup.appendChild(col3);
+
+      $("#zoneList").append(radioGroup);
+    })
+
+
+
+    $("#zoneList").on("change", "input[name='zone']", function() {
+  console.log($(this).val());
+});
+
     reinitializeMapster();
   </script>
   <!--table creation scripts-->
