@@ -258,11 +258,7 @@
   <!--zone creation scripts-->
 
   <script>
-    zonesRadio = [];
-    var zoneCounter = 1;
-    $("#addZone").on("click", () => {
-
-
+    function createRadio() {
       var radioGroup = document.createElement("div");
       radioGroup.classList.add("row", "m-3");
 
@@ -308,17 +304,29 @@
       radioGroup.appendChild(col3);
 
       $("#zoneList").append(radioGroup);
+    }
+    createRadio();
+    var zoneCounter = 1;
+    $("#addZone").on("click", () => {
+      createRadio();
+
     })
-
-
-
     $("#zoneList").on("change", "input[name='zone']", function() {
-  console.log($(this).val());
-});
+      console.log($(this).val());
+    });
 
+    $(function() {
+      var newFloorOption = document.createElement("option");
+      newFloorOption.value = "newFloor";
+      newFloorOption.innerText = "New Floor";
+      $("#floorSelector").append(newFloorOption);
+    });
+
+    $("#submit").click(function() {
+      
+    });
     reinitializeMapster();
   </script>
-  <!--table creation scripts-->
 </body>
 
 </html>
