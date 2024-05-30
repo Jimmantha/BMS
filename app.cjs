@@ -14,6 +14,8 @@ const server = http.createServer(app);
 const io = socketIO(server);
 const emitter = new EventEmitter();
 const Schema = mongoose.Schema;
+app.use(express.json({limit: '50mb'}));
+app.use(express.urlencoded({limit: '50mb'}));
 
 const ZoneSchema = new Schema({
     startX: { type: Number, required: false },
@@ -185,6 +187,7 @@ server.listen(port, () => {
 
 var FinZone = [];
 app.post('/submit', async (req, res) => {
+    FinZone = [];
     console.log('upload read', req.body)
     const { floorplan, floorLevel, buildingName, zones } = req.body;
 
@@ -195,7 +198,7 @@ app.post('/submit', async (req, res) => {
         FinZone.push(tempZone)
     }
     console.log('zone', FinZone)
-    const newFloor = new floorDetails({
+    var newFloor = new floorDetails({
         zones: FinZone,
         floorplan: floorplan,
         floorlevel: floorLevel,

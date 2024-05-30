@@ -1,5 +1,6 @@
 /* Reset default styles */
-html, body {
+html,
+body {
     margin: 0;
     padding: 0;
 }
@@ -9,6 +10,7 @@ body {
     font-family: Arial, sans-serif;
     background-color: #ffffff;
 }
+
 /*f0f0f0
 /* Add styles for headings */
 h1 {
@@ -45,30 +47,39 @@ a:hover {
 
 .navbar {
     height: 50px;
-    background-color: #bababa!important;
+    background-color: #bababa !important;
 }
 
-.navbar-button{
+.navbar-button {
     background-color: transparent;
 }
 
-body { min-height: 100% }
-
-
-.mapster_el{
-    opacity: 0.7!important;
-    position: absolute!important;   
-    opacity: 0.7!important;
+body {
+    min-height: 100%
 }
 
-#mapster_wrap_0{
-    opacity: 0.7!important;
+
+.mapster_el {
+    opacity: 0.7 !important;
+    position: absolute !important;
+    opacity: 0.7 !important;
+}
+
+#mapster_wrap_0 {
+    position: absolute !important;
+    opacity: 0.7 !important;
 }
 
 .title {
-    background-color: #f0f0f0!important;
+    background-color: #f0f0f0 !important;
 }
 
-.table{
-    background-color: #f0f0f000!important;
+.table {
+    background-color: #f0f0f000 !important;
+}
+
+.shade {
+    width: 600px;
+    height: 400px;
+    border: none
 }
