@@ -10,6 +10,7 @@
     position: absolute!important;   
     
 }
+
 .navbar {
     height: 50px;
     background-color: #bababa !important;
@@ -27,18 +28,6 @@
 
 #mapster_wrap_0{
     position: absolute!important;
-    z-index: 2;
-}
-
-.shade{
-    z-index: 1;
-    position: relative;
-    width: 300px;
-    height: 50px;
-    background-color: red;
-}
-
-.offcanvas {
-    width: 200px;
+    opacity: 0.7;
 }
 

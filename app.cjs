@@ -163,7 +163,7 @@ app.set('view engine', 'ejs');
 app.use(bodyparser.json());
 
 app.get('/', (req, res) => {
-    res.render('converter');
+    res.render('newConverter');
 });
 
 app.get('/Floorview', async (req, res) => {
