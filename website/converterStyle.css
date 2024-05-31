@@ -27,7 +27,7 @@
 
 #mapster_wrap_0{
     position: absolute!important;
-    z-index: 5;
+    z-index: 2;
 }
 
 .shade{
@@ -38,81 +38,7 @@
     background-color: red;
 }
 
-.menu {
-    list-style: none;
-    padding: 0;
-}
-
-.menu li {
-    position: relative;
-}
-
-.menu li a {
-    display: block;
-    padding: 10px;
-    text-decoration: none;
-    color: #333;
-}
-
-.sub-menu {
-    display: none;
-    position: absolute;
-    top: 0;
-    left: 100%;
-}
-
-.sub-menu li {
-    position: relative;
-}
-
-.sub-menu li a {
-    background-color: #f4f4f4;
-}
-
-.sub-menu li:hover > .sub-sub-menu {
-    display: block;
-}
-
-.sub-sub-menu {
-    display: none;
-    position: absolute;
-    top: 0;
-    left: 100%;
-}
-
 .offcanvas {
     width: 200px;
 }
 
-
-.p-link{
-    font-weight: bold;
-    font-size: 1.5em;
-}
-
-td {
-    border: 1px solid black;
-    padding: 10px;
-}
-tr {
-    border: 1px solid black;
-}
-
-.dropdown-color {
-    background: mediumseagreen;
-}
-
-th{
-    background-color: #ffcc00 !important
-}
-
-.container {
-    height: 500px!important;
-    width: auto!important;
-}
-
-
-.canvas-size{
-    height: 1000px !important;
-    width: auto !important;
-}

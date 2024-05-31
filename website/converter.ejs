@@ -72,7 +72,7 @@
                 "></canvas>
             <canvas id="placeholder" style="
                  position: relative;
-                 background-color: rgba(255, 255, 255, 0);
+                 background-color: rgba(255, 0, 0, 0);
                  height: 400px;
                  width: 600px;
                  z-index: -1;
@@ -107,7 +107,9 @@
           </div>
         </div>
 
-        <map name="imagemap" id="map" class="opacity"> </map>
+        <map name="imagemap" id="imagemap" class="opacity">
+          <area shape="rect" coords="0,0,100,100" alt="Whole Image" id="wholeImage" />
+        </map>
       </div>
     </div>
 
@@ -129,17 +131,8 @@
           fillColor: "222222",
           fillOpacity: 0.3,
           singleSelect: true,
-          onClick: function(e) {
-            $("input[name='zone']").prop("checked", false);
-            $("input[name='zone'][value='" + zonelist[e.key] + "']").prop(
-              "checked",
-              true
-            );
-            run(zonelist[e.key]);
-          },
         })
       );
-      $("#mapster_el").css("opacity", "0.5");
     }
     var el = document.getElementById("picture");
     var vanilla = new Croppie(el, {
@@ -258,6 +251,11 @@
   <!--zone creation scripts-->
 
   <script>
+    let zones = {};
+    let namelist = []; // check if name is already in use
+    var canvas = document.getElementById("shadecanvas");
+    var ctx = canvas.getContext("2d");
+
     function createRadio() {
       var radioGroup = document.createElement("div");
       radioGroup.classList.add("row", "m-3");
@@ -269,12 +267,23 @@
       col2.classList.add("col");
 
       var col3 = document.createElement("div");
-      col3.classList.add("col", "text-end");
+      col3.classList.add("col");
+
+      var col4 = document.createElement("div");
+      col4.classList.add("col", "text-end");
 
       var radioInput = document.createElement("input");
       radioInput.type = "radio";
       radioInput.name = "zone";
       radioInput.value = "zone" + zoneCounter;
+
+      radioInput.addEventListener("click", function() {
+        if (radioInput.id === "") {
+          alert("Please enter and confirm a name first.");
+          radioInput.checked = false;
+          return;
+        }
+      });
       zoneCounter++;
 
       var inputName = document.createElement("input");
@@ -282,10 +291,28 @@
       inputName.placeholder = "Enter name";
       inputName.classList.add("form-control");
 
-      inputName.addEventListener("change", function() {
+
+      var confirmButton = document.createElement("button");
+      confirmButton.type = "button";
+      confirmButton.classList.add("btn", "btn-success");
+      confirmButton.innerText = "Confirm Name";
+      confirmButton.addEventListener("click", function() {
+        if (inputName.value === "") {
+          alert("Please enter a name before confirming.");
+          return;
+        }
+        if (namelist.includes(inputName.value)) {
+          alert("Name already in use. Please enter a different name.");
+          return;
+        }
+        console.log("confirm pressed")
+        inputName.readOnly = true;
         radioInput.id = inputName.value;
         radioInput.value = inputName.value;
+        namelist.push(inputName.value);
+        confirmButton.remove()
       });
+
 
       var deleteButton = document.createElement("button");
       deleteButton.type = "button";
@@ -293,15 +320,26 @@
       deleteButton.innerText = "Delete";
       deleteButton.addEventListener("click", function() {
         radioGroup.remove();
+        var zoneName = radioInput.value;
+        var index = zones.findIndex(zone => zone.name == zoneName);
+        if (index !== -1) {
+          zones.splice(index, 1);
+        }
+        var index = namelist.indexOf(zoneName);
+        if (index !== -1) {
+          namelist.splice(index, 1);
+        }
       });
 
       col1.appendChild(radioInput);
       col2.appendChild(inputName);
-      col3.appendChild(deleteButton);
+      col3.appendChild(confirmButton);
+      col4.appendChild(deleteButton);
 
       radioGroup.appendChild(col1);
       radioGroup.appendChild(col2);
       radioGroup.appendChild(col3);
+      radioGroup.appendChild(col4);
 
       $("#zoneList").append(radioGroup);
     }
@@ -322,10 +360,45 @@
       $("#floorSelector").append(newFloorOption);
     });
 
+    $("#new-floorplan").on("click", () => {
+
+      rec = document.getElementById("new-floorplan").getBoundingClientRect();
+      var x = event.clientX - rec.left;
+      var y = event.clientY - rec.top;
+
+
+      var selectedZone = document.querySelector("input[name='zone']:checked");
+
+      if (!selectedZone) {
+        alert("Please select a zone before proceeding.");
+        return;
+      }
+
+      if (zones[selectedZone.value] && zones[selectedZone.value].startX && !zones[selectedZone.value].endX) {
+        zones[selectedZone.value].endX = x;
+        zones[selectedZone.value].endY = y;
+      } else if (!zones[selectedZone.value] || !zones[selectedZone.value].startX) {
+        zones[selectedZone.value] = {
+          startX: x,
+          startY: y
+        };
+        ctx.beginPath();
+        ctx.rect(x, y, 10, 10);
+        ctx.fillStyle = "red";
+        ctx.fill();
+        ctx.closePath();
+
+      }
+
+
+
+
+    })
+
+
     $("#submit").click(function() {
-      
+      //submit code to be added here
     });
-    reinitializeMapster();
   </script>
 </body>
 
