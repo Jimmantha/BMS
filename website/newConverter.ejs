@@ -20,11 +20,11 @@
       </div>
       <div class="modal-body">
         <div>
-          <div class="flex">
-            <input type="file" id="fileInput" accept=".pdf" />
+          <div >
+            <input type="file" id="fileInput" accept=".pdf" class="btn" />
             Page Number:
             <input type="number" id="pageNumber" onchange="convertTojpg()" />
-            <div class="justify-content-end"></div>
+           <br>
             <img src="#" class="mt-3" alt="upload Image" id="picture" />
           </div>
         </div>
@@ -103,11 +103,7 @@
   <map name="testmap">
 
   </map>
-  <script>
-    $("img").mapster({
-      fillOpacity: 0.8
-    });
-  </script>
+
   <script>
     var zonelist;
     var imageData;
@@ -121,18 +117,20 @@
           fillColor: "222222",
           fillOpacity: 0.3,
           singleSelect: true,
+          mapKey: "id",
           onClick: function(e) {
+  
             $("input[name='zone']").prop("checked", false);
-            $("input[name='zone'][value='" + zonelist[e.key] + "']").prop(
+            $("input[name='zone'][id='" + zones[e.key].name + "']").prop(
               "checked",
               true
             );
-            run(zonelist[e.key]);
           },
         })
       );
       $("#mapster_el").css("opacity", "0.5");
     }
+    reinitializeMapster();
     var el = document.getElementById("picture");
     var vanilla = new Croppie(el, {
       viewport: {
@@ -290,17 +288,12 @@
         }
         ctx.fill();
       }
-      $('#new-floorplan').mapster('unbind');
-
-      // Reinitialize ImageMapster
-      $('#new-floorplan').mapster({
-        fillOpacity: 0.8,
-        // other options
-      });
+      reinitializeMapster();
 
     }
 
     function createRadio() {
+      document.querySelector("map").innerHTML = "";
       var radioGroup = document.createElement("div");
       radioGroup.classList.add("row", "m-3");
 
