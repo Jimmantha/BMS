@@ -92,8 +92,22 @@ io.on('connection', async (socket) => {
     });
 
     socket.on('floorplan', (data) => {
-        var floorDetails = data;
-        console.log('floorDetails', floorDetails)
+        const { floorplan, zones, floorlevel } = data;
+        FinZone = [];
+        for (var zone in zones) {
+            var tempZone = zones[zone];
+            tempZone.name = zone;
+            console.log('tempZone', tempZone)
+            FinZone.push(tempZone)
+        }
+        console.log('zone', FinZone)
+        var newFloor = new floorDetails({
+            zones: FinZone,
+            floorplan: floorplan,
+            floorlevel: floorlevel,
+        })
+        newFloor.save();
+        console.log ('newFloor',newFloor)
     });
     sensorData = await getSensorData();
 });
@@ -167,8 +181,11 @@ app.set('view engine', 'ejs');
 
 app.use(bodyparser.json());
 
+
 app.get('/', (req, res) => {
+    console.time('Time taken to fetch floor details');
     res.render('newConverter');
+
 });
 
 app.get('/Floorview', async (req, res) => {

@@ -11,7 +11,7 @@
 
 <body>
   <div class="table-active">
-    <div class="row title" style="height: 4vh">
+    <div class="row title pb-1" style="height: 4vh">
       <div class="col-4 text-center mt-2 justify-text-center " style="background-color: rgba(240, 248, 255, 0);">
         <h3>Floorplan</h3>
       </div>
@@ -29,9 +29,9 @@
         </div>
       </div>
     </div>
-    <div class="row title" style="height:5vh"></div>
+    <div class="row title pt-1 pb-1" style="height:5vh"></div>
     <div class="row">
-      <div class="col" >
+      <div class="col">
         <canvas id="aggregate temp"></canvas>
       </div>
     </div>
@@ -70,13 +70,14 @@
   <script>
     var orginalSensorData = <%- JSON.stringify(sensorData) %>;
 
-    $("#floorSelector").empty(); 
-      for (var data in ejsData) {   
-        var option = document.createElement('option');
-        option.value = ejsData[data].floorlevel;
-        option.text = "Floor " + ejsData[data].floorlevel; // Assuming you want to use the same value for the display text
-        $("#floorSelector").append(option);
-      }
+    $("#floorSelector").empty();
+    for (var data in ejsData) {
+      var option = document.createElement('option');
+      option.value = ejsData[data].floorlevel;
+      option.text = "Floor " + ejsData[data].floorlevel; // Assuming you want to use the same value for the display text
+      $("#floorSelector").append(option);
+    }
+
     function loadData() {
 
       floorlevel = $("#floorSelector").val();
@@ -87,7 +88,7 @@
           if (orginalSensorData[data].metaData.zone == zones[zone].name && orginalSensorData[data].metaData.floor == floorlevel) {
             timestampTemperaturePairs.push({
               floor: orginalSensorData[data].metaData.floor,
-              zone:orginalSensorData[data].metaData.zone,
+              zone: orginalSensorData[data].metaData.zone,
               temperature: orginalSensorData[data].temperature,
               timestamp: orginalSensorData[data].timestamp,
               setTemperature: orginalSensorData[data].setTemperature,
@@ -205,18 +206,23 @@
           loadTempChart(e.key);
         },
       });
-      var areaOptions = {
-        key: zones[zone].name,
-        toolTip: "temperature Set: " +
-          sensorData[zones[zone].name][0].setTemperature +
-          "C",
-      };
-      $("img").mapster("set_options", {
-        areas: [{
-          key: areaOptions.key,
-          toolTip: areaOptions.toolTip,
-        }, ],
-      });
+      try {
+        var areaOptions = {
+          key: zones[zone].name,
+          toolTip: "temperature Set: " +
+            sensorData[zones[zone].name][0].setTemperature +
+            "C",
+        };
+
+        $("img").mapster("set_options", {
+          areas: [{
+            key: areaOptions.key,
+            toolTip: areaOptions.toolTip,
+          }],
+        });
+      } catch (error) {
+        console.error("Error setting tooltip in ImageMapster:", error);
+      }
     }
 
     function updatetemperature() {
@@ -228,32 +234,41 @@
             temp = sensorData[data].temperature;
           }
         }
-        var areaOptions = {
-          key: zones[zone].name,
-          toolTip: "temperature Set: " +
-            sensorData[zones[zone].name][0].setTemperature +
-            "C",
-        };
-        $("img").mapster("set_options", {
-          areas: [{
-            key: areaOptions.key,
-            toolTip: areaOptions.toolTip,
-          }, ],
-        });
+        try {
+          var areaOptions = {
+            key: zones[zone].name,
+            toolTip: "temperature Set: " +
+              sensorData[zones[zone].name][0].setTemperature +
+              "C",
+          };
+
+          $("img").mapster("set_options", {
+            areas: [{
+              key: areaOptions.key,
+              toolTip: areaOptions.toolTip,
+            }],
+          });
+        } catch (error) {
+          console.error("Error setting tooltip in ImageMapster:", error);
+        }
         var zonePosition = zones[zone];
         var startX = (zonePosition.startX / 600) * shadeCanvas.width;
         var startY = (zonePosition.startY / 400) * shadeCanvas.height;
         var endX = (zonePosition.endX / 600) * shadeCanvas.width;
         var endY = (zonePosition.endY / 400) * shadeCanvas.height;
 
-        var temperatureGradient =
-          (sensorData[zones[zone].name][0].temperature -
-            sensorData[zones[zone].name][0].lowerMargin) /
-          (sensorData[zones[zone].name][0].upperMargin -
-            sensorData[zones[zone].name][0].lowerMargin);
-        var red = Math.round(255 * temperatureGradient);
-        var blue = Math.round(255 * (1 - temperatureGradient));
-        ctx.fillStyle = "rgba(" + red / 2 + ", 255, " + blue + ", 0.5)";
+        try {
+          var temperatureGradient =
+            (sensorData[zones[zone].name][0].temperature -
+              sensorData[zones[zone].name][0].lowerMargin) /
+            (sensorData[zones[zone].name][0].upperMargin -
+              sensorData[zones[zone].name][0].lowerMargin);
+          var red = Math.round(255 * temperatureGradient);
+          var blue = Math.round(255 * (1 - temperatureGradient));
+          ctx.fillStyle = "rgba(" + red / 2 + ", 255, " + blue + ", 0.5)";
+        } catch (error) {
+          ctx.fillStyle = "rgba(128, 128, 128, 0.5)"; // Set fillStyle to grey
+        }
 
         ctx.beginPath();
         if (endX > startX) {
@@ -315,7 +330,7 @@
         });
         modal.querySelector(".modal-footer").removeChild(button);
         closeModal();
-      }); 
+      });
       modal.querySelector(".modal-body").innerHTML = "";
       modal.querySelector(".modal-body").appendChild(div);
       div.appendChild(setTempInput);
@@ -679,17 +694,18 @@
     var testbutton = document.createElement("button");
     testbutton.textContent = "test";
     testbutton.addEventListener("click", function() {
-    dynamicCharts.gauge0.data.datasets[0].needle = (Math.floor(Math.random() * 601)).toFixed(2);
+      dynamicCharts.gauge0.data.datasets[0].needle = (Math.floor(Math.random() * 601)).toFixed(2);
       dynamicCharts.gauge0.update();
       console.log(dynamicCharts.gauge0.data.datasets[0].needle);
     })
     document.body.appendChild(testbutton);
     createGauge();
-    $('#floorSelector').on('change', ()=>{
+    $('#floorSelector').on('change', () => {
       loadData();
       createArea();
       updatetemperature();
-    })  
+    })
+
     function loadTempChart(key) {
       var temp = [];
       var upper = [];

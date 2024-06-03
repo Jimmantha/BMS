@@ -293,6 +293,7 @@
       var col2 = document.createElement("div");
       col2.classList.add("col");
 
+      
       var col3 = document.createElement("div");
       col3.classList.add("col");
 
@@ -371,6 +372,7 @@
     var zoneCounter = 1;
     $("#addZone").on("click", () => {
       createRadio();
+      createShadenArea();
 
     })
     $("#zoneList").on("change", "input[name='zone']", function() {
@@ -429,9 +431,10 @@
       var data = {};
       data.floorplan = floorDetails;
       data.zones = zones;
+      data.floorlevel = 2;
       console.log(data);
 
-      socket.emit("floorplan", zones);
+      socket.emit("floorplan", data);
     });
   </script>
 </body>
