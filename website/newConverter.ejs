@@ -227,7 +227,7 @@
           reader.onload = function() {
             var b64 = reader.result;
             console.log(b64);
-            zones.floor = b64;
+            floorDetails = b64;
           };
           reader.readAsDataURL(newImage);
           reinitializeMapster();
@@ -426,7 +426,12 @@
 
 
     $("#submit").click(function() {
-      console.log(zones)
+      var data = {};
+      data.floorplan = floorDetails;
+      data.zones = zones;
+      console.log(data);
+
+      socket.emit("floorplan", zones);
     });
   </script>
 </body>

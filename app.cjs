@@ -90,6 +90,11 @@ io.on('connection', async (socket) => {
         console.log('Temperature:', data.temperature);
         client.publish('coolerControl', dataSend);
     });
+
+    socket.on('floorplan', (data) => {
+        var floorDetails = data;
+        console.log('floorDetails', floorDetails)
+    });
     sensorData = await getSensorData();
 });
 
