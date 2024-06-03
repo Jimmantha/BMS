@@ -5,7 +5,7 @@ To install dependencies:
 ```bash
 bun install
 
-or node install
+or npm install
 ```
 
 To run:
