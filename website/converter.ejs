@@ -5,114 +5,105 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DWG to JPEG Conversion</title>
-  <link href="./converterStyle.css" rel="stylesheet" />
   <%-include("./header")%>
+  <link href="./converterStyle.css" rel="stylesheet" />
 </head>
 
-<body>
-  <button type="button" class="btn btn-primary mt-5 ms-3" data-bs-toggle="modal" data-bs-target="#uploadModal">
-    upload floorplan
-  </button>
-  <button type="button" class="btn btn-info mt-5" style="margin-left: 450px !important" id="clear">
-    clear
-  </button>
-
-  <!-- Modal -->
-  <div class="modal fade flex" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h1 class="modal-title fs-5" id="uploadModalLabel">
-            FloorPlan import
-          </h1>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <div>
-            <div class="flex">
-              <input type="file" id="fileInput" accept=".pdf" />
-              Page Number:
-              <input type="number" id="pageNumber" onchange="convertTojpg()" />
-              <div class="justify-content-end"></div>
-              <img src="#" class="mt-3" alt="upload Image" id="picture" />
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <div class="hstack">
-            <div class="hstack gap-3">
-              <button class="btn btn-warning" id="rotateLeft">
-                rotate left
-              </button>
-              <button id="rotateRight" class="btn btn-warning">
-                rotate Right
-              </button>
-            </div>
-          </div>
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="cropImage()">
-            Close
-          </button>
-        </div>
+<div class="modal fade flex" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="uploadModalLabel">
+          FloorPlan import
+        </h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-    </div>
-  </div>
-  <!--table-->
-  <div class="table">
-    <div class="row">
-      <div class="col-6">
+      <div class="modal-body">
         <div>
-          <div class=" ms-5 mt-5">
-            <img id="new-floorplan" class="p-6 m-6" src="https://placehold.co/600x400" usemap="#imagemap" style=" position: absolute" />
-            <canvas id="shadeCanvas" style="
-                 position: relative;
-                 background-color: rgba(255, 0, 0, 0);
-                 height: 400px;
-                 width: 600px;
-                 z-index: -5;
-               "></canvas>
-            <map name="imagemap" id="imagemap" class="opacity">
-              <area shape="rect" coords="0,0,100,100" />
-            </map>
-            <div class="table border border-black" style="position: absoulte;height: 40vh; overflow-y: scroll;">
-              <div class="row m-3 sticky-top" style="background-color: white;">
-                <div class="col">
-                  <b style="font-size: 20px;"> Zones: </b>
-                </div>
-                <div class="col text-end">
-                  <button id="addZone" class="btn btn-secondary">+ </button>
-                </div>
-              </div>
-              <div id="zoneList" class="p-3"></div>
-              <div class="row m-3">
-                <div class="col-6"></div>
-                <div id="buttonHolder">
-                  <div class="row m-3">
-                    <div class="col flex ">
-                      <input class="btn btn-secondary" type="button" style="width: 200px" value="submit" id="submit" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div>
+          <div>
+            <input type="file" id="fileInput" accept=".pdf" class="btn" />
+            Page Number:
+            <input type="number" id="pageNumber" onchange="convertTojpg()" />
+            <br>
+            <img src="#" class="mt-3" alt="upload Image" id="picture" />
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div class="hstack">
+          <div class="hstack gap-3">
+            <button class="btn btn-warning" id="rotateLeft">
+              rotate left
+            </button>
+            <button id="rotateRight" class="btn btn-warning">
+              rotate Right
+            </button>
+          </div>
+        </div>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="cropImage()">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
+<body>
+  <div class="table mt-3 ms-3">
+    <div class="row">
+
+      <div class="col-8 ">
+        <div class="row">
+          <div class="col">
+            <button type="button" class="btn btn-primary mt-5" data-bs-toggle="modal" data-bs-target="#uploadModal">
+              upload floorplan
+            </button>
+          </div>
+          <div class="col">
+            <button type="button" class="btn btn-info mt-5" style="margin-left: 450px !important" id="clear">
+              clear
+            </button>
+
+          </div>
+        </div>
+        <img id="new-floorplan" class="p-6 m-6 z-5" src="https://placehold.co/600x400" usemap="#testmap" style=" position: absolute" />
+        <canvas class="p-0 m-0" id="shadeCanvas" style="
+               position: relative;
+               background-color: rgb(255, 255, 255);
+               height: 400px;
+               width: 600px;
+               z-index: -5;
+             "></canvas>
+        <div class="table border border-black" style="position: absoulte;height: 40vh; overflow-y: scroll;">
+          <div class="row m-3 sticky-top" style="background-color: white;">
+            <div class="col">
+              <b style="font-size: 20px;"> Zones: </b>
+            </div>
+            <div class="col text-end">
+              <button id="addZone" class="btn btn-secondary">+ </button>
+            </div>
+          </div>
+          <div id="zoneList" class="p-3"></div>
+          <div class="row m-3">
+            <div id="buttonHolder">
+              <div class="row m-3 flex justify-content-end">
+                <input class="btn btn-primary" type="button" style="width: 200px" value="submit" id="submit" />
+              </div>
             </div>
           </div>
         </div>
-
-
       </div>
     </div>
+  </div>
+  <map name="testmap">
 
-  </div>
-  </div>
-  <!--end of table-->
-  <!--upload modal scripts-->
+  </map>
+
   <script>
-    $("img").mapster();
     var zonelist;
     var imageData;
     var zoneLevel = 1;
+    var zones = {};
     var floor = zoneLevel.value;
 
     function reinitializeMapster() {
@@ -122,9 +113,20 @@
           fillColor: "222222",
           fillOpacity: 0.3,
           singleSelect: true,
+          mapKey: "id",
+          onClick: function(e) {
+
+            $("input[name='zone']").prop("checked", false);
+            $("input[name='zone'][id='" + zones[e.key].name + "']").prop(
+              "checked",
+              true
+            );
+          },
         })
       );
+      $("#mapster_el").css("opacity", "0.5");
     }
+    reinitializeMapster();
     var el = document.getElementById("picture");
     var vanilla = new Croppie(el, {
       viewport: {
@@ -145,11 +147,10 @@
       max: 4.0
     });
 
-    //ties new image to variable newImage to be use when modal closes
     function cropImage() {
       vanilla
         .result({
-          type: "blob", // Use canvas for better quality
+          type: "blob",
           size: "viewport", // Use original size of the cropped image
         })
         .then(function(croppedImage) {
@@ -163,9 +164,8 @@
       vanilla.rotate(90);
     });
     $("#upload").click(function() {
-      floorDetails = {
-        zones: {}
-      };
+      
+
 
       console.log("uploading");
       convertTojpg();
@@ -227,25 +227,63 @@
           reader.onload = function() {
             var b64 = reader.result;
             console.log(b64);
-            floorDetails = {
-              floorplan: b64,
-              zones: {}
-            };
+            floorDetails = b64;
           };
           reader.readAsDataURL(newImage);
           reinitializeMapster();
         });
       } catch (error) {}
-      console.log(newImage);
+
     }
   </script>
-  <!--zone creation scripts-->
-
   <script>
-    let zones = {};
     let namelist = []; // check if name is already in use
+    function createShadenArea() {
+      var canvas = document.getElementById("shadeCanvas");
+      var ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (zone in zones) {
+        var startX = zones[zone].startX / 600 * canvas.width;
+        var startY = zones[zone].startY / 400 * canvas.height;
+        var endX = zones[zone].endX / 600 * canvas.width;
+        var endY = zones[zone].endY / 400 * canvas.height;
+        var area = document.createElement("area");
+        area.setAttribute("shape", "rect");
+        area.setAttribute("coords", zones[zone].startX + "," + zones[zone].startY + "," + zones[zone].endX + "," + zones[zone].endY);
+        area.setAttribute("ID", zones[zone].name);
+        area.setAttribute("href", "#");
+        document.querySelector("map").appendChild(area);
+
+
+        ctx.fillStyle = "rgb(255, 0, 0)";
+        ctx.beginPath();
+        if (endX > startX) {
+          var width = Math.abs(endX - startX);
+          if (endY > startY) {
+            var height = Math.abs(endY - startY);
+            ctx.rect(startX, startY, width, height);
+          } else {
+            var height = Math.abs(startY - endY);
+            ctx.rect(startX, endY, width, height);
+          }
+        } else {
+          var width = Math.abs(startX - endX);
+          if (endY > startY) {
+            var height = Math.abs(endY - startY);
+            ctx.rect(endX, startY, width, height);
+          } else {
+            var height = Math.abs(startY - endY);
+            ctx.rect(endX, endY, width, height);
+          }
+        }
+        ctx.fill();
+      }
+      reinitializeMapster();
+
+    }
 
     function createRadio() {
+      document.querySelector("map").innerHTML = "";
       var radioGroup = document.createElement("div");
       radioGroup.classList.add("row", "m-3");
 
@@ -255,6 +293,7 @@
       var col2 = document.createElement("div");
       col2.classList.add("col");
 
+      
       var col3 = document.createElement("div");
       col3.classList.add("col");
 
@@ -303,6 +342,7 @@
       });
 
 
+
       var deleteButton = document.createElement("button");
       deleteButton.type = "button";
       deleteButton.classList.add("btn", "btn-danger");
@@ -310,14 +350,10 @@
       deleteButton.addEventListener("click", function() {
         radioGroup.remove();
         var zoneName = radioInput.value;
-        var index = zones.findIndex(zone => zone.name == zoneName);
-        if (index !== -1) {
-          zones.splice(index, 1);
-        }
-        var index = namelist.indexOf(zoneName);
-        if (index !== -1) {
-          namelist.splice(index, 1);
-        }
+        namelist.splice(namelist.indexOf(zoneName), 1);
+        document.querySelector("map").innerHTML = "";
+        delete zones[zoneName];
+        createShadenArea();
       });
 
       col1.appendChild(radioInput);
@@ -336,6 +372,7 @@
     var zoneCounter = 1;
     $("#addZone").on("click", () => {
       createRadio();
+      createShadenArea();
 
     })
     $("#zoneList").on("change", "input[name='zone']", function() {
@@ -350,7 +387,8 @@
     });
 
     $("#new-floorplan").on("click", () => {
-
+      var canvas = document.getElementById("shadeCanvas");
+      var ctx = canvas.getContext("2d");
       rec = document.getElementById("new-floorplan").getBoundingClientRect();
       var x = event.clientX - rec.left;
       var y = event.clientY - rec.top;
@@ -366,41 +404,37 @@
       if (zones[selectedZone.value] && zones[selectedZone.value].startX && !zones[selectedZone.value].endX) {
         zones[selectedZone.value].endX = x;
         zones[selectedZone.value].endY = y;
+
+        createShadenArea();
+
+
       } else if (!zones[selectedZone.value] || !zones[selectedZone.value].startX) {
         zones[selectedZone.value] = {
           startX: x,
-          startY: y
+          startY: y,
+          name: selectedZone.value
         };
 
+        var startX = x / 600 * canvas.width;
+        var startY = y / 400 * canvas.height;
+        var endX = (5) / 600 * canvas.width;
+        var endY = (5) / 400 * canvas.height;
+        ctx.fillStyle = "rgb(255, 0, 0)";
+        ctx.fillRect(startX, startY, endX, endY);
       }
-
-      try {
-        var shadecanvas = document.getElementById("shadeCanvas");
-        var ctx = shadecanvas.getContext("2d");
-
-        ctx.beginPath();
-        var rect = shadecanvas.getBoundingClientRect();
-        var x = event.clientX - rect.left;
-        var y = event.clientY - rect.top;
-        ctx.rect(x, y, 10, 10);
-        ctx.fillStyle = "red";
-        ctx.fill();
-        ctx.closePath();
-        console.log("marked")
-      } catch (error) {
-        console.log(error);
-      }
-
-
-
-
     })
 
 
+
+
     $("#submit").click(function() {
-      //submit code to be added here
+      var data = {};
+      data.floorplan = floorDetails;
+      data.zones = zones;
+      data.floorlevel = 2;
+      console.log(data);
+
+      socket.emit("floorplan", data);
     });
   </script>
 </body>
-
-</html>
