@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <%- include('header') %>
+</head>
+
+<body>
+  <div class="row" style="height:40vh;">
+    <div class="col">
+      <canvas id="TempChart"></canvas>
+    </div>
+    <div class="col">
+      <canvas id="energyUseChart"></canvas>
+    </div>
+
+
+  </div>
+  <div class="row m-1">
+    <nav>
+      <div class="nav nav-tabs" id="nav-tab" role="tablist">
+        <button class="nav-link active" id="nav-schedule-tab" data-bs-toggle="tab" data-bs-target="#nav-schedule" type="button" role="tab" aria-controls="nav-home" aria-selected="true">Schedule</button>
+        <button class="nav-link" id="nav-sensorData-tab" data-bs-toggle="tab" data-bs-target="#nav-sensorData" type="button" role="tab" aria-controls="nav-profile" aria-selected="false">Sensor Data</button>
+        <button class="nav-link" id="nav-control-tab" data-bs-toggle="tab" data-bs-target="#nav-control" type="button" role="tab" aria-controls="nav-contact" aria-selected="false">Control</button>
+      </div>
+    </nav>
+    <div class="tab-content" id="nav-tabContent">
+      <div class="tab-pane fade show active m-3" id="nav-schedule" role="tabpanel" aria-labelledby="nav-schedule-tab">
+        <div class="text-center"> Schedule</div>
+        <br>
+        <div style="height:40vh; overflow-y: auto;">
+          <table class="table table-bordered schedule-table">
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Monday</th>
+                <th>Tuesday</th>
+                <th>Wednesday</th>
+                <th>Thursday</th>
+                <th>Friday</th>
+                <th>Saturday</th>
+                <th>Sunday</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Generate rows for each hour from 00:00 to 24:00 -->
+              <!-- Looping over 24 hours -->
+              <!-- You can use a script to generate these rows to avoid manual typing -->
+              <script>
+                for (let hour = 5; hour < 24; hour++) {
+                  let time = hour.toString().padStart(2, '0') + ":00";
+                  document.write(`<tr><td>${time}</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`);
+                }
+              </script>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+      <div class="tab-pane fade" id="nav-sensorData" role="tabpanel" aria-labelledby="nav-sensorData-tab">...</div>
+      <div class="tab-pane fade" id="nav-control" role="tabpanel" aria-labelledby="nav-control-tab">...</div>
+    </div>
+
+  </div>
+
+  <script>
+
+  </script>
+</body>
+
+</html>
