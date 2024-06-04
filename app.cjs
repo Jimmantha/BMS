@@ -60,7 +60,8 @@ const sensorDataSchema = new mongoose.Schema({
     timestamp: Date,
     setTemperature: Number,
     upperMargin: Number,
-    lowerMargin: Number
+    lowerMargin: Number,
+    humidity : Number,
 
 });
 
@@ -136,6 +137,7 @@ client.on('message', async (topic, message) => {
             setTemperature: data.temperature_set_to,
             upperMargin: data.upper_margin,
             lowerMargin: data.lower_margin,
+            humidity: data.humidity
         });
 
         // Save the sensor data to MongoDB  
@@ -182,10 +184,17 @@ app.set('view engine', 'ejs');
 app.use(bodyparser.json());
 
 
-app.get('/', (req, res) => {
-    console.time('Time taken to fetch floor details');
-    res.render('newConverter');
+app.get('/', async (req, res) => {
+    var floorDetails = await fetchFloorDetails();
+    var sensorData = await getSensorData();
 
+    res.render('newfloorview', { data: floorDetails, sensorData: sensorData });
+
+});
+
+app.get('/converter', (req, res) => {
+    console.time('Time taken to fetch floor details');
+    res.render('converter');
 });
 
 app.get('/Floorview', async (req, res) => {
@@ -195,38 +204,21 @@ app.get('/Floorview', async (req, res) => {
     res.render('floorview', { data: floorDetails, sensorData: sensorData });
 });
 
-
 app.get('/publish', (req, res) => {
     res.render('publish');
 });
 
+app.get('/moreDetails', async (req, res) => {
+    console.log(req.query);
+    var {zone, floorlevel} = req.query;
+    
+    var data = await SensorData.find({ "metaData.zone": zone, "metaData.floor": floorlevel }).sort({ timestamp: -1 }).limit(50);
+    
+    res.render('moreDetails', { data: data, zone: zone, floorlevel: floorlevel });
+
+}); 
 
 // start server on port 8000
 server.listen(port, () => {
     console.log('server running on port ' + port);
 });
-
-
-var FinZone = [];
-app.post('/submit', async (req, res) => {
-    FinZone = [];
-    console.log('upload read', req.body)
-    const { floorplan, floorLevel, buildingName, zones } = req.body;
-
-    for (var zone in zones) {
-        var tempZone = zones[zone];
-        tempZone.name = zone;
-        console.log('tempZone', tempZone)
-        FinZone.push(tempZone)
-    }
-    console.log('zone', FinZone)
-    var newFloor = new floorDetails({
-        zones: FinZone,
-        floorplan: floorplan,
-        floorlevel: floorLevel,
-    })
-    newFloor.save();
-    res.send('Data saved successfully');
-});
-
-
