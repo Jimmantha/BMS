@@ -164,7 +164,7 @@
       vanilla.rotate(90);
     });
     $("#upload").click(function() {
-      
+
 
 
       console.log("uploading");
@@ -243,40 +243,63 @@
       var ctx = canvas.getContext("2d");
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       for (zone in zones) {
-        var startX = zones[zone].startX / 600 * canvas.width;
-        var startY = zones[zone].startY / 400 * canvas.height;
-        var endX = zones[zone].endX / 600 * canvas.width;
-        var endY = zones[zone].endY / 400 * canvas.height;
-        var area = document.createElement("area");
-        area.setAttribute("shape", "rect");
-        area.setAttribute("coords", zones[zone].startX + "," + zones[zone].startY + "," + zones[zone].endX + "," + zones[zone].endY);
-        area.setAttribute("ID", zones[zone].name);
-        area.setAttribute("href", "#");
-        document.querySelector("map").appendChild(area);
+        if (zones[zone].shape == "rect") {
+          var startX = zones[zone].startX / 600 * canvas.width;
+          var startY = zones[zone].startY / 400 * canvas.height;
+          var endX = zones[zone].endX / 600 * canvas.width;
+          var endY = zones[zone].endY / 400 * canvas.height;
+          var area = document.createElement("area");
+          area.setAttribute("shape", "rect");
+          area.setAttribute("coords", zones[zone].startX + "," + zones[zone].startY + "," + zones[zone].endX + "," + zones[zone].endY);
+          area.setAttribute("ID", zones[zone].name);
+          area.setAttribute("href", "#");
+          document.querySelector("map").appendChild(area);
 
 
-        ctx.fillStyle = "rgb(255, 0, 0)";
-        ctx.beginPath();
-        if (endX > startX) {
-          var width = Math.abs(endX - startX);
-          if (endY > startY) {
-            var height = Math.abs(endY - startY);
-            ctx.rect(startX, startY, width, height);
+          ctx.fillStyle = "rgb(255, 0, 0)";
+          ctx.beginPath();
+          if (endX > startX) {
+            var width = Math.abs(endX - startX);
+            if (endY > startY) {
+              var height = Math.abs(endY - startY);
+              ctx.rect(startX, startY, width, height);
+            } else {
+              var height = Math.abs(startY - endY);
+              ctx.rect(startX, endY, width, height);
+            }
           } else {
-            var height = Math.abs(startY - endY);
-            ctx.rect(startX, endY, width, height);
+            var width = Math.abs(startX - endX);
+            if (endY > startY) {
+              var height = Math.abs(endY - startY);
+              ctx.rect(endX, startY, width, height);
+            } else {
+              var height = Math.abs(startY - endY);
+              ctx.rect(endX, endY, width, height);
+            }
           }
-        } else {
-          var width = Math.abs(startX - endX);
-          if (endY > startY) {
-            var height = Math.abs(endY - startY);
-            ctx.rect(endX, startY, width, height);
-          } else {
-            var height = Math.abs(startY - endY);
-            ctx.rect(endX, endY, width, height);
+          ctx.fill();
+        } else if (zones[zone].shape == "poly") {
+          var area = document.createElement("area");
+          var coords = "";
+          for (var i = 0; i < zones[zone].xcords.length; i++) {
+            coords += zones[zone].xcords[i] + "," + zones[zone].ycords[i] + ",";
           }
+          coords = coords.slice(0, -1);
+          area.setAttribute("shape", "poly");
+          area.setAttribute("coords", coords);
+          area.setAttribute("ID", zones[zone].name);
+          area.setAttribute("href", "#");
+          document.querySelector("map").appendChild(area);
+          
+          ctx.fillStyle = "rgb(255, 0, 0)";
+          ctx.beginPath();
+          ctx.moveTo(zones[zone].xcords[0] / 600 * canvas.width, zones[zone].ycords[0] / 400 * canvas.height);
+          for (var i = 1; i < zones[zone].xcords.length; i++) {
+            ctx.lineTo(zones[zone].xcords[i] / 600 * canvas.width, zones[zone].ycords[i] / 400 * canvas.height);
+          }
+          ctx.closePath();
+          ctx.fill();
         }
-        ctx.fill();
       }
       reinitializeMapster();
 
@@ -293,12 +316,15 @@
       var col2 = document.createElement("div");
       col2.classList.add("col");
 
-      
+
       var col3 = document.createElement("div");
       col3.classList.add("col");
 
       var col4 = document.createElement("div");
-      col4.classList.add("col", "text-end");
+      col4.classList.add("col");
+
+      var col5 = document.createElement("div");
+      col5.classList.add("col", "text-end");
 
       var radioInput = document.createElement("input");
       radioInput.type = "radio";
@@ -320,6 +346,23 @@
       inputName.classList.add("form-control");
 
 
+      var shapeSelect = document.createElement("select");
+      shapeSelect.classList.add("form-select");
+      shapeSelect.id = "shapeSelect";
+
+      var rectOption = document.createElement("option");
+      rectOption.value = "rect";
+      rectOption.innerText = "Rectangle";
+
+      var polyOption = document.createElement("option");
+      polyOption.value = "poly";
+      polyOption.innerText = "Polygon";
+
+      shapeSelect.appendChild(rectOption);
+      shapeSelect.appendChild(polyOption);
+
+
+
       var confirmButton = document.createElement("button");
       confirmButton.type = "button";
       confirmButton.classList.add("btn", "btn-success");
@@ -337,8 +380,10 @@
         inputName.readOnly = true;
         radioInput.id = inputName.value;
         radioInput.value = inputName.value;
+        radioInput.setAttribute("data-shape", shapeSelect.value);
         namelist.push(inputName.value);
-        confirmButton.remove()
+        confirmButton.remove();
+        shapeSelect.disabled = true;
       });
 
 
@@ -359,12 +404,14 @@
       col1.appendChild(radioInput);
       col2.appendChild(inputName);
       col3.appendChild(confirmButton);
-      col4.appendChild(deleteButton);
+      col4.appendChild(shapeSelect);
+      col5.appendChild(deleteButton);
 
       radioGroup.appendChild(col1);
       radioGroup.appendChild(col2);
-      radioGroup.appendChild(col3);
       radioGroup.appendChild(col4);
+      radioGroup.appendChild(col3);
+      radioGroup.appendChild(col5);
 
       $("#zoneList").append(radioGroup);
     }
@@ -401,26 +448,65 @@
         return;
       }
 
-      if (zones[selectedZone.value] && zones[selectedZone.value].startX && !zones[selectedZone.value].endX) {
-        zones[selectedZone.value].endX = x;
-        zones[selectedZone.value].endY = y;
-
-        createShadenArea();
-
-
-      } else if (!zones[selectedZone.value] || !zones[selectedZone.value].startX) {
+      if (!zones[selectedZone.value]) {
         zones[selectedZone.value] = {
-          startX: x,
-          startY: y,
+          xcords: [],
+          ycords: [],
+          com: 0,
           name: selectedZone.value
-        };
+        }
+      }
 
-        var startX = x / 600 * canvas.width;
-        var startY = y / 400 * canvas.height;
-        var endX = (5) / 600 * canvas.width;
-        var endY = (5) / 400 * canvas.height;
-        ctx.fillStyle = "rgb(255, 0, 0)";
-        ctx.fillRect(startX, startY, endX, endY);
+
+      var shapeInput = document.getElementById("shapeSelect");
+      var shape = selectedZone.getAttribute("data-shape");
+      if (shape == "rect") {
+        if (zones[selectedZone.value] && zones[selectedZone.value].startX && !zones[selectedZone.value].endX) {
+          zones[selectedZone.value].endX = x;
+          zones[selectedZone.value].endY = y;
+          zones[selectedZone.value].shape = "rect";
+          createShadenArea();
+        } else if (!zones[selectedZone.value] || !zones[selectedZone.value].startX) {
+          zones[selectedZone.value] = {
+            startX: x,
+            startY: y,
+            name: selectedZone.value
+          };
+
+          var startX = x / 600 * canvas.width;
+          var startY = y / 400 * canvas.height;
+          var endX = (5) / 600 * canvas.width;
+          var endY = (5) / 400 * canvas.height;
+          ctx.fillStyle = "rgb(255, 0, 0)";
+          ctx.fillRect(startX, startY, endX, endY);
+        }
+      } else if (shape == "poly") {
+        if (zones[selectedZone.value].com == 0) {
+          var startX = x / 600 * canvas.width;
+          var startY = y / 400 * canvas.height;
+          var endX = (5) / 600 * canvas.width;
+          var endY = (5) / 400 * canvas.height;
+          ctx.fillStyle = "rgb(255, 0, 0)";
+          ctx.fillRect(startX, startY, endX, endY);
+          if (x < zones[selectedZone.value].xcords[0] + 10 &&
+            x > zones[selectedZone.value].xcords[0] - 10 &&
+            y < zones[selectedZone.value].ycords[0] + 10 &&
+            y > zones[selectedZone.value].ycords[0] - 10 && zones[selectedZone.value].xcords.length > 1) {
+            x = zones[selectedZone.value].xcords[0];
+            y = zones[selectedZone.value].ycords[0];
+            zones[selectedZone.value].shape = "poly";
+            zones[selectedZone.value].com = 1
+
+          }
+          zones[selectedZone.value].xcords.push(x);
+          zones[selectedZone.value].ycords.push(y);
+          if (zones[selectedZone.value].com == 1) {
+            createShadenArea();
+          }
+
+
+        }
+
       }
     })
 
@@ -428,13 +514,39 @@
 
 
     $("#submit").click(function() {
-      var data = {};
-      data.floorplan = floorDetails;
-      data.zones = zones;
-      data.floorlevel = 2;
-      console.log(data);
+      if (floorDetails == null || zones == null) {
+        alert("Please upload a floorplan and create zones before submitting.");
+        return;
+      }
+      if (confirm("Are you sure you want to submit?")) {
+        var data = {};
+        data.floorplan = floorDetails;
+        data.zones = zones;
+        data.floorlevel = 2;
+        console.log(data);
 
-      socket.emit("floorplan", data);
+        socket.emit("floorplan", data);
+        window.location.href = "/floorview";
+      } else {
+        return;
+      }
     });
+
+
+    function createMoreDetails() {
+      const labels = Utils.months({
+        count: 7
+      });
+      const data = {
+        labels: labels,
+        datasets: [{
+          label: 'My First Dataset',
+          data: [65, 59, 80, 81, 56, 55, 40],
+          fill: false,
+          borderColor: 'rgb(75, 192, 192)',
+          tension: 0.1
+        }]
+      };
+    }
   </script>
 </body>
