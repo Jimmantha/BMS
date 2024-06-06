@@ -1,5 +1,5 @@
 const express = require('express');
-const mqtt = require('mqtt');
+    const mqtt = require('mqtt');
 const mongoose = require('mongoose');
 const bodyparser = require('body-parser');
 const path = require('path');
@@ -18,11 +18,12 @@ app.use(express.json({limit: '50mb'}));
 app.use(express.urlencoded({limit: '50mb'}));
 
 const ZoneSchema = new Schema({
-    startX: { type: Number, required: false },
-    startY: { type: Number, required: false },
+    xCords: { type: Number, required: false },
+    yCords: { type: Number, required: false },
     endX: { type: Number, required: false },
     endY: { type: Number, required: false },
-    name: { type: String, required: false }
+    name: { type: String, required: false },
+    shape: { type: String, required: true },
 });
 
 const floorplan = new Schema({
@@ -201,7 +202,7 @@ app.get('/Floorview', async (req, res) => {
     var floorDetails = await fetchFloorDetails();
     var sensorData = await getSensorData();
 
-    res.render('floorview', { data: floorDetails, sensorData: sensorData });
+    res.render('newfloorview', { data: floorDetails, sensorData: sensorData });
 });
 
 app.get('/publish', (req, res) => {
@@ -209,11 +210,8 @@ app.get('/publish', (req, res) => {
 });
 
 app.get('/moreDetails', async (req, res) => {
-    console.log(req.query);
     var {zone, floorlevel} = req.query;
-    
     var data = await SensorData.find({ "metaData.zone": zone, "metaData.floor": floorlevel }).sort({ timestamp: -1 }).limit(50);
-    
     res.render('moreDetails', { data: data, zone: zone, floorlevel: floorlevel });
 
 }); 
