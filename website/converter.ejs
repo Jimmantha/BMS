@@ -281,8 +281,8 @@
         } else if (zones[zone].shape == "poly") {
           var area = document.createElement("area");
           var coords = "";
-          for (var i = 0; i < zones[zone].xcords.length; i++) {
-            coords += zones[zone].xcords[i] + "," + zones[zone].ycords[i] + ",";
+          for (var i = 0; i < zones[zone].xCords.length; i++) {
+            coords += zones[zone].xCords[i] + "," + zones[zone].yCords[i] + ",";
           }
           coords = coords.slice(0, -1);
           area.setAttribute("shape", "poly");
@@ -293,9 +293,9 @@
           
           ctx.fillStyle = "rgb(255, 0, 0)";
           ctx.beginPath();
-          ctx.moveTo(zones[zone].xcords[0] / 600 * canvas.width, zones[zone].ycords[0] / 400 * canvas.height);
-          for (var i = 1; i < zones[zone].xcords.length; i++) {
-            ctx.lineTo(zones[zone].xcords[i] / 600 * canvas.width, zones[zone].ycords[i] / 400 * canvas.height);
+          ctx.moveTo(zones[zone].xCords[0] / 600 * canvas.width, zones[zone].yCords[0] / 400 * canvas.height);
+          for (var i = 1; i < zones[zone].xCords.length; i++) {
+            ctx.lineTo(zones[zone].xCords[i] / 600 * canvas.width, zones[zone].yCords[i] / 400 * canvas.height);
           }
           ctx.closePath();
           ctx.fill();
@@ -450,8 +450,8 @@
 
       if (!zones[selectedZone.value]) {
         zones[selectedZone.value] = {
-          xcords: [],
-          ycords: [],
+          xCords: [],
+          yCords: [],
           com: 0,
           name: selectedZone.value
         }
@@ -488,18 +488,18 @@
           var endY = (5) / 400 * canvas.height;
           ctx.fillStyle = "rgb(255, 0, 0)";
           ctx.fillRect(startX, startY, endX, endY);
-          if (x < zones[selectedZone.value].xcords[0] + 10 &&
-            x > zones[selectedZone.value].xcords[0] - 10 &&
-            y < zones[selectedZone.value].ycords[0] + 10 &&
-            y > zones[selectedZone.value].ycords[0] - 10 && zones[selectedZone.value].xcords.length > 1) {
-            x = zones[selectedZone.value].xcords[0];
-            y = zones[selectedZone.value].ycords[0];
+          if (x < zones[selectedZone.value].xCords[0] + 10 &&
+            x > zones[selectedZone.value].xCords[0] - 10 &&
+            y < zones[selectedZone.value].yCords[0] + 10 &&
+            y > zones[selectedZone.value].yCords[0] - 10 && zones[selectedZone.value].xCords.length > 1) {
+            x = zones[selectedZone.value].xCords[0];
+            y = zones[selectedZone.value].yCords[0];
             zones[selectedZone.value].shape = "poly";
             zones[selectedZone.value].com = 1
 
           }
-          zones[selectedZone.value].xcords.push(x);
-          zones[selectedZone.value].ycords.push(y);
+          zones[selectedZone.value].xCords.push(x);
+          zones[selectedZone.value].yCords.push(y);
           if (zones[selectedZone.value].com == 1) {
             createShadenArea();
           }

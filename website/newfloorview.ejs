@@ -106,7 +106,22 @@
 
       floorlevel = $("#floorSelector").val();
       zones = ejsData[floorlevel - 1].zones;
+      try {
+        var image = document.getElementById("floorplan");
+        $(image).mapster('unbind');
+        var floorplan = ejsData[floorlevel - 1].floorplan;
+        image.src = floorplan;
+        if ($(image).data('mapster')) {
+          $(image).mapster('unbind');
+        }
+        console.log("Floorplan image set")
+      } catch (error) {
+        console.error("Error setting floorplan image:", error);
+      }
+
       for (zone in zones) {
+
+
         var timestampTemperaturePairs = []; // Changed from timestampZonePairs
         for (data in orginalSensorData) {
           if (orginalSensorData[data].metaData.zone == zones[zone].name && orginalSensorData[data].metaData.floor == floorlevel) {
@@ -131,7 +146,6 @@
     var timestampTemperaturePairs = [];
     var zones;
     var imagemap = document.getElementById("testmap");
-    var floorplan = ejsData[0].floorplan;
     var modal = document.getElementById("infoModal");
     var shadeCanvas = document.getElementById("shadeCanvas");
     var ctx = shadeCanvas.getContext("2d");
@@ -194,20 +208,6 @@
           area.setAttribute("id", zones[zone].name);
           imagemap.appendChild(area);
         }
-        else if(zones[zone].shape == "poly"){
-          var coordinates = zones[zone];
-          var area = document.createElement("area");
-          var coords = "";
-          for (var i = 0; i < coordinates.points.length; i++) {
-            coords += coordinates.points[i].x + "," + coordinates.points[i].y + ",";
-          }
-          coords = coords.substring(0, coords.length - 1);
-          area.setAttribute("shape", "poly");
-          area.setAttribute("coords", coords);
-          area.setAttribute("href", "#");
-          area.setAttribute("id", zones[zone].name);
-          imagemap.appendChild(area);
-        }
       }
       $("img").mapster({
         showToolTip: true,
@@ -265,7 +265,7 @@
       }
     }
 
-   function updatetemperature() {
+    function updatetemperature() {
       ctx.clearRect(0, 0, shadeCanvas.width, shadeCanvas.height);
       var temp;
       for (var zone in zones) {
@@ -291,12 +291,13 @@
         } catch (error) {
           console.error("Error setting tooltip in ImageMapster:", error);
         }
-        var zonePosition = zones[zone];
-        var startX = (zonePosition.startX / 600) * shadeCanvas.width;
-        var startY = (zonePosition.startY / 400) * shadeCanvas.height;
-        var endX = (zonePosition.endX / 600) * shadeCanvas.width;
-        var endY = (zonePosition.endY / 400) * shadeCanvas.height;
-
+        if (zones[zone].shape == "rect") {
+          var zonePosition = zones[zone];
+          var startX = (zonePosition.startX / 600) * shadeCanvas.width;
+          var startY = (zonePosition.startY / 400) * shadeCanvas.height;
+          var endX = (zonePosition.endX / 600) * shadeCanvas.width;
+          var endY = (zonePosition.endY / 400) * shadeCanvas.height;
+        }
         try {
           var temperatureGradient =
             (sensorData[zones[zone].name][0].temperature -
@@ -309,28 +310,39 @@
         } catch (error) {
           ctx.fillStyle = "rgba(128, 128, 128, 0.5)"; // Set fillStyle to grey
         }
-
-        ctx.beginPath();
-        if (endX > startX) {
-          var width = Math.abs(endX - startX);
-          if (endY > startY) {
-            var height = Math.abs(endY - startY);
-            ctx.rect(startX, startY, width, height);
+        if (zones[zone].shape == "rect") {
+          ctx.beginPath();
+          if (endX > startX) {
+            var width = Math.abs(endX - startX);
+            if (endY > startY) {
+              var height = Math.abs(endY - startY);
+              ctx.rect(startX, startY, width, height);
+            } else {
+              var height = Math.abs(startY - endY);
+              ctx.rect(startX, endY, width, height);
+            }
           } else {
-            var height = Math.abs(startY - endY);
-            ctx.rect(startX, endY, width, height);
+            var width = Math.abs(startX - endX);
+            if (endY > startY) {
+              var height = Math.abs(endY - startY);
+              ctx.rect(endX, startY, width, height);
+            } else {
+              var height = Math.abs(startY - endY);
+              ctx.rect(endX, endY, width, height);
+            }
           }
-        } else {
-          var width = Math.abs(startX - endX);
-          if (endY > startY) {
-            var height = Math.abs(endY - startY);
-            ctx.rect(endX, startY, width, height);
-          } else {
-            var height = Math.abs(startY - endY);
-            ctx.rect(endX, endY, width, height);
+          ctx.fill();
+        } else if (zones[zone].shape == "poly") {
+          ctx.fillStyle = "red";
+          ctx.beginPath();
+          ctx.moveTo(zones[zone].xCords[0], zones[zone].yCords[0]);
+          for (var i = 1; i < zones[zone].xCords.length; i++) {
+            ctx.lineTo(zones[zone].xCords[i], zones[zone].yCords[i]);
           }
+          ctx.closePath();
+          ctx.fill();
+          console.log(zones[zone].name, "poly shaped")
         }
-        ctx.fill();
       }
     }
 
@@ -380,13 +392,9 @@
     updatetemperature();
   </script>
   <script>
-
-
-
     $('#floorSelector').on('change', () => {
       loadData();
       createArea();
-      createGauge();
       updatetemperature();
       dynamicCharts = {};
     })
