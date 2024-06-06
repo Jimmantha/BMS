@@ -18,8 +18,10 @@ app.use(express.json({limit: '50mb'}));
 app.use(express.urlencoded({limit: '50mb'}));
 
 const ZoneSchema = new Schema({
-    xCords: { type: Number, required: false },
-    yCords: { type: Number, required: false },
+    xCords: { type: Array, required: false },
+    yCords: { type: Array, required: false },
+    startX: { type: Number, required: false },
+    startY: { type: Number, required: false },
     endX: { type: Number, required: false },
     endY: { type: Number, required: false },
     name: { type: String, required: false },
