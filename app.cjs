@@ -88,6 +88,11 @@ io.on('connection', async (socket) => {
         io.emit('data');
     });
 
+    socket.on('test', ()=>{
+        console.log('test');
+    
+    })
+
     socket.on('change', (data) => {
         setTemp = JSON.parse(JSON.stringify(data));
         dataSend = "set_temp_" + setTemp.temperature + ',' + "set_error_high_" + setTemp.margin + ',' + "set_error_low_" + setTemp.margin;
@@ -96,6 +101,7 @@ io.on('connection', async (socket) => {
     });
 
     socket.on('floorplan', (data) => {
+        console.log('floorplan', data);
         const { floorplan, zones, floorlevel } = data;
         FinZone = [];
         for (var zone in zones) {

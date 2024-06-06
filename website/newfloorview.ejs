@@ -120,8 +120,6 @@
       }
 
       for (zone in zones) {
-
-
         var timestampTemperaturePairs = []; // Changed from timestampZonePairs
         for (data in orginalSensorData) {
           if (orginalSensorData[data].metaData.zone == zones[zone].name && orginalSensorData[data].metaData.floor == floorlevel) {
@@ -204,6 +202,21 @@
             "," +
             coordinates.endY
           );
+          area.setAttribute("href", "#");
+          area.setAttribute("id", zones[zone].name);
+          imagemap.appendChild(area);
+        } else if (zones[zone].shape == "poly") {
+          var coordinates = zones[zone];
+          var area = document.createElement("area");
+
+          area.setAttribute("shape", "poly");
+          var coords = "";
+          for (var i = 0; i < zones[zone].xCords.length; i++) {
+            coords += zones[zone].xCords[i] + "," + zones[zone].yCords[i] + ",";
+          }
+
+          coords = coords.slice(0, -1);
+          area.setAttribute("coords", coords);
           area.setAttribute("href", "#");
           area.setAttribute("id", zones[zone].name);
           imagemap.appendChild(area);
@@ -333,14 +346,21 @@
           }
           ctx.fill();
         } else if (zones[zone].shape == "poly") {
-          ctx.fillStyle = "red";
+          var zonePosition = zones[zone];
           ctx.beginPath();
-          ctx.moveTo(zones[zone].xCords[0], zones[zone].yCords[0]);
-          for (var i = 1; i < zones[zone].xCords.length; i++) {
-            ctx.lineTo(zones[zone].xCords[i], zones[zone].yCords[i]);
+          ctx.moveTo(
+            (zonePosition.xCords[0] / 600) * shadeCanvas.width,
+            (zonePosition.yCords[0] / 400) * shadeCanvas.height
+          );
+          for (var i = 1; i < zonePosition.xCords.length; i++) {
+            ctx.lineTo(
+              (zonePosition.xCords[i] / 600) * shadeCanvas.width,
+              (zonePosition.yCords[i] / 400) * shadeCanvas.height
+            );
           }
           ctx.closePath();
           ctx.fill();
+
           console.log(zones[zone].name, "poly shaped")
         }
       }
