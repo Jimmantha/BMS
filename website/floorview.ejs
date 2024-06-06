@@ -32,7 +32,7 @@
     <div class="row title pt-1 pb-1" style="height:5vh"></div>
   </div>
   <br />
-  
+
   <map name="testmap" id="testmap">
   </map>
 
@@ -145,23 +145,39 @@
         imagemap.removeChild(imagemap.firstChild);
       }
       for (var zone in zones) {
-        var coordinates = zones[zone];
-        var area = document.createElement("area");
+        if (zones[zone].shape == "rect") {
+          var coordinates = zones[zone];
+          var area = document.createElement("area");
 
-        area.setAttribute("shape", "rect");
-        area.setAttribute(
-          "coords",
-          coordinates.startX +
-          "," +
-          coordinates.startY +
-          "," +
-          coordinates.endX +
-          "," +
-          coordinates.endY
-        );
-        area.setAttribute("href", "#");
-        area.setAttribute("id", zones[zone].name);
-        imagemap.appendChild(area);
+          area.setAttribute("shape", "rect");
+          area.setAttribute(
+            "coords",
+            coordinates.startX +
+            "," +
+            coordinates.startY +
+            "," +
+            coordinates.endX +
+            "," +
+            coordinates.endY
+          );
+          area.setAttribute("href", "#");
+          area.setAttribute("id", zones[zone].name);
+          imagemap.appendChild(area);
+        }
+        else if(zones[zone].shape == "poly"){
+          var coordinates = zones[zone];
+          var area = document.createElement("area");
+          var coords = "";
+          for (var i = 0; i < coordinates.points.length; i++) {
+            coords += coordinates.points[i].x + "," + coordinates.points[i].y + ",";
+          }
+          coords = coords.substring(0, coords.length - 1);
+          area.setAttribute("shape", "poly");
+          area.setAttribute("coords", coords);
+          area.setAttribute("href", "#");
+          area.setAttribute("id", zones[zone].name);
+          imagemap.appendChild(area);
+        }
       }
       $("img").mapster({
         showToolTip: true,
@@ -783,10 +799,6 @@
 
     }
     updatetemperature();
-
-
-
-
   </script>
 </body>
 

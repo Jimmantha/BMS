@@ -46,9 +46,6 @@
               </tr>
             </thead>
             <tbody>
-              <!-- Generate rows for each hour from 00:00 to 24:00 -->
-              <!-- Looping over 24 hours -->
-              <!-- You can use a script to generate these rows to avoid manual typing -->
               <script>
                 for (let hour = 5; hour < 24; hour++) {
                   let time = hour.toString().padStart(2, '0') + ":00";
@@ -63,11 +60,22 @@
       <div class="tab-pane fade" id="nav-sensorData" role="tabpanel" aria-labelledby="nav-sensorData-tab">...</div>
       <div class="tab-pane fade" id="nav-control" role="tabpanel" aria-labelledby="nav-control-tab">...</div>
     </div>
-
   </div>
 
   <script>
-
+    var orginalSensorData = <%- JSON.stringify(data) %>;
+    var zone = <%- JSON.stringify(zone) %>;
+    console.log(zone);
+    console.log(orginalSensorData);
+    var tempData = [];
+    var zoneValue = zone;
+    for(data in orginalSensorData){
+      var tempData = [];
+      tempData.temperature = orginalSensorData[data].temperature;
+      tempData.time = orginalSensorData[data].timestamp;
+      tempData.margin = orginalSensorData[data].lowerMargin;
+    data.push(tempData);
+    }
   </script>
 </body>
 
