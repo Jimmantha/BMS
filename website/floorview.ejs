@@ -2,40 +2,70 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document</title>
-  <link href="./stylesheet.css" rel="stylesheet" />
-  <%- include("./header") %>
+  <%- include('header') %>
+  <link rel="stylesheet" href="./stylesheet.css">
+
 </head>
 
 <body>
-  <div class="table-active">
-    <div class="row title pb-1" style="height: 4vh">
-      <div class="col-4 text-center mt-2 justify-text-center " style="background-color: rgba(240, 248, 255, 0);">
-        <h3>Floorplan</h3>
+  <div class="table">
+    <div class="row title">
+      <div class="col text-center">
+        Floorview
       </div>
-      <div class="col-4 text-center mt-2 justify-text-center ">
-        <h3>Energy Usage</h3>
+      <div class="col text-center">
+        gauge
+      </div>
+      <div class="col text-center">
+        Details
       </div>
     </div>
-    <div class="row" style="height: 44vh;z-index: -5; ">
-      <div class="col-4 m-3">
-        <canvas class="p-0" id="shadeCanvas" style="position: absolute; z-index: -1; width: 600px; height: 400px"></canvas>
-        <img src="https://placehold.co/600x400" alt="" id="floorplan" style="position: absolute; top: 0; left: 0;opacity: 0.5;" usemap="#testmap" />
-      </div>
-      <div class="col-4 m-3" style="overflow: auto; height: 100%">
-        <div class="table" id="gaugeTable">
+    <div class="row">
+      <div class="col-8">
+        <div class="table">
+          <div class="row">
+            <div class="col">
+              <div class="row" style="height: 44vh;background-color: rgba(240, 248, 255, 0);">
+                <div class="col m-3">
+                  <canvas class="p-0" id="shadeCanvas" style="position: absolute; z-index: -1; width: 600px; height: 400px"></canvas>
+                  <img src="https://placehold.co/600x400" alt="" id="floorplan" style="position: absolute; top: 0; left: 0" usemap="#testmap" />
+                </div>
+                <div class="col m-3" style="overflow: auto; height: 100%">
+                  <div class="table" id="gaugeTable">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row title mt-3">
+            <div class="col text-center">
+              Floorview
+            </div>
+            <div class="col text-center">
+              Total Energy (month)
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              Lorem ipsum dolor sit amet consectetur adipisicing elit. In tenetur doloribus iusto recusandae officiis pariatur saepe aliquid eos perspiciatis similique libero omnis non esse quibusdam laudantium eum, quaerat excepturi aspernatur.
+            </div>
+            <div class="col d-flex justify-content-center">
+              <div class="mt-3 d-flex meter">
+                <!-- meter -->
+              </div>
+            </div>
+          </div>
         </div>
       </div>
+      <div class="col m-2" style="overflow-y:scroll; height: 90vh;" id="moreDetails"></div>
     </div>
-    <div class="row title pt-1 pb-1" style="height:5vh"></div>
   </div>
-  <br />
-
+  </div>
   <map name="testmap" id="testmap">
   </map>
-
   <!-- Modal -->
   <div id="infoModal" class="modal p-3" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
@@ -74,8 +104,19 @@
 
     function loadData() {
 
+
       floorlevel = $("#floorSelector").val();
       zones = ejsData[floorlevel - 1].zones;
+      try {
+        var image = document.getElementById("floorplan");
+        $(image).mapster('unbind');
+        var floorplan = ejsData[floorlevel - 1].floorplan;
+        image.src = floorplan;
+        console.log("Floorplan image set")
+      } catch (error) {
+        console.error("Error setting floorplan image:", error);
+      }
+
       for (zone in zones) {
         var timestampTemperaturePairs = []; // Changed from timestampZonePairs
         for (data in orginalSensorData) {
@@ -101,7 +142,6 @@
     var timestampTemperaturePairs = [];
     var zones;
     var imagemap = document.getElementById("testmap");
-    var floorplan = ejsData[0].floorplan;
     var modal = document.getElementById("infoModal");
     var shadeCanvas = document.getElementById("shadeCanvas");
     var ctx = shadeCanvas.getContext("2d");
@@ -163,16 +203,17 @@
           area.setAttribute("href", "#");
           area.setAttribute("id", zones[zone].name);
           imagemap.appendChild(area);
-        }
-        else if(zones[zone].shape == "poly"){
+        } else if (zones[zone].shape == "poly") {
           var coordinates = zones[zone];
           var area = document.createElement("area");
-          var coords = "";
-          for (var i = 0; i < coordinates.points.length; i++) {
-            coords += coordinates.points[i].x + "," + coordinates.points[i].y + ",";
-          }
-          coords = coords.substring(0, coords.length - 1);
+
           area.setAttribute("shape", "poly");
+          var coords = "";
+          for (var i = 0; i < zones[zone].xCords.length; i++) {
+            coords += zones[zone].xCords[i] + "," + zones[zone].yCords[i] + ",";
+          }
+
+          coords = coords.slice(0, -1);
           area.setAttribute("coords", coords);
           area.setAttribute("href", "#");
           area.setAttribute("id", zones[zone].name);
@@ -184,9 +225,9 @@
         mapKey: "id",
         singleSelect: true,
         fillOpacity: 0.2,
+
         onClick: function(e) {
-          console.log(e)
-            loadDetails(e);
+          loadDetails(e);
         },
       });
       try {
@@ -234,12 +275,13 @@
         } catch (error) {
           console.error("Error setting tooltip in ImageMapster:", error);
         }
-        var zonePosition = zones[zone];
-        var startX = (zonePosition.startX / 600) * shadeCanvas.width;
-        var startY = (zonePosition.startY / 400) * shadeCanvas.height;
-        var endX = (zonePosition.endX / 600) * shadeCanvas.width;
-        var endY = (zonePosition.endY / 400) * shadeCanvas.height;
-
+        if (zones[zone].shape == "rect") {
+          var zonePosition = zones[zone];
+          var startX = (zonePosition.startX / 600) * shadeCanvas.width;
+          var startY = (zonePosition.startY / 400) * shadeCanvas.height;
+          var endX = (zonePosition.endX / 600) * shadeCanvas.width;
+          var endY = (zonePosition.endY / 400) * shadeCanvas.height;
+        }
         try {
           var temperatureGradient =
             (sensorData[zones[zone].name][0].temperature -
@@ -252,401 +294,100 @@
         } catch (error) {
           ctx.fillStyle = "rgba(128, 128, 128, 0.5)"; // Set fillStyle to grey
         }
+        if (zones[zone].shape == "rect") {
+          ctx.beginPath();
+          if (endX > startX) {
+            var width = Math.abs(endX - startX);
+            if (endY > startY) {
+              var height = Math.abs(endY - startY);
+              ctx.rect(startX, startY, width, height);
+            } else {
+              var height = Math.abs(startY - endY);
+              ctx.rect(startX, endY, width, height);
+            }
+          } else {
+            var width = Math.abs(startX - endX);
+            if (endY > startY) {
+              var height = Math.abs(endY - startY);
+              ctx.rect(endX, startY, width, height);
+            } else {
+              var height = Math.abs(startY - endY);
+              ctx.rect(endX, endY, width, height);
+            }
+          }
+          ctx.fill();
+        } else if (zones[zone].shape == "poly") {
+          var zonePosition = zones[zone];
+          ctx.beginPath();
+          ctx.moveTo(
+            (zonePosition.xCords[0] / 600) * shadeCanvas.width,
+            (zonePosition.yCords[0] / 400) * shadeCanvas.height
+          );
+          for (var i = 1; i < zonePosition.xCords.length; i++) {
+            ctx.lineTo(
+              (zonePosition.xCords[i] / 600) * shadeCanvas.width,
+              (zonePosition.yCords[i] / 400) * shadeCanvas.height
+            );
+          }
+          ctx.closePath();
+          ctx.fill();
 
-        ctx.beginPath();
-        if (endX > startX) {
-          var width = Math.abs(endX - startX);
-          if (endY > startY) {
-            var height = Math.abs(endY - startY);
-            ctx.rect(startX, startY, width, height);
-          } else {
-            var height = Math.abs(startY - endY);
-            ctx.rect(startX, endY, width, height);
-          }
-        } else {
-          var width = Math.abs(startX - endX);
-          if (endY > startY) {
-            var height = Math.abs(endY - startY);
-            ctx.rect(endX, startY, width, height);
-          } else {
-            var height = Math.abs(startY - endY);
-            ctx.rect(endX, endY, width, height);
-          }
+          console.log(zones[zone].name, "poly shaped")
         }
-        ctx.fill();
       }
     }
 
 
 
-  
+    $("#editButton").click(function() {
+      var name = modal.querySelector(".modal-title").textContent;
+      modal.querySelector(".modal-title").textContent = "Edit " + modal.querySelector(".modal-title").textContent;
+      modal.querySelector(".modal-header");
+      document.getElementById("editButton").style.display = "none";
+      var div = document.createElement("div");
+      div.textContent = "set temp: ";
+      var setTempInput = document.createElement("input");
+      setTempInput.id = "setInput";
+      setTempInput.type = "number";
+      setTempInput.value =
+        sensorData[name][0].setTemperature;
+
+      var margin = document.createElement("div");
+      margin.textContent = "margin: ";
+      var marginInput = document.createElement("input");
+      marginInput.id = "Margin";
+      marginInput.type = "number";
+      marginInput.value = (-(sensorData[name][0].setTemperature - sensorData[name][0].upperMargin));
+      margin.appendChild(marginInput);
+
+      var button = document.createElement("button");
+      button.classList.add("btn", "ms-3", "btn-primary");
+      button.textContent = "update";
+      button.id = "update";
+      button.addEventListener("click", function() {
+        var newTemp = setTempInput.value;
+        var newMargin = marginInput.value;
+        socket.emit("change", {
+          temperature: newTemp,
+          margin: newMargin
+        });
+        modal.querySelector(".modal-footer").removeChild(button);
+        closeModal();
+      });
+      modal.querySelector(".modal-body").innerHTML = "";
+      modal.querySelector(".modal-body").appendChild(div);
+      div.appendChild(setTempInput);
+      div.appendChild(margin);
+      modal.querySelector(".modal-footer").appendChild(button);
+    });
     updatetemperature();
   </script>
   <script>
-    function createGauge() {
-      count = 0;
-      for (var zone in zones) {
-        if (count % 2 == 0) {
-          var row = document.createElement("div");
-          row.classList.add("row");
-          row.id = "row" + count;
-          $("#gaugeTable").append(row);
-          var gaugeData = {
-            datasets: [{
-              label: zones[zone].name,
-              data: [200, 200, 200],
-              backgroundColor: [
-                "rgba(255, 0, 0, 0.2)",
-                "rgba(0, 255, 0, 0.2)",
-                "rgba(0, 0, 255, 0.2)",
-              ],
-              borderColor: [
-                "rgba(255, 0, 0, 0.2)",
-                "rgba(0, 255, 0, 0.2)",
-                "rgba(0, 0, 255, 0.2)",
-              ],
-              borderWidth: 1,
-              circumference: 180,
-              rotation: -90,
-              cutout: "80%",
-              needle: 300,
-            }, ],
-          };
-          var gaugeNeedle = {
-            id: "gaugeNeedle",
-            afterDatasetsDraw(chart, args, plugins) {
-              const {
-                ctx,
-                data
-              } = chart;
-              ctx.save();
-              const xCenter = chart.getDatasetMeta(0).data[0].x;
-              const yCenter = chart.getDatasetMeta(0).data[0].y;
-
-              const outerRadius = chart.getDatasetMeta(0).data[0].outerRadius;
-              const innerRadius = chart.getDatasetMeta(0).data[0].innerRadius;
-              const widthSlice = (outerRadius - innerRadius) / 2;
-              const radius = 15;
-              const angle = Math.PI / 180;
-
-              const needleValue = data.datasets[0].needleValue;
-
-              const dataTotal = data.datasets[0].data.reduce((a, b) => a + b, 0);
-              const circumference =
-                (chart.getDatasetMeta(0).data[0].circumference /
-                  Math.PI /
-                  data.datasets[0].data[0]) *
-                data.datasets[0].needle;
-
-              ctx.translate(xCenter, yCenter);
-              ctx.rotate(Math.PI * (circumference + 1.5));
-              //needle
-              ctx.beginPath();
-              ctx.strokeStyle = "grey";
-              ctx.fillStyle = "grey";
-              ctx.moveTo(0 - 15, 0);
-              ctx.lineTo(0, 0 - innerRadius - widthSlice);
-              ctx.lineTo(0 + 15, 0);
-              ctx.closePath();
-              ctx.stroke();
-              ctx.fill();
-
-              //dot
-              ctx.beginPath();
-              ctx.arc(0, 0, radius, 0, angle * 360, false);
-              ctx.fill();
-              ctx.restore();
-            },
-          };
-          const gaugeFlowMeter = {
-            id: "gaugeFlowMeter",
-            afterDatasetsDraw(chart, args, plugins) {
-              const {
-                ctx,
-                data
-              } = chart;
-
-              ctx.save();
-              const needleValue = data.datasets[0].needleValue;
-              const xCenter = chart.getDatasetMeta(0).data[0].x;
-              const yCenter = chart.getDatasetMeta(0).data[0].y;
-              const chartMetaData = chart.getDatasetMeta(0);
-
-              const circumference =
-                (chart.getDatasetMeta(0).data[0].circumference /
-                  Math.PI /
-                  data.datasets[0].data[0]) *
-                data.datasets[0].needle;
-
-              //flowmeter
-              ctx.fillStyle = "black";
-              ctx.font = "30px Arial";
-              ctx.textAlign = "center";
-              ctx.fillText(data.datasets[0].needle + " kwh", xCenter, yCenter + 40);
-            },
-          };
-          const gaugeLabels = {
-            id: "gaugeLabels",
-            afterDatasetsDraw(chart, args, plugins) {
-              const {
-                ctx,
-                data
-              } = chart;
-              ctx.save();
-              const xCenter = chart.getDatasetMeta(0).data[0].x;
-              const yCenter = chart.getDatasetMeta(0).data[0].y;
-              const outer = chart.getDatasetMeta(0).data[0].outerRadius;
-              const inner = chart.getDatasetMeta(0).data[0].innerRadius;
-              ctx.fillStyle = "black";
-              ctx.font = "30px Arial";
-              ctx.textAlign = "center";
-              ctx.fillText(data.datasets[0].label, xCenter, yCenter - outer - 10);
-              ctx.restore();
-            },
-          };
-          const chartAreaBorder = {
-            id: "chartAreaBorder",
-            beforeDraw(chart, args, options) {
-              const {
-                ctx,
-                chartArea: {
-                  left,
-                  top,
-                  width,
-                  height
-                },
-              } = chart;
-              const margin = 10;
-              const leftMargin = left - margin;
-              const topMargin = top - margin;
-              const widthMargin = width + 2 * margin;
-              const heightMargin = height + 2 * margin;
-              ctx.strokeRect(leftMargin, topMargin, widthMargin, heightMargin);
-              ctx.save();
-              ctx.restore();
-            },
-          };
-          const gaugeConfig = {
-            type: "doughnut",
-            data: gaugeData,
-            options: {
-              layout: {
-                padding: 20,
-              },
-              animation: {
-                animateRotate: false, // Disable rotation animation
-              },
-              aspectRatio: 1.2,
-              plugins: {
-                legend: {
-                  display: false,
-                },
-                tooltip: {
-                  enabled: false,
-                },
-              },
-            },
-            plugins: [gaugeNeedle, gaugeFlowMeter, gaugeLabels, chartAreaBorder],
-          };
-          var canvas = document.createElement("canvas");
-          var col = document.createElement("div");
-          canvas.id = "gauge" + zones[zone].name;
-          canvas.style.width = "100%";
-          canvas.style.height = "300px";
-          var row = document.getElementById("row" + count);
-          col.classList.add("col-6");
-          col.appendChild(canvas);
-          row.appendChild(col);
-          var ctx = canvas.getContext("2d");
-          dynamicCharts["gauge" + count] = new Chart(ctx, gaugeConfig);
-          count++;
-        } else {
-          var gaugeData = {
-            datasets: [{
-              label: zones[zone].name,
-              data: [200, 200, 200],
-              backgroundColor: [
-                "rgba(255, 0, 0, 0.2)",
-                "rgba(0, 255, 0, 0.2)",
-                "rgba(0, 0, 255, 0.2)",
-              ],
-              borderColor: [
-                "rgba(255, 0, 0, 0.2)",
-                "rgba(0, 255, 0, 0.2)",
-                "rgba(0, 0, 255, 0.2)",
-              ],
-              borderWidth: 1,
-              circumference: 180,
-              rotation: -90,
-              cutout: "80%",
-              needle: 300,
-            }, ],
-          };
-          var gaugeNeedle = {
-            id: "gaugeNeedle",
-            afterDatasetsDraw(chart, args, plugins) {
-              const {
-                ctx,
-                data
-              } = chart;
-              ctx.save();
-              const xCenter = chart.getDatasetMeta(0).data[0].x;
-              const yCenter = chart.getDatasetMeta(0).data[0].y;
-
-              const outerRadius = chart.getDatasetMeta(0).data[0].outerRadius;
-              const innerRadius = chart.getDatasetMeta(0).data[0].innerRadius;
-              const widthSlice = (outerRadius - innerRadius) / 2;
-              const radius = 15;
-              const angle = Math.PI / 180;
-
-              const needleValue = data.datasets[0].needleValue;
-
-              const dataTotal = data.datasets[0].data.reduce((a, b) => a + b, 0);
-              const circumference =
-                (chart.getDatasetMeta(0).data[0].circumference /
-                  Math.PI /
-                  data.datasets[0].data[0]) *
-                data.datasets[0].needle;
-
-              ctx.translate(xCenter, yCenter);
-              ctx.rotate(Math.PI * (circumference + 1.5));
-              //needle
-              ctx.beginPath();
-              ctx.strokeStyle = "grey";
-              ctx.fillStyle = "grey";
-              ctx.moveTo(0 - 15, 0);
-              ctx.lineTo(0, 0 - innerRadius - widthSlice);
-              ctx.lineTo(0 + 15, 0);
-              ctx.closePath();
-              ctx.stroke();
-              ctx.fill();
-
-              //dot
-              ctx.beginPath();
-              ctx.arc(0, 0, radius, 0, angle * 360, false);
-              ctx.fill();
-              ctx.restore();
-            },
-          };
-          const gaugeFlowMeter = {
-            id: "gaugeFlowMeter",
-            afterDatasetsDraw(chart, args, plugins) {
-              const {
-                ctx,
-                data
-              } = chart;
-
-              ctx.save();
-              const needleValue = data.datasets[0].needleValue;
-              const xCenter = chart.getDatasetMeta(0).data[0].x;
-              const yCenter = chart.getDatasetMeta(0).data[0].y;
-              const chartMetaData = chart.getDatasetMeta(0);
-
-              const circumference =
-                (chart.getDatasetMeta(0).data[0].circumference /
-                  Math.PI /
-                  data.datasets[0].data[0]) *
-                data.datasets[0].needle;
-
-              //flowmeter
-              ctx.fillStyle = "black";
-              ctx.font = "30px Arial";
-              ctx.textAlign = "center";
-              ctx.fillText(data.datasets[0].needle + " kwh", xCenter, yCenter + 40);
-            },
-          };
-          const gaugeLabels = {
-            id: "gaugeLabels",
-            afterDatasetsDraw(chart, args, plugins) {
-              const {
-                ctx,
-                data
-              } = chart;
-              ctx.save();
-              const xCenter = chart.getDatasetMeta(0).data[0].x;
-              const yCenter = chart.getDatasetMeta(0).data[0].y;
-              const outer = chart.getDatasetMeta(0).data[0].outerRadius;
-              const inner = chart.getDatasetMeta(0).data[0].innerRadius;
-              ctx.fillStyle = "black";
-              ctx.font = "30px Arial";
-              ctx.textAlign = "center";
-              ctx.fillText(data.datasets[0].label, xCenter, yCenter - outer - 10);
-              ctx.restore();
-            },
-          };
-          const chartAreaBorder = {
-            id: "chartAreaBorder",
-            beforeDraw(chart, args, options) {
-              const {
-                ctx,
-                chartArea: {
-                  left,
-                  top,
-                  width,
-                  height
-                },
-              } = chart;
-              const margin = 10;
-              const leftMargin = left - margin;
-              const topMargin = top - margin;
-              const widthMargin = width + 2 * margin;
-              const heightMargin = height + 2 * margin;
-              ctx.strokeRect(leftMargin, topMargin, widthMargin, heightMargin);
-              ctx.save();
-              ctx.restore();
-            },
-          };
-          const gaugeConfig = {
-            type: "doughnut",
-            data: gaugeData,
-            options: {
-              layout: {
-                padding: 20,
-              },
-              animation: {
-                animateRotate: false, // Disable rotation animation
-              },
-              aspectRatio: 1.2,
-              plugins: {
-                legend: {
-                  display: false,
-                },
-                tooltip: {
-                  enabled: false,
-                },
-              },
-            },
-            plugins: [gaugeNeedle, gaugeFlowMeter, gaugeLabels, chartAreaBorder],
-          };
-          var canvas = document.createElement("canvas");
-          var col = document.createElement("div");
-          canvas.id = "gauge" + zones[zone].name;
-          canvas.style.width = "100%";
-          canvas.style.height = "300px";
-          var row = document.getElementById("row" + (count - 1));
-          col.classList.add("col-6");
-          col.appendChild(canvas);
-          row.appendChild(col);
-          var ctx = canvas.getContext("2d");
-          dynamicCharts["gauge" + count] = new Chart(ctx, gaugeConfig);
-          count++;
-        }
-      }
-    }
-    console.log(dynamicCharts);
-    var testbutton = document.createElement("button");
-    testbutton.textContent = "test";
-    testbutton.addEventListener("click", function() {
-      dynamicCharts.gauge0.data.datasets[0].needle = (Math.floor(Math.random() * 601)).toFixed(2);
-      dynamicCharts.gauge0.update();
-      console.log(dynamicCharts.gauge0.data.datasets[0].needle);
-    })
-    document.body.appendChild(testbutton);
-    createGauge();
     $('#floorSelector').on('change', () => {
       loadData();
       createArea();
       updatetemperature();
+      dynamicCharts = {};
     })
 
     function loadTempChart(key) {
@@ -676,7 +417,7 @@
       lower.reverse();
       set.reverse();
 
-      var tempChart = document.getElementById("tempChart");
+      var tempChart = document.createElement("canvas");
       var tempCtx = tempChart.getContext("2d");
       var time = new Date().toISOString().split("T")[1].substring(0, 8);
       var data = {
@@ -727,25 +468,125 @@
           },
         },
       };
+      var tempContainer = document.createElement("div");
+      tempContainer.id = "tempContainer";
+      tempContainer.textContent = "Temperature over past hour"
+      tempContainer.classList.add("p-3", "text-center", "border")
+      tempContainer.appendChild(tempChart);
 
       dynamicCharts[dynamicChartName] = new Chart(tempCtx, tempConfig);
+      document.getElementById("moreDetails").appendChild(tempContainer);
+
 
     }
+
+    function loadEnergyUse(key) {
+      var energyUse = document.createElement("canvas");
+      var energyUseContainer = document.createElement("div");
+      energyUseContainer.id = "energyUseContainer";
+      energyUseContainer.textContent = "Energy use over past month";
+      energyUseContainer.classList.add("p-3", "mt-2", "text-center", "border")
+      energyUseContainer.appendChild(energyUse);
+
+      var moreDetails = document.getElementById("moreDetails");
+      moreDetails.appendChild(energyUseContainer);
+    }
+
+    function loadHumidityChart(key) {
+      var HumidityChart = document.createElement("canvas");
+      var HumidityChartContainer = document.createElement("div");
+      HumidityChartContainer.id = "energyUseContainer";
+      HumidityChartContainer.textContent = "Energy use over past month";
+      HumidityChartContainer.classList.add("p-3", "mt-2", "text-center", "border")
+      HumidityChartContainer.appendChild(HumidityChart);
+
+      var moreDetails = document.getElementById("moreDetails");
+      moreDetails.appendChild(HumidityChartContainer);
+    }
+
+    function loadPIRChart(key) {
+      var PIRChart = document.createElement("canvas");
+      var PIRChartContainer = document.createElement("div");
+      PIRChartContainer.id = "energyUseContainer";
+      PIRChartContainer.textContent = "Energy use over past month";
+      PIRChartContainer.classList.add("p-3", "mt-2", "text-center", "border")
+      PIRChartContainer.appendChild(PIRChart);
+
+      var moreDetails = document.getElementById("moreDetails");
+      moreDetails.appendChild(PIRChartContainer);
+    }
+
     updatetemperature();
   </script>
   <script>
-    function loadDetails(zone){
+    function loadDetails(zone) {
+      var table = document.getElementById("moreDetails");
+      table.innerHTML = "";
+      var creationTime = document.createElement("div");
+
+      var refreshButton = document.createElement("button");
+      refreshButton.classList.add("btn", "btn-primary");
+      refreshButton.textContent = "Refresh";
+      refreshButton.addEventListener("click", function() {
+        // Add your refresh logic here
+      });
+
+
+      creationTime.classList.add("col", "text-end");
+      creationTime.appendChild(refreshButton);
+      creationTime.id = "creationTime";
+      creationTime.textContent = "Creation Time: " + new Date().toLocaleString();
+      table.appendChild(creationTime);
+
       var table = document.getElementById("gaugeTable")
-      var zoneName = zone;
+      table.innerHTML = "";
+      var zoneName = zone.key;
       var row1 = document.createElement("div");
       row1.classList.add("row");
       var title = document.createElement("div");
-      title.classList.add("col");
+      title.classList.add("col", "text-center");
       title.textContent = zoneName;
-      row1.appendChild(title);
 
+      var row2 = document.createElement("div");
+      row2.classList.add("row");
+      var gauge = document.createElement("div");
+      gauge.classList.add("col", "text-center", "mt-5");
+      gauge.textContent = "gauge";
+      gauge.style.fontFamily = "digital";
+      gauge.style.fontSize = "40px";
+      gauge.textContent = sensorData[zoneName][0].setTemperature + "C";
+
+      var row3 = document.createElement("div");
+      row3.classList.add("row");
+
+
+
+
+      row1.appendChild(title);
+      row2.appendChild(gauge);
+
+      table.appendChild(row1);
+      table.appendChild(row2);
+      loadCharts(zoneName);
 
     }
+
+    function loadCharts(key) {
+      var creationTime = document.getElementById("creationTime");
+      loadTempChart(key)
+      loadEnergyUse(key)
+      loadHumidityChart(key)
+      loadPIRChart(key)
+
+    }
+
+    var testButton = document.createElement("button");
+    testButton.textContent = "socket test";
+    testButton.addEventListener("click", function() {
+      socket.emit("test");
+    });
+    testButton.classList.add("btn", "btn-primary");
+    document.body.appendChild(testButton);
   </script>
 </body>
 
