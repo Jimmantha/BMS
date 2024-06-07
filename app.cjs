@@ -84,9 +84,6 @@ const SensorData = mongoose.model('SensorDatas', sensorDataSchema);
 
 //watch for changes on mongodb and emit the changes to the client
 io.on('connection', async (socket) => {
-    SensorData.watch().on('change', async () => {
-        io.emit('data');
-    });
 
     socket.on('test', ()=>{
         console.log('test');
@@ -197,7 +194,7 @@ app.get('/', async (req, res) => {
     var floorDetails = await fetchFloorDetails();
     var sensorData = await getSensorData();
 
-    res.render('newfloorview', { data: floorDetails, sensorData: sensorData });
+    res.render('floorview', { data: floorDetails, sensorData: sensorData });
 
 });
 
@@ -210,7 +207,7 @@ app.get('/Floorview', async (req, res) => {
     var floorDetails = await fetchFloorDetails();
     var sensorData = await getSensorData();
 
-    res.render('newfloorview', { data: floorDetails, sensorData: sensorData });
+    res.render('floorview', { data: floorDetails, sensorData: sensorData });
 });
 
 app.get('/publish', (req, res) => {
