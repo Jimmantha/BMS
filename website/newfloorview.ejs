@@ -60,7 +60,7 @@
           </div>
         </div>
       </div>
-      <div class="col " id="moreDetails"></div>
+      <div class="col m-2" style="overflow-y:scroll; height: 90vh;" id="moreDetails"></div>
     </div>
   </div>
   </div>
@@ -104,6 +104,7 @@
 
     function loadData() {
 
+
       floorlevel = $("#floorSelector").val();
       zones = ejsData[floorlevel - 1].zones;
       try {
@@ -111,9 +112,6 @@
         $(image).mapster('unbind');
         var floorplan = ejsData[floorlevel - 1].floorplan;
         image.src = floorplan;
-        if ($(image).data('mapster')) {
-          $(image).mapster('unbind');
-        }
         console.log("Floorplan image set")
       } catch (error) {
         console.error("Error setting floorplan image:", error);
@@ -227,36 +225,9 @@
         mapKey: "id",
         singleSelect: true,
         fillOpacity: 0.2,
+        
         onClick: function(e) {
-          console.log(e.key);
-          openModal();
-          modal.querySelector(".modal-title").textContent = e.key;
-
-          for (zone in zones) {
-            if (e.key == zones[zone].name) {
-              modal.querySelector(".modal-body").textContent =
-                "Temperature Set: " +
-                sensorData[zones[zone].name][0].setTemperature +
-                "C";
-              modal.querySelector(".modal-body").innerHTML += "&#177";
-              modal.querySelector(".modal-body").textContent +=
-                (sensorData[zones[zone].name][0].setTemperature - sensorData[zones[zone].name][0].lowerMargin) + "C";
-              // create modal body elements
-              var div = document.createElement("div");
-              modal.querySelector(".modal-body").appendChild(div);
-              var div = document.createElement("div");
-
-
-              modal.querySelector(".modal-body").appendChild(div);
-
-              var canvas = document.createElement("canvas");
-              canvas.id = "tempChart";
-              canvas.style.width = "100%";
-              canvas.style.height = "300px";
-              modal.querySelector(".modal-body").appendChild(canvas);
-            }
-          }
-          loadTempChart(e.key);
+          loadDetails(e);
         },
       });
       try {
@@ -446,7 +417,7 @@
       lower.reverse();
       set.reverse();
 
-      var tempChart = document.getElementById("tempChart");
+      var tempChart = document.createElement("canvas");
       var tempCtx = tempChart.getContext("2d");
       var time = new Date().toISOString().split("T")[1].substring(0, 8);
       var data = {
@@ -497,11 +468,117 @@
           },
         },
       };
+      var tempContainer = document.createElement("div");
+      tempContainer.id = "tempContainer";
+      tempContainer.textContent = "Temperature over past hour"
+      tempContainer.classList.add("p-3","text-center","border")
+      tempContainer.appendChild(tempChart);
 
       dynamicCharts[dynamicChartName] = new Chart(tempCtx, tempConfig);
+      document.getElementById("moreDetails").appendChild(tempContainer);
+
 
     }
+   
+    function loadEnergyUse(key){
+      var energyUse = document.createElement("canvas");
+      var energyUseContainer = document.createElement("div"); 
+      energyUseContainer.id = "energyUseContainer";
+      energyUseContainer.textContent = "Energy use over past month";
+      energyUseContainer.classList.add("p-3","mt-2","text-center","border")
+      energyUseContainer.appendChild(energyUse);
+      
+      var moreDetails = document.getElementById("moreDetails");
+      moreDetails.appendChild(energyUseContainer);
+    }
+
+    function loadHumidityChart(key){
+      var HumidityChart = document.createElement("canvas");
+      var HumidityChartContainer = document.createElement("div"); 
+      HumidityChartContainer.id = "energyUseContainer";
+      HumidityChartContainer.textContent = "Energy use over past month";
+      HumidityChartContainer.classList.add("p-3","mt-2","text-center","border")
+      HumidityChartContainer.appendChild(HumidityChart);
+      
+      var moreDetails = document.getElementById("moreDetails");
+      moreDetails.appendChild(HumidityChartContainer);
+    }
+
+    function loadPIRChart(key){
+      var PIRChart = document.createElement("canvas");
+      var PIRChartContainer = document.createElement("div"); 
+      PIRChartContainer.id = "energyUseContainer";
+      PIRChartContainer.textContent = "Energy use over past month";
+      PIRChartContainer.classList.add("p-3","mt-2","text-center","border")
+      PIRChartContainer.appendChild(PIRChart);
+      
+      var moreDetails = document.getElementById("moreDetails");
+      moreDetails.appendChild(PIRChartContainer);
+    }
+
     updatetemperature();
+  </script>
+  <script>
+    function loadDetails(zone) {
+      var table = document.getElementById("moreDetails");
+      table.innerHTML = "";
+      var creationTime = document.createElement("div");
+
+      var refreshButton = document.createElement("button");
+      refreshButton.classList.add("btn", "btn-primary");
+      refreshButton.textContent = "Refresh";
+      refreshButton.addEventListener("click", function() {
+        // Add your refresh logic here
+      });
+
+      
+      creationTime.classList.add("col", "text-end");
+      creationTime.appendChild(refreshButton);
+      creationTime.id = "creationTime";
+      creationTime.textContent = "Creation Time: " + new Date().toLocaleString();
+      table.appendChild(creationTime);
+
+      var table = document.getElementById("gaugeTable")
+      table.innerHTML = "";
+      var zoneName = zone.key;
+      var row1 = document.createElement("div");
+      row1.classList.add("row");
+      var title = document.createElement("div");
+      title.classList.add("col", "text-center");
+      title.textContent = zoneName;
+
+      var row2 = document.createElement("div");
+      row2.classList.add("row");
+      var gauge = document.createElement("div");
+      gauge.classList.add("col", "text-center", "mt-5");
+      gauge.textContent = "gauge";
+      gauge.style.fontFamily = "digital";
+      gauge.style.fontSize = "40px";
+      gauge.textContent = sensorData[zoneName][0].setTemperature + "C";
+
+      var row3 = document.createElement("div");
+      row3.classList.add("row");
+      
+
+
+
+      row1.appendChild(title);
+      row2.appendChild(gauge);
+
+      table.appendChild(row1);
+      table.appendChild(row2);
+      loadCharts(zoneName);
+
+    }
+
+    function loadCharts(key){
+      var creationTime = document.getElementById("creationTime");
+      loadTempChart(key)
+      loadEnergyUse(key)
+      loadHumidityChart(key)
+      loadPIRChart(key)
+
+    } 
   </script>
 </body>
 

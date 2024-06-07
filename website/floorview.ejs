@@ -185,35 +185,8 @@
         singleSelect: true,
         fillOpacity: 0.2,
         onClick: function(e) {
-          console.log(e.key);
-          openModal();
-          modal.querySelector(".modal-title").textContent = e.key;
-
-          for (zone in zones) {
-            if (e.key == zones[zone].name) {
-              modal.querySelector(".modal-body").textContent =
-                "Temperature Set: " +
-                sensorData[zones[zone].name][0].setTemperature +
-                "C";
-              modal.querySelector(".modal-body").innerHTML += "&#177";
-              modal.querySelector(".modal-body").textContent +=
-                (sensorData[zones[zone].name][0].setTemperature - sensorData[zones[zone].name][0].lowerMargin) + "C";
-              // create modal body elements
-              var div = document.createElement("div");
-              modal.querySelector(".modal-body").appendChild(div);
-              var div = document.createElement("div");
-
-
-              modal.querySelector(".modal-body").appendChild(div);
-
-              var canvas = document.createElement("canvas");
-              canvas.id = "tempChart";
-              canvas.style.width = "100%";
-              canvas.style.height = "300px";
-              modal.querySelector(".modal-body").appendChild(canvas);
-            }
-          }
-          loadTempChart(e.key);
+          console.log(e)
+            loadDetails(e);
         },
       });
       try {
@@ -306,47 +279,7 @@
 
 
 
-    $("#editButton").click(function() {
-      var name = modal.querySelector(".modal-title").textContent;
-      modal.querySelector(".modal-title").textContent = "Edit " + modal.querySelector(".modal-title").textContent;
-      modal.querySelector(".modal-header");
-      document.getElementById("editButton").style.display = "none";
-      var div = document.createElement("div");
-      div.textContent = "set temp: ";
-      var setTempInput = document.createElement("input");
-      setTempInput.id = "setInput";
-      setTempInput.type = "number";
-      setTempInput.value =
-        sensorData[name][0].setTemperature;
-
-      var margin = document.createElement("div");
-      margin.textContent = "margin: ";
-      var marginInput = document.createElement("input");
-      marginInput.id = "Margin";
-      marginInput.type = "number";
-      marginInput.value = (-(sensorData[name][0].setTemperature - sensorData[name][0].upperMargin));
-      margin.appendChild(marginInput);
-
-      var button = document.createElement("button");
-      button.classList.add("btn", "ms-3", "btn-primary");
-      button.textContent = "update";
-      button.id = "update";
-      button.addEventListener("click", function() {
-        var newTemp = setTempInput.value;
-        var newMargin = marginInput.value;
-        socket.emit("change", {
-          temperature: newTemp,
-          margin: newMargin
-        });
-        modal.querySelector(".modal-footer").removeChild(button);
-        closeModal();
-      });
-      modal.querySelector(".modal-body").innerHTML = "";
-      modal.querySelector(".modal-body").appendChild(div);
-      div.appendChild(setTempInput);
-      div.appendChild(margin);
-      modal.querySelector(".modal-footer").appendChild(button);
-    });
+  
     updatetemperature();
   </script>
   <script>
@@ -799,6 +732,20 @@
 
     }
     updatetemperature();
+  </script>
+  <script>
+    function loadDetails(zone){
+      var table = document.getElementById("gaugeTable")
+      var zoneName = zone;
+      var row1 = document.createElement("div");
+      row1.classList.add("row");
+      var title = document.createElement("div");
+      title.classList.add("col");
+      title.textContent = zoneName;
+      row1.appendChild(title);
+
+
+    }
   </script>
 </body>
 
