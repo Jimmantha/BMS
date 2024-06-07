@@ -98,7 +98,7 @@
     for (var data in ejsData) {
       var option = document.createElement('option');
       option.value = ejsData[data].floorlevel;
-      option.text = "Floor " + ejsData[data].floorlevel; // Assuming you want to use the same value for the display text
+      option.text = ejsData[data].floorlevel; // Assuming you want to use the same value for the display text
       $("#floorSelector").append(option);
     }
 
@@ -106,11 +106,11 @@
 
 
       floorlevel = $("#floorSelector").val();
-      zones = ejsData[floorlevel - 1].zones;
+      zones = ejsData.find(obj => obj.floorlevel == floorlevel).zones;
       try {
         var image = document.getElementById("floorplan");
         $(image).mapster('unbind');
-        var floorplan = ejsData[floorlevel - 1].floorplan;
+        var floorplan = ejsData.find(obj => obj.floorlevel == floorlevel).floorplan;
         image.src = floorplan;
         console.log("Floorplan image set")
       } catch (error) {

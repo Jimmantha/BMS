@@ -54,16 +54,21 @@
 
       <div class="col-8 ">
         <div class="row">
-          <div class="col">
-            <button type="button" class="btn btn-primary mt-5" data-bs-toggle="modal" data-bs-target="#uploadModal">
-              upload floorplan
-            </button>
-          </div>
-          <div class="col">
-            <button type="button" class="btn btn-info mt-5" style="margin-left: 450px !important" id="clear">
-              clear
-            </button>
-
+          <div class="d-flex justify-content-center align-items-center">
+            <div class="col text-start">
+              <button type="button" class="btn btn-primary mt-5" data-bs-toggle="modal" data-bs-target="#uploadModal">
+                upload floorplan
+              </button>
+            </div>
+            <div class="col text-center mt-5">
+              Floor Name: 
+              <input type="text" id="floorLevel" />
+            </div>
+            <div class="col text-end">
+              <button type="button" class="btn btn-primary mt-5" id="clear">
+               clear
+              </button>
+            </div>
           </div>
         </div>
         <img id="new-floorplan" class="p-6 m-6 z-5" src="https://placehold.co/600x400" usemap="#testmap" style=" position: absolute" />
@@ -513,39 +518,44 @@
 
 
 
-    $("#submit").click(function() {
+    $("#submit").click(async function() {
+      if(!document.getElementById("floorLevel").value){
+        alert("Please enter a floor name before submitting.");
+        return;
+      }
+      floorlevel = document.getElementById("floorLevel").value;
+      socket.emit("getFloorNames")
+      await socket.on("floorNames", function(data) {
+        console.log(data);
+        if (data.data.find((floor) => floor.floorlevel == floorlevel)){
+          alert("Floor already exists. Please enter a different floor level.");
+          return;
+        }
+      })
       if (floorDetails == null || zones == null) {
         alert("Please upload a floorplan and create zones before submitting.");
         return;
       }
+
       if (confirm("Are you sure you want to submit?")) {
         var data = {};
         data.floorplan = floorDetails;
         data.zones = zones;
-        data.floorlevel = 1;
+        data.floorlevel = floorlevel;
         console.log(data);
 
         socket.emit("floorplan", data);
-        console.log("submitted");
-          fetch("/", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify(data)
-          })
-            .then(response => response.json())
-            .then(data => {
-              // Handle response data here
-            })
-            .catch(error => {
-              // Handle error here
-            });
       } else {
         return;
       }
     });
 
+    $(document).ready( () =>  {
+      $("#clear").on("click", () => {
+        location.reload();
+      })
+    })
+    
 
     function createMoreDetails() {
       const labels = Utils.months({

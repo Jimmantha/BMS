@@ -30,7 +30,7 @@ const ZoneSchema = new Schema({
 
 const floorplan = new Schema({
     floorplan: { type: String, required: false },
-    floorlevel: { type: Number, required: false },
+    floorlevel: { type: String, required: false },
     zones: [ZoneSchema]
 });
 
@@ -45,7 +45,7 @@ async function fetchFloorDetails() {
     }
 }
 
-mongoose.connect('mongodb://localhost:27017').then(() => {
+mongoose.connect('mongodb+srv://pleasepeople123:VfLWNiTsHAUOZjkY@cluster0.75o7lsi.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0').then(() => {
     console.log('connected to db');
 }).catch(err => console.log(err));
 
@@ -56,7 +56,7 @@ const client = mqtt.connect('mqtt://localhost:1883');
 // Create a schema for the sensor data
 const sensorDataSchema = new mongoose.Schema({
     metaData: {
-        floor: Number,
+        floor: String,
         zone: String
     },
     temperature: Number,
@@ -71,6 +71,7 @@ const sensorDataSchema = new mongoose.Schema({
 // Create a model for the sensor data
 const SensorData = mongoose.model('SensorDatas', sensorDataSchema);
 
+
 // Handle sending command to MQTT broker
 // from req.body
 // Send the command to the MQTT broker
@@ -84,6 +85,7 @@ const SensorData = mongoose.model('SensorDatas', sensorDataSchema);
 
 //watch for changes on mongodb and emit the changes to the client
 io.on('connection', async (socket) => {
+
 
     socket.on('test', ()=>{
         console.log('test');
@@ -115,6 +117,13 @@ io.on('connection', async (socket) => {
         })
         newFloor.save();
         console.log ('newFloor',newFloor)
+
+
+    });
+
+    socket.on('getFloorNames', async () => {
+        var data = await floorDetails.find({}, 'floorlevel');
+        socket.emit('floorNames', { data: data });
     });
     sensorData = await getSensorData();
 });
