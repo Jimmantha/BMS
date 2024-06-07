@@ -522,11 +522,25 @@
         var data = {};
         data.floorplan = floorDetails;
         data.zones = zones;
-        
+        data.floorlevel = 1;
         console.log(data);
 
         socket.emit("floorplan", data);
         console.log("submitted");
+          fetch("/", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+          })
+            .then(response => response.json())
+            .then(data => {
+              // Handle response data here
+            })
+            .catch(error => {
+              // Handle error here
+            });
       } else {
         return;
       }

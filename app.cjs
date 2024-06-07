@@ -45,7 +45,7 @@ async function fetchFloorDetails() {
     }
 }
 
-mongoose.connect('mongodb+srv://pleasepeople123:VfLWNiTsHAUOZjkY@cluster0.75o7lsi.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0').then(() => {
+mongoose.connect('mongodb://localhost:27017').then(() => {
     console.log('connected to db');
 }).catch(err => console.log(err));
 
