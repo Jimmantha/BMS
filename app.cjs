@@ -99,7 +99,7 @@ io.on('connection', async (socket) => {
         client.publish('coolerControl', dataSend);
     });
 
-    socket.on('floorplan', (data) => {
+    socket.on('floorplan', async (data) => {
         console.log('floorplan', data);
         const { floorplan, zones, floorlevel } = data;
         FinZone = [];
@@ -115,16 +115,25 @@ io.on('connection', async (socket) => {
             floorplan: floorplan,
             floorlevel: floorlevel,
         })
-        newFloor.save();
+        await newFloor.save();
         console.log ('newFloor',newFloor)
+        socket.emit("ready", { message: "Floorplan saved" });
+      });
 
 
-    });
 
-    socket.on('getFloorNames', async () => {
-        var data = await floorDetails.find({}, 'floorlevel');
-        socket.emit('floorNames', { data: data });
-    });
+    socket.on('getFloorData', async ()=>{
+        try {
+            var floorDetails = await fetchFloorDetails();
+            var sensorData = await getSensorData();
+            data =  ({ data: floorDetails, sensorData: sensorData });
+            callback(data) 
+        } catch (error) {
+            callback({error: error})
+        }
+
+    })
+
     sensorData = await getSensorData();
 });
 
