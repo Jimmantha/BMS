@@ -33,8 +33,9 @@
                   <canvas class="p-0" id="shadeCanvas" style="position: absolute; z-index: -1; width: 600px; height: 400px"></canvas>
                   <img src="https://placehold.co/600x400" alt="" id="floorplan" style="position: absolute; top: 0; left: 0" usemap="#testmap" />
                 </div>
-                <div class="col m-3" style="overflow: auto; height: 100%">
-                  <div class="table" id="gaugeTable">
+                <div class="col m-3">
+                  <div class="table placeholder-text" id="gaugeTable">
+                    -click on a zone to view details-
                   </div>
                 </div>
               </div>
@@ -89,10 +90,13 @@
     </div>
   </div>
   <script>
-    var ejsData = <%- JSON.stringify(data) %>;
+        var ejsData = <%- JSON.stringify(data) %>;
+        var orginalSensorData = <%- JSON.stringify(sensorData) %>;
+
+
   </script>
   <script>
-    var orginalSensorData = <%- JSON.stringify(sensorData) %>;
+
 
     $("#floorSelector").empty();
     for (var data in ejsData) {
@@ -384,6 +388,9 @@
   </script>
   <script>
     $('#floorSelector').on('change', () => {
+      document.getElementById("moreDetails").innerHTML = "-click on a zone to view details-";
+
+      document.getElementById("gaugeTable").innerHTML = "-click on a zone to view details-";
       loadData();
       createArea();
       updatetemperature();
@@ -496,7 +503,7 @@
       var HumidityChart = document.createElement("canvas");
       var HumidityChartContainer = document.createElement("div");
       HumidityChartContainer.id = "energyUseContainer";
-      HumidityChartContainer.textContent = "Energy use over past month";
+      HumidityChartContainer.textContent = "Humidity use over past hour";
       HumidityChartContainer.classList.add("p-3", "mt-2", "text-center", "border")
       HumidityChartContainer.appendChild(HumidityChart);
 
@@ -508,7 +515,7 @@
       var PIRChart = document.createElement("canvas");
       var PIRChartContainer = document.createElement("div");
       PIRChartContainer.id = "energyUseContainer";
-      PIRChartContainer.textContent = "Energy use over past month";
+      PIRChartContainer.textContent = "PIR trigger use over past hour";
       PIRChartContainer.classList.add("p-3", "mt-2", "text-center", "border")
       PIRChartContainer.appendChild(PIRChart);
 
@@ -550,10 +557,8 @@
       var row2 = document.createElement("div");
       row2.classList.add("row");
       var gauge = document.createElement("div");
-      gauge.classList.add("col", "text-center", "mt-5");
+      gauge.classList.add("col", "text-center", "mt-5", "temp-meter");
       gauge.textContent = "gauge";
-      gauge.style.fontFamily = "digital";
-      gauge.style.fontSize = "40px";
       gauge.textContent = sensorData[zoneName][0].setTemperature + "C";
 
       var row3 = document.createElement("div");

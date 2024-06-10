@@ -87,7 +87,21 @@ body {
 
 }
 
+.placeholder-text{
+    font-size: 30px;
+    text-align: center !important;
+    height: 100%;
+    width: 100%;
+}
+
+.temp-meter{
+    font-family: digital;
+    font-size: 80px;
+}
+
+
 @font-face{
     font-family:'digital';
     src: url('./DIGITALDREAM.ttf');
+ 
    }
