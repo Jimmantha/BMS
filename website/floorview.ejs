@@ -90,14 +90,10 @@
     </div>
   </div>
   <script>
-        var ejsData = <%- JSON.stringify(data) %>;
-        var orginalSensorData = <%- JSON.stringify(sensorData) %>;
-
-
+    var ejsData = <%- JSON.stringify(data) %>;
+    var orginalSensorData = <%- JSON.stringify(sensorData) %>;
   </script>
   <script>
-
-
     $("#floorSelector").empty();
     for (var data in ejsData) {
       var option = document.createElement('option');
@@ -515,7 +511,7 @@
       var PIRChart = document.createElement("canvas");
       var PIRChartContainer = document.createElement("div");
       PIRChartContainer.id = "energyUseContainer";
-      PIRChartContainer.textContent = "PIR trigger use over past hour";
+      PIRChartContainer.textContent = "PIR triggered over past hour";
       PIRChartContainer.classList.add("p-3", "mt-2", "text-center", "border")
       PIRChartContainer.appendChild(PIRChart);
 
@@ -529,21 +525,38 @@
     function loadDetails(zone) {
       var table = document.getElementById("moreDetails");
       table.innerHTML = "";
+      rowhead = document.createElement("div");
+      rowhead.classList.add("row","m-2");
+    
+
+      col1 = document.createElement("div"); 
+      col1.classList.add("col", "text-start");
+
+      col2 = document.createElement("div");
+      col2.classList.add("col", "text-end");
+
       var creationTime = document.createElement("div");
-
-      var refreshButton = document.createElement("button");
-      refreshButton.classList.add("btn", "btn-primary");
-      refreshButton.textContent = "Refresh";
-      refreshButton.addEventListener("click", function() {
-        // Add your refresh logic here
-      });
-
-
       creationTime.classList.add("col", "text-end");
-      creationTime.appendChild(refreshButton);
       creationTime.id = "creationTime";
-      creationTime.textContent = "Creation Time: " + new Date().toLocaleString();
-      table.appendChild(creationTime);
+      creationTime.textContent = "Creation Time: " + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      col2.appendChild(creationTime);
+
+      var moreDetailsButton = document.createElement("submit");
+      moreDetailsButton.classList.add("btn", "btn-primary");
+      moreDetailsButton.textContent = "More Details";
+      var floorlevel = $('#floorSelector').val();
+      moreDetailsButton.addEventListener("click", function() {
+        window.location.href = "/moreDetails/?zone=" + zone.key + "&floorlevel=" + floorlevel;
+      });
+      col1.appendChild(moreDetailsButton);
+
+      rowhead.appendChild(col1);
+      rowhead.appendChild(col2);
+
+      table.appendChild(rowhead);
+
+
+
 
       var table = document.getElementById("gaugeTable")
       table.innerHTML = "";
@@ -584,14 +597,6 @@
       loadPIRChart(key)
 
     }
-
-    var testButton = document.createElement("button");
-    testButton.textContent = "socket test";
-    testButton.addEventListener("click", function() {
-      socket.emit("test");
-    });
-    testButton.classList.add("btn", "btn-primary");
-    document.body.appendChild(testButton);
   </script>
 </body>
 

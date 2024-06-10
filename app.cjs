@@ -1,5 +1,5 @@
 const express = require('express');
-    const mqtt = require('mqtt');
+const mqtt = require('mqtt');
 const mongoose = require('mongoose');
 const bodyparser = require('body-parser');
 const path = require('path');
@@ -14,8 +14,8 @@ const server = http.createServer(app);
 const io = socketIO(server);
 const emitter = new EventEmitter();
 const Schema = mongoose.Schema;
-app.use(express.json({limit: '50mb'}));
-app.use(express.urlencoded({limit: '50mb'}));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb' }));
 
 const ZoneSchema = new Schema({
     xCords: { type: Array, required: false },
@@ -31,6 +31,7 @@ const ZoneSchema = new Schema({
 const floorplan = new Schema({
     floorplan: { type: String, required: false },
     floorlevel: { type: String, required: false },
+
     zones: [ZoneSchema]
 });
 
@@ -57,6 +58,7 @@ const client = mqtt.connect('mqtt://localhost:1883');
 const sensorDataSchema = new mongoose.Schema({
     metaData: {
         floor: String,
+        floor: Number,
         zone: String
     },
     temperature: Number,
@@ -64,12 +66,12 @@ const sensorDataSchema = new mongoose.Schema({
     setTemperature: Number,
     upperMargin: Number,
     lowerMargin: Number,
-    humidity : Number,
+    humidity: Number,
 
 });
 
 // Create a model for the sensor data
-const SensorData = mongoose.model('SensorDatas', sensorDataSchema);
+const SensorData = mongoose.model('sensordatas', sensorDataSchema);
 
 
 // Handle sending command to MQTT broker
@@ -87,9 +89,9 @@ const SensorData = mongoose.model('SensorDatas', sensorDataSchema);
 io.on('connection', async (socket) => {
 
 
-    socket.on('test', ()=>{
+    socket.on('test', () => {
         console.log('test');
-    
+
     })
 
     socket.on('change', (data) => {
@@ -116,23 +118,9 @@ io.on('connection', async (socket) => {
             floorlevel: floorlevel,
         })
         await newFloor.save();
-        console.log ('newFloor',newFloor)
+        console.log('newFloor', newFloor)
         socket.emit("ready", { message: "Floorplan saved" });
-      });
-
-
-
-    socket.on('getFloorData', async ()=>{
-        try {
-            var floorDetails = await fetchFloorDetails();
-            var sensorData = await getSensorData();
-            data =  ({ data: floorDetails, sensorData: sensorData });
-            callback(data) 
-        } catch (error) {
-            callback({error: error})
-        }
-
-    })
+    });
 
     sensorData = await getSensorData();
 });
@@ -187,7 +175,7 @@ client.on('message', async (topic, message) => {
             dynoSensorData.unshift(newSensorDataObject);
             console.log(sensorData.length - dynoSensorData.length);
             io.emit('sensorData', { sensorData: dynoSensorData });
-                console.log('emitted');
+            console.log('emitted');
 
         }
     }
@@ -233,11 +221,15 @@ app.get('/publish', (req, res) => {
 });
 
 app.get('/moreDetails', async (req, res) => {
-    var {zone, floorlevel} = req.query;
-    var data = await SensorData.find({ "metaData.zone": zone, "metaData.floor": floorlevel }).sort({ timestamp: -1 }).limit(50);
+    console.log('moreDetails')
+    var { zone, floorlevel } = req.query;
+
+  
+    var data = await SensorData.find({ 'metaData.zone': "Zone1", "metaData.floor": 1 }).sort({ timestamp: -1 }).limit(50);
+    console.log(data);
     res.render('moreDetails', { data: data, zone: zone, floorlevel: floorlevel });
 
-}); 
+});
 
 // start server on port 8000
 server.listen(port, () => {
