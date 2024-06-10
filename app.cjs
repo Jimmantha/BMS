@@ -52,7 +52,7 @@ mongoose.connect('mongodb+srv://pleasepeople123:VfLWNiTsHAUOZjkY@cluster0.75o7ls
 
 
 // Connect to the MQTT broker
-const client = mqtt.connect('mqtt://localhost:1883');
+const client = mqtt.connect('mqtt://172.23.18.169:1883');
 
 // Create a schema for the sensor data
 const sensorDataSchema = new mongoose.Schema({
@@ -70,8 +70,19 @@ const sensorDataSchema = new mongoose.Schema({
 
 });
 
+const energyReading = new mongoose.Schema({
+    metaData: {
+        floor: String,
+        floor: Number,
+        zone: String
+    },
+    energy: Number,
+    timestamp: Date,
+});
+
 // Create a model for the sensor data
 const SensorData = mongoose.model('sensordatas', sensorDataSchema);
+const EnergyReading = mongoose.model('energyreadings', energyReading);
 
 
 // Handle sending command to MQTT broker
@@ -128,10 +139,12 @@ io.on('connection', async (socket) => {
 // Subscribe to the sensorReadings topic
 client.on('connect', () => {
     client.subscribe('sensorReadings');
+    client.subscribe('energyReadings');
     console.log('connected to MQTT broker');
 });
 
-var savetime
+var sensorSaveTime
+var energySaveTime
 // Listen for messages on the sensorReadings topic
 client.on('message', async (topic, message) => {
     if (topic == 'sensorReadings') {
@@ -154,29 +167,51 @@ client.on('message', async (topic, message) => {
 
         // Save the sensor data to MongoDB  
         var currenttime = new Date();
-        if (currenttime - savetime > 60000) { //300000ms = 5 minutes
+        if (currenttime - sensorSaveTime > 60000) { //300000ms = 5 minutes
             newSensorData.save().then(() => {
-                savetime = new Date();
+                sensorSaveTime = new Date();
             });
             sensorData = await SensorData.find().sort({ timestamp: -1 }).limit(50);
             dynoSensorData = sensorData;
             io.emit('sensorData', { sensorData: sensorData });
-            console.log('saved');
-        } else if (savetime == undefined) {
+        } else if (sensorSaveTime == undefined) {
             newSensorData.save().then(() => {
-                savetime = new Date();
+                sensorSaveTime = new Date();
             });
             sensorData = await SensorData.find().sort({ timestamp: -1 }).limit(50);
             dynoSensorData = sensorData;
             io.emit('sensorData', { sensorData: sensorData });
-            console.log('saved undefined');
         } else {
             const newSensorDataObject = newSensorData.toObject();
             dynoSensorData.unshift(newSensorDataObject);
             console.log(sensorData.length - dynoSensorData.length);
             io.emit('sensorData', { sensorData: dynoSensorData });
-            console.log('emitted');
-
+        }
+    }
+    if (topic == 'energyReadings') {
+        data = JSON.parse(message);
+        console.log(data);
+        var date = new Date(Date.now());
+        date.setHours(date.getHours() + 8);
+        const newEnergyReading = new EnergyReading({
+            metaData: {
+                floor: 1,
+                zone: "Zone1"
+            },
+            energy: data.energy,
+            timestamp: date,
+        });
+        var currenttime = new Date();
+        if (currenttime - energySaveTime > 100000) { //300000ms = 5 minutes
+            newEnergyReading.save().then(() => {
+                energySaveTime = new Date();
+            });
+            console.log('saved energy reading');
+        } else if (energySaveTime == undefined) {
+            newEnergyReading.save().then(() => {
+                energySaveTime = new Date();
+            });
+            console.log('saved undefined');
         }
     }
 });
