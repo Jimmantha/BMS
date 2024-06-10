@@ -99,9 +99,18 @@ body {
     font-size: 80px;
 }
 
+.Energy-meter{
+    font-family: digital;
+    color: #000000;
+    font-size: 7vh;
+    background-color: white;
+    text-align: center;
+    margin:100px auto;
+    margin-left: 20px;
+    margin-right: 20px;
+}
 
 @font-face{
     font-family:'digital';
     src: url('./DIGITALDREAM.ttf');
- 
-   }
+}

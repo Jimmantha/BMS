@@ -74,7 +74,6 @@ const energyReading = new mongoose.Schema({
     metaData: {
         floor: String,
         floor: Number,
-        zone: String
     },
     energy: Number,
     timestamp: Date,
@@ -203,7 +202,7 @@ client.on('message', async (topic, message) => {
             timestamp: date,
         });
         var currenttime = new Date();
-        if (currenttime - energySaveTime > 10000) { //300000ms = 5 minutes
+        if (currenttime - energySaveTime > 60000) { //300000ms = 5 minutes
             newEnergyReading.save().then(() => {
                 energySaveTime = new Date();
             });
@@ -214,7 +213,8 @@ client.on('message', async (topic, message) => {
             });
             console.log('saved undefined');
         }
-        io.emit('energyData', { energyData: newEnergyReading });
+        data = await getEnergyData();
+        io.emit('energyData', { energyData: data });
     }
 });
 
