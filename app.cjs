@@ -190,19 +190,20 @@ client.on('message', async (topic, message) => {
     }
     if (topic == 'energyReadings') {
         data = JSON.parse(message);
+        energy = data.energy.toFixed(2);
         console.log(data);
         var date = new Date(Date.now());
         date.setHours(date.getHours() + 8);
         const newEnergyReading = new EnergyReading({
             metaData: {
-                floor: 1,
-                zone: "Zone1"
+            floor: 1,
+            zone: "Zone1"
             },
-            energy: data.energy,
+            energy: energy,
             timestamp: date,
         });
         var currenttime = new Date();
-        if (currenttime - energySaveTime > 100000) { //300000ms = 5 minutes
+        if (currenttime - energySaveTime > 10000) { //300000ms = 5 minutes
             newEnergyReading.save().then(() => {
                 energySaveTime = new Date();
             });
@@ -213,6 +214,7 @@ client.on('message', async (topic, message) => {
             });
             console.log('saved undefined');
         }
+        io.emit('energyData', { energyData: newEnergyReading });
     }
 });
 
@@ -220,6 +222,11 @@ client.on('message', async (topic, message) => {
 async function getSensorData() {
     //limit to 1200 for 
     var data = await SensorData.find().sort({ timestamp: -1 }).limit(50);
+    return data;
+}
+
+async function getEnergyData() {
+    var data = await EnergyReading.find().sort({ timestamp: -1 }).limit(50);
     return data;
 }
 
@@ -247,8 +254,9 @@ app.get('/converter', (req, res) => {
 app.get('/Floorview', async (req, res) => {
     var floorDetails = await fetchFloorDetails();
     var sensorData = await getSensorData();
+    var energyData = await getEnergyData();
 
-    res.render('floorview', { data: floorDetails, sensorData: sensorData });
+    res.render('floorview', { data: floorDetails, sensorData: sensorData, energyData: energyData});
 });
 
 app.get('/publish', (req, res) => {

@@ -94,6 +94,9 @@
     var orginalSensorData = <%- JSON.stringify(sensorData) %>;
   </script>
   <script>
+    var originalEnergyData = <%- JSON.stringify(energyData) %>;
+  </script>
+  <script>
     $("#floorSelector").empty();
     for (var data in ejsData) {
       var option = document.createElement('option');
@@ -133,8 +136,8 @@
                 orginalSensorData[data].lowerMargin,
             });
           }
-          sensorData[zones[zone].name] = timestampTemperaturePairs; // Correct variable name
         }
+        sensorData[zones[zone].name] = timestampTemperaturePairs;
       }
     }
   </script>
@@ -157,6 +160,13 @@
       createArea();
       updatetemperature();
       console.log(dynamicCharts);
+    });
+    socket.on("energyData", function(data) {
+      originalEnergyData = data.energyData;
+      loadData();
+      createArea();
+      updatetemperature();
+      console.log("received energy data");
     });
     window.addEventListener("click", function(event) {
       if (event.target == modal) {
