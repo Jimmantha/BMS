@@ -101,6 +101,7 @@
     var originalEnergyData = <%- JSON.stringify(energyData) %>;
   </script>
   <script>
+    var editState = false;
     floorNames = []
     $("#floorSelector").empty();
     for (var data in ejsData) {
@@ -113,8 +114,6 @@
     var energyData = {};
 
     function loadData() {
-
-
       floorlevel = $("#floorSelector").val();
       zones = ejsData.find(obj => obj.floorlevel == floorlevel).zones;
       try {
@@ -186,7 +185,6 @@
       createArea();
       updatetemperature();
       updateEnergy();
-      loadEnergyChart();
       console.log("received energy data");
     });
     window.addEventListener("click", function(event) {
@@ -258,7 +256,9 @@
         fillOpacity: 0.2,
 
         onClick: function(e) {
+
           loadDetails(e);
+
         },
       });
       try {
@@ -461,7 +461,9 @@
             hoverBackgroundColor: "rgba(75, 192, 192, 0.4)",
             borderColor: "rgb(75, 192, 192)",
             tension: 0.1,
-            pointstyle: "dash",
+            pointStyle: "none",
+            pointRadius: 0,
+
           },
           {
             label: "uppermargin",
@@ -469,6 +471,7 @@
             fill: false,
             borderColor: "red",
             tension: 0.1,
+            pointRadius: 0,
             pointStyle: "dash",
           },
           {
@@ -477,6 +480,7 @@
             fill: false,
             borderColor: "blue",
             tension: 0.1,
+            pointRadius: 0,
             pointstyle: "dash",
           },
           {
@@ -485,6 +489,7 @@
             fill: false,
             borderColor: "green",
             tension: 0.1,
+            pointRadius: 0,
             pointstyle: "dash",
           },
         ],
@@ -588,6 +593,85 @@
       title.classList.add("col", "text-center");
       title.textContent = zoneName;
 
+      var editButtonContainer = document.createElement("div");
+      editButtonContainer.classList.add("row", "align-content-end", "text-end");
+      var editButton = document.createElement("button");
+      editButton.classList.add("btn", "btn-warning", "text-en", "editButton");
+      editButton.textContent = "Edit";
+      editButton.addEventListener("click", function() {
+        var editTemp = sensorData[zoneName][0].setTemperature;
+        gauge.textContent = editTemp + "C";
+        var increaseButtonContianer = document.createElement("div");
+        increaseButtonContianer.classList.add("col", "text-center", "d-flex", "justify-content-center", "align-items-center");
+        var increaseButton = document.createElement("button");
+        increaseButton.classList.add("btn", "btn-success");
+        increaseButton.textContent = "+";
+        increaseButton.addEventListener("click", function() {
+          editTemp += 1;
+          gauge.textContent = editTemp + "C";
+          socket.emit("change", {
+            temperature: sensorData[zoneName][0].setTemperature
+          })
+        });
+        increaseButtonContianer.appendChild(increaseButton);
+
+        var decreaseButtonContianer = document.createElement("div");
+        decreaseButtonContianer.classList.add("col", "text-center", "d-flex", "justify-content-center", "align-items-center");
+        var decreaseButton = document.createElement("button");
+        decreaseButton.classList.add("btn", "btn-danger");
+        decreaseButton.textContent = "-";
+        decreaseButton.addEventListener("click", function() {
+          editTemp -= 1;
+          gauge.textContent = editTemp + "C";
+          socket.emit("change", {
+            temperature: sensorData[zoneName][0].setTemperature
+          })
+        });
+        decreaseButtonContianer.appendChild(decreaseButton);
+
+
+
+
+        row2.innerHTML = "";
+        row2.appendChild(increaseButtonContianer);
+        row2.appendChild(gauge);
+        row2.appendChild(decreaseButtonContianer);
+        editButtonContainer.removeChild(editButton);
+
+        var closeButton = document.createElement("button");
+        closeButton.classList.add("btn", "btn-danger", "text-en", "editButton");
+        closeButton.textContent = "x";
+        closeButton.addEventListener("click", function() {
+          row2.innerHTML = "";
+          row2.appendChild(gauge);
+          editButtonContainer.removeChild(closeButton);
+          editButtonContainer.appendChild(editButton);
+          table.removeChild(confirmButtonContainer);
+        });
+        editButtonContainer.appendChild(closeButton);
+
+        confirmButtonContainer = document.createElement("div");
+        confirmButtonContainer.classList.add("row", "text-center");
+        var confirmButton = document.createElement("button");
+        confirmButton.classList.add("btn", "btn-success",);
+        confirmButton.textContent = "Confirm";
+        confirmButton.addEventListener("click", function() {
+          
+          row2.innerHTML = "";
+          gauge.textContent = sensorData[zoneName][0].setTemperature + "C";
+          row2.appendChild(gauge);
+          editButtonContainer.removeChild(closeButton);
+          editButtonContainer.appendChild(editButton);
+          table.removeChild(confirmButtonContainer);
+        });
+        confirmButtonContainer.appendChild(confirmButton);
+        table.appendChild(confirmButtonContainer);
+
+      });
+
+      editButtonContainer.appendChild(editButton);
+      table.appendChild(editButtonContainer);
+
       var row2 = document.createElement("div");
       row2.classList.add("row");
       var gauge = document.createElement("div");
@@ -595,14 +679,11 @@
       gauge.textContent = "gauge";
       gauge.textContent = sensorData[zoneName][0].setTemperature + "C";
 
-      var row3 = document.createElement("div");
-      row3.classList.add("row");
-
-
 
 
       row1.appendChild(title);
       row2.appendChild(gauge);
+
 
       table.appendChild(row1);
       table.appendChild(row2);
@@ -626,12 +707,56 @@
     }
 
     function loadEnergyChart() {
-      var floor = $('#floorSelector').val();
+      floor = $('#floorSelector').val();
       var ChartData = energyData[floor];
-      var chart = $("#energyChart");
+      var chart = document.getElementById("energyChart");
       var ctx = chart.getContext("2d");
-      
+      var energy = [];
+      var energyChanges = [];
+      var label = [];
+      for (data in ChartData) {
+        energy.push(ChartData[data].energy);
+        if (data > 0) {
+          var energyChange = ChartData[data].energy - ChartData[data - 1].energy;
+        } else {
+          var energyChange = 0;
+        }
+        energyChanges.push(energyChange);
+        label.push(ChartData[data].timestamp);
+      }
+      energy.reverse();
+      energyChanges.reverse();
+      label.reverse();
+
+      var data = {
+        labels: label,
+        datasets: [{
+          label: "Energy",
+          data: energy,
+          fill: false,
+          borderColor: "rgb(75, 192, 192)",
+          tension: 0.1,
+          pointStyle: "none",
+          pointRadius: 0
+        }, ],
+
+      }
+      const energyChartConfig = {
+        type: 'line',
+        data: data,
+        options: {
+          legend: {
+            display: false,
+            usePointStyle: true,
+          },
+
+        }
+      }
+      dynamicCharts["energyChart"] = new Chart(ctx, energyChartConfig);
+      console.log(energyData);
+
     }
+
     updateEnergy();
     loadEnergyChart();
   </script>

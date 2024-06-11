@@ -67,7 +67,6 @@ const sensorDataSchema = new mongoose.Schema({
     upperMargin: Number,
     lowerMargin: Number,
     humidity: Number,
-
 });
 
 const energyReading = new mongoose.Schema({
@@ -148,6 +147,7 @@ var energySaveTime
 client.on('message', async (topic, message) => {
     if (topic == 'sensorReadings') {
         data = JSON.parse(message);
+        console.log(data);
         var date = new Date(Date.now());
         date.setHours(date.getHours() + 8);
         // issue inserting date.now() into mongodb changes back to gmt tho the date is correct for now manually add 8 hours to get the correct time
@@ -166,25 +166,17 @@ client.on('message', async (topic, message) => {
 
         // Save the sensor data to MongoDB  
         var currenttime = new Date();
+
         if (currenttime - sensorSaveTime > 60000) { //300000ms = 5 minutes
             newSensorData.save().then(() => {
                 sensorSaveTime = new Date();
             });
-            sensorData = await SensorData.find().sort({ timestamp: -1 }).limit(50);
-            dynoSensorData = sensorData;
-            io.emit('sensorData', { sensorData: sensorData });
+            console.log('saved energy reading');
         } else if (sensorSaveTime == undefined) {
             newSensorData.save().then(() => {
                 sensorSaveTime = new Date();
             });
-            sensorData = await SensorData.find().sort({ timestamp: -1 }).limit(50);
-            dynoSensorData = sensorData;
-            io.emit('sensorData', { sensorData: sensorData });
-        } else {
-            const newSensorDataObject = newSensorData.toObject();
-            dynoSensorData.unshift(newSensorDataObject);
-            console.log(sensorData.length - dynoSensorData.length);
-            io.emit('sensorData', { sensorData: dynoSensorData });
+            console.log('saved undefined');
         }
     }
     if (topic == 'energyReadings') {
@@ -195,8 +187,8 @@ client.on('message', async (topic, message) => {
         date.setHours(date.getHours() + 8);
         const newEnergyReading = new EnergyReading({
             metaData: {
-            floor: 1,
-            zone: "Zone1"
+                floor: 1,
+                zone: "Zone1"
             },
             energy: energy,
             timestamp: date,
@@ -243,7 +235,7 @@ app.get('/', async (req, res) => {
     var sensorData = await getSensorData();
     var energyData = await getEnergyData();
 
-    res.render('floorview', { data: floorDetails, sensorData: sensorData, energyData: energyData});
+    res.render('floorview', { data: floorDetails, sensorData: sensorData, energyData: energyData });
 
 });
 
@@ -257,7 +249,7 @@ app.get('/Floorview', async (req, res) => {
     var sensorData = await getSensorData();
     var energyData = await getEnergyData();
 
-    res.render('floorview', { data: floorDetails, sensorData: sensorData, energyData: energyData});
+    res.render('floorview', { data: floorDetails, sensorData: sensorData, energyData: energyData });
 });
 
 app.get('/publish', (req, res) => {
@@ -268,7 +260,7 @@ app.get('/moreDetails', async (req, res) => {
     console.log('moreDetails')
     var { zone, floorlevel } = req.query;
 
-  
+
     var data = await SensorData.find({ 'metaData.zone': "Zone1", "metaData.floor": 1 }).sort({ timestamp: -1 }).limit(50);
     console.log(data);
     res.render('moreDetails', { data: data, zone: zone, floorlevel: floorlevel });
