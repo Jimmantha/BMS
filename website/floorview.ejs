@@ -20,7 +20,7 @@
         temperature Details
       </div>
       <div class="col text-center">
-       Zone Details
+        Zone Details
       </div>
     </div>
     <div class="row">
@@ -43,7 +43,7 @@
           </div>
           <div class="row title mt-3">
             <div class="col text-center">
-              Floorview
+              Chart
             </div>
             <div class="col text-center">
               Total Energy (month)
@@ -51,7 +51,7 @@
           </div>
           <div class="row">
             <div class="col">
-              Lorem ipsum dolor sit amet consectetur adipisicing elit. In tenetur doloribus iusto recusandae officiis pariatur saepe aliquid eos perspiciatis similique libero omnis non esse quibusdam laudantium eum, quaerat excepturi aspernatur.
+              <canvas id="energyChart"> </canvas>
             </div>
             <div class="col d-flex justify-content-center">
               <div class="mt-3 d-flex meter">
@@ -145,7 +145,7 @@
         }
         sensorData[zones[zone].name] = timestampTemperaturePairs;
       }
-      
+
       var timestampEnergyPairs = [];
       for (data in originalEnergyData) {
         if (originalEnergyData[data].metaData.floor == floorlevel) {
@@ -186,6 +186,7 @@
       createArea();
       updatetemperature();
       updateEnergy();
+      loadEnergyChart();
       console.log("received energy data");
     });
     window.addEventListener("click", function(event) {
@@ -621,8 +622,18 @@
       energyMeter = document.getElementById("energyMeter");
       floor = $('#floorSelector').val();
       energyMeter.textContent = energyData[floor][0].energy + "kwh";
+
+    }
+
+    function loadEnergyChart() {
+      var floor = $('#floorSelector').val();
+      var ChartData = energyData[floor];
+      var chart = $("#energyChart");
+      var ctx = chart.getContext("2d");
+      
     }
     updateEnergy();
+    loadEnergyChart();
   </script>
 </body>
 

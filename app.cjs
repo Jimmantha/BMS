@@ -241,8 +241,9 @@ app.use(bodyparser.json());
 app.get('/', async (req, res) => {
     var floorDetails = await fetchFloorDetails();
     var sensorData = await getSensorData();
+    var energyData = await getEnergyData();
 
-    res.render('floorview', { data: floorDetails, sensorData: sensorData });
+    res.render('floorview', { data: floorDetails, sensorData: sensorData, energyData: energyData});
 
 });
 
