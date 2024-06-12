@@ -131,6 +131,10 @@ io.on('connection', async (socket) => {
         socket.emit("ready", { message: "Floorplan saved" });
     });
 
+    socket.on('change', (data)=> {
+        console.log(data);
+    })
+
     sensorData = await getSensorData();
 });
 
@@ -149,7 +153,7 @@ client.on('message', async (topic, message) => {
         data = JSON.parse(message);
         console.log(data);
         var date = new Date(Date.now());
-        date.setHours(date.getHours() + 8);
+        date.setHours(date.getHours());
         // issue inserting date.now() into mongodb changes back to gmt tho the date is correct for now manually add 8 hours to get the correct time
         const newSensorData = new SensorData({
             metaData: {

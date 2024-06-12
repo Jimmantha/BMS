@@ -114,6 +114,12 @@ body {
     width:3vw
 }
 
+.select{
+    width:12vw;
+    font-size:1.5vh;
+    text-align: center;
+}
+
 @font-face{
     font-family:'digital';
     src: url('./DIGITALDREAM.ttf');

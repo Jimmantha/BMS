@@ -50,14 +50,23 @@
             </div>
           </div>
           <div class="row">
-            <div class="col">
+            <div class="col ">
+              <div class="row justify-content-end">
+                <select id="timeInterval" class="form-control select">
+                  <option value="hour">Hour</option>
+                  <option value="day">Day</option>
+                  <option value="week">Week</option>
+                  <option value="month">Month</option>
+                </select>
+              </div>
+
               <canvas id="energyChart"> </canvas>
             </div>
             <div class="col d-flex justify-content-center">
               <div class="mt-3 d-flex meter">
 
                 <!-- meter -->
-                <div class="container Energy-meter" id="energyMeter">
+                <div class="container Energy-meter " id="energyMeter">
                   748kwh
                 </div>
               </div>
@@ -66,6 +75,19 @@
         </div>
       </div>
       <div class="col m-2" style="overflow-y:scroll; height: 90vh;" id="moreDetails"></div>
+    </div>
+    <div class="offcanvas offcanvas-bottom" tabindex="-1" id="offcanvas" aria-labelledby="offcanvasLabel">
+      <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasLabel">Offcanvas</h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      </div>
+      <div class="offcanvas-body">
+        <!-- Offcanvas content goes here -->
+      </div>
+    </div>
+
+    <div class="fixed-bottom title ms-1" id="warning">
+      warning
     </div>
   </div>
   </div>
@@ -581,6 +603,7 @@
 
       table.appendChild(rowhead);
 
+      var zoneName = zone.key;
 
 
 
@@ -588,19 +611,23 @@
       table.innerHTML = "";
       var zoneName = zone.key;
       var row1 = document.createElement("div");
-      row1.classList.add("row");
-      var title = document.createElement("div");
+      row1.classList.add("row", "align-items-center", "justify-content-center", "text-center");
+
+      var title = document.createElement("div")
       title.classList.add("col", "text-center");
       title.textContent = zoneName;
 
       var editButtonContainer = document.createElement("div");
       editButtonContainer.classList.add("row", "align-content-end", "text-end");
+
       var editButton = document.createElement("button");
-      editButton.classList.add("btn", "btn-warning", "text-en", "editButton");
+      editButton.classList.add("btn", "btn-secondary", "text-en", "editButton");
       editButton.textContent = "Edit";
       editButton.addEventListener("click", function() {
         var editTemp = sensorData[zoneName][0].setTemperature;
-        gauge.textContent = editTemp + "C";
+        tempReading.textContent = editTemp + "C";
+
+
         var increaseButtonContianer = document.createElement("div");
         increaseButtonContianer.classList.add("col", "text-center", "d-flex", "justify-content-center", "align-items-center");
         var increaseButton = document.createElement("button");
@@ -608,12 +635,10 @@
         increaseButton.textContent = "+";
         increaseButton.addEventListener("click", function() {
           editTemp += 1;
-          gauge.textContent = editTemp + "C";
-          socket.emit("change", {
-            temperature: sensorData[zoneName][0].setTemperature
-          })
+          tempReading.textContent = editTemp + "C";
         });
         increaseButtonContianer.appendChild(increaseButton);
+
 
         var decreaseButtonContianer = document.createElement("div");
         decreaseButtonContianer.classList.add("col", "text-center", "d-flex", "justify-content-center", "align-items-center");
@@ -622,19 +647,14 @@
         decreaseButton.textContent = "-";
         decreaseButton.addEventListener("click", function() {
           editTemp -= 1;
-          gauge.textContent = editTemp + "C";
-          socket.emit("change", {
-            temperature: sensorData[zoneName][0].setTemperature
-          })
+          tempReading.textContent = editTemp + "C";
         });
         decreaseButtonContianer.appendChild(decreaseButton);
 
 
-
-
         row2.innerHTML = "";
         row2.appendChild(increaseButtonContianer);
-        row2.appendChild(gauge);
+        row2.appendChild(tempReading);
         row2.appendChild(decreaseButtonContianer);
         editButtonContainer.removeChild(editButton);
 
@@ -643,7 +663,7 @@
         closeButton.textContent = "x";
         closeButton.addEventListener("click", function() {
           row2.innerHTML = "";
-          row2.appendChild(gauge);
+          row2.appendChild(tempReading);
           editButtonContainer.removeChild(closeButton);
           editButtonContainer.appendChild(editButton);
           table.removeChild(confirmButtonContainer);
@@ -653,13 +673,19 @@
         confirmButtonContainer = document.createElement("div");
         confirmButtonContainer.classList.add("row", "text-center");
         var confirmButton = document.createElement("button");
-        confirmButton.classList.add("btn", "btn-success",);
+        confirmButton.classList.add("btn", "btn-success", );
         confirmButton.textContent = "Confirm";
         confirmButton.addEventListener("click", function() {
-          
+          var reason = prompt("Enter reason:");
+          socket.emit("change", {
+            setTemperature: editTemp,
+            zone: zoneName,
+            floor: floorlevel
+          })
+
           row2.innerHTML = "";
-          gauge.textContent = sensorData[zoneName][0].setTemperature + "C";
-          row2.appendChild(gauge);
+          tempReading.textContent = sensorData[zoneName][0].setTemperature + "C";
+          row2.appendChild(tempReading);
           editButtonContainer.removeChild(closeButton);
           editButtonContainer.appendChild(editButton);
           table.removeChild(confirmButtonContainer);
@@ -674,15 +700,15 @@
 
       var row2 = document.createElement("div");
       row2.classList.add("row");
-      var gauge = document.createElement("div");
-      gauge.classList.add("col", "text-center", "mt-5", "temp-meter");
-      gauge.textContent = "gauge";
-      gauge.textContent = sensorData[zoneName][0].setTemperature + "C";
+      var tempReading = document.createElement("div");
+      tempReading.classList.add("col", "text-center", "mt-5", "temp-meter");
+      tempReading.textContent = "gauge";
+      tempReading.textContent = sensorData[zoneName][0].setTemperature + "C";
 
 
 
       row1.appendChild(title);
-      row2.appendChild(gauge);
+      row2.appendChild(tempReading);
 
 
       table.appendChild(row1);

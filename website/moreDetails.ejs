@@ -10,16 +10,15 @@
 
 <body>
 
-  <%= data %>
-  <%= zone %>
-  <%= floorlevel %>
-  <div class="row" style="height:40vh;">
+
+  <div class="row" style="height:auto;">
     <div class="col">
       <canvas id="TempChart"></canvas>
     </div>
     <div class="col">
       <canvas id="energyUseChart"></canvas>
     </div>
+
 
 
   </div>
@@ -67,19 +66,79 @@
   </div>
 
   <script>
-    var orginalSensorData = <%- JSON.stringify(data) %>;
+    var zoneData = <%- JSON.stringify(data) %>;
     var zone = <%- JSON.stringify(zone) %>;
-    console.log(zone);
-    console.log(orginalSensorData);
-    var tempData = [];
-    var zoneValue = zone;
-    for(data in orginalSensorData){
-      var tempData = [];
-      tempData.temperature = orginalSensorData[data].temperature;
-      tempData.time = orginalSensorData[data].timestamp;
-      tempData.margin = orginalSensorData[data].lowerMargin;
-    data.push(tempData);
+    var floor = <%- JSON.stringify(floorlevel) %>;
+    console.log(zone, floor, zoneData);
+    $("#floorSelector").hide();
+    var tempData = []
+    var upperMargin = []
+    var lowerMargin = []
+    var setTemp = []
+    var time = []
+    currentTime = new Date();
+    for (data in zoneData) {
+      var tempTime = new Date(zoneData[data].timestamp)
+      if(currentTime.getMonth() == tempTime.getMonth()){
+        tempData.push(zoneData[data].temperature)
+        upperMargin.push(zoneData[data].upperMargin)
+        lowerMargin.push(zoneData[data].lowerMargin)
+        setTemp.push(zoneData[data].setTemperature)
+        time.push(tempTime)
+      }
+      console.log(tempTime);
+      var currentTime = new Date();
     }
+    tempData.reverse();
+    time.reverse();
+    console.log(tempData, time);
+
+    var tempData = {
+      labels: time,
+      datasets: [{
+          label: 'Temperature',
+          data: tempData,
+          fill: false,
+          borderColor: 'rgb(75, 192, 192)',
+          tension: 0.1,
+          radius: 0
+        },
+        {
+          label: 'Upper Margin',
+          data: upperMargin,
+          fill: false,
+          borderColor: 'rgb(255, 99, 132)',
+          tension: 0.1,
+          radius: 0
+        },
+        {
+          label: 'Lower Margin',
+          data: lowerMargin,
+          fill: false,
+          borderColor: 'rgb(255, 99, 132)',
+          tension: 0.1,
+          radius: 0
+        },
+        {
+          label: 'Set Temperature',
+          data: setTemp,
+          fill: false,
+          borderColor: 'rgb(255, 99, 132)',
+          tension: 0.1,
+          radius: 0
+        }
+      ]
+    };
+
+    var tempChartConfig = {
+      type: 'line',
+      data: tempData,
+      options: {}
+    };
+
+    var tempCanvas = document.getElementById('TempChart');
+    var tempCanvasctx = tempCanvas.getContext('2d');
+    var tempChart = new Chart(tempCanvasctx, tempChartConfig);
   </script>
 </body>
 
