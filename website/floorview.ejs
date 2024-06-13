@@ -88,6 +88,7 @@
     </div>
 
     <div class="fixed-bottom title ms-1 alert-text ps-3 m-0" id="warning">
+    
       Alerts
     </div>
   </div>
@@ -124,6 +125,7 @@
     var originalEnergyData = <%- JSON.stringify(energyData) %>;
   </script>
   <script>
+    var alertCount = 0;
     floorNames = []
     $("#floorSelector").empty();
     for (var data in ejsData) {
@@ -208,12 +210,14 @@
     socket.on("sensorData", function(data) {
       orginalSensorData = data.sensorData;
       console.log("received sensor data");
+      alertCount = 0;
       loadData();
       createArea();
       updatetemperature();
     });
     socket.on("energyData", function(data) {
       originalEnergyData = data.energyData;
+      alertCount = 0;
       loadData();
       createArea();
       updatetemperature();
@@ -768,7 +772,7 @@
             energyAlert.classList.remove('highlight');
           });
         });
-
+        alertCount++;
         var energyCanvas = document.getElementById("energyChart");
         energyCanvas.addEventListener("click", function() {
           $('#offcanvas').offcanvas('show')
@@ -778,6 +782,8 @@
             energyAlert.classList.remove('highlight');
           });
         });
+        alertCount++;
+        updateAlertCount();
         return;
       } else if (currentTime - milisecondtempTime > 3600000) {
 
@@ -785,6 +791,8 @@
         energyAlert.textContent = "Energy Readings last updated " + timeDiffMin + " minutes ago";
         energyMeter.textContent = energyData[floor][0].energy + "kwh";
         alertMessageList.appendChild(energyAlert);
+        alertCount++;
+        updateAlertCount();
       } else {
         console.log("updating energy");
         energyMeter.textContent = energyData[floor][0].energy + "kwh";
@@ -793,7 +801,9 @@
 
     }
 
-
+    function updateAlertCount () {
+      $('#warning').text("Alerts(" + alertCount +")");
+    }
     function loadEnergyChart() {
       if (!dynamicCharts["energyChart"]) {
         floor = $('#floorSelector').val();
@@ -865,15 +875,19 @@
         dynamicCharts["energyChart"].update();
       }
     }
-
+   
     updateEnergy();
+    updateAlertCount();
   </script>
   <script>
     $(document).ready(function() {
       $('#warning').on('click', function() {
+        $('#warning').text("Alerts(" + alertCount +")");
         $('#offcanvas').offcanvas('show')
       });
     });
+
+
   </script>
 </body>
 
