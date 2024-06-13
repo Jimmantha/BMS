@@ -120,6 +120,18 @@ body {
     text-align: center;
 }
 
+.offcanvas-title{
+    height: 2vh;
+}
+
+.alert-text{
+    color: red;
+}
+
+.highlight{
+    background-color: yellow;
+}
+
 @font-face{
     font-family:'digital';
     src: url('./DIGITALDREAM.ttf');

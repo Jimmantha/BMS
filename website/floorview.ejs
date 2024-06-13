@@ -53,7 +53,6 @@
             <div class="col ">
               <div class="row justify-content-end">
                 <select id="timeInterval" class="form-control select">
-                  <option value="hour">Hour</option>
                   <option value="day">Day</option>
                   <option value="week">Week</option>
                   <option value="month">Month</option>
@@ -77,17 +76,19 @@
       <div class="col m-2" style="overflow-y:scroll; height: 90vh;" id="moreDetails"></div>
     </div>
     <div class="offcanvas offcanvas-bottom" tabindex="-1" id="offcanvas" aria-labelledby="offcanvasLabel">
-      <div class="offcanvas-header">
-        <h5 class="offcanvas-title" id="offcanvasLabel">Offcanvas</h5>
+      <div class="offcanvas-header alert-text">
+        Alerts
         <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
       </div>
-      <div class="offcanvas-body">
-        <!-- Offcanvas content goes here -->
+      <div class="offcanvas-body m-3" id="AlertMessages" style="overflow-y:s">
+        <ul id="alertMessageList">
+
+        </ul>
       </div>
     </div>
 
-    <div class="fixed-bottom title ms-1" id="warning">
-      warning
+    <div class="fixed-bottom title ms-1 alert-text ps-3 m-0" id="warning">
+      Alerts
     </div>
   </div>
   </div>
@@ -123,7 +124,6 @@
     var originalEnergyData = <%- JSON.stringify(energyData) %>;
   </script>
   <script>
-    var editState = false;
     floorNames = []
     $("#floorSelector").empty();
     for (var data in ejsData) {
@@ -136,6 +136,10 @@
     var energyData = {};
 
     function loadData() {
+      // Clear alerts
+      $("#alertMessageList").empty();
+
+
       floorlevel = $("#floorSelector").val();
       zones = ejsData.find(obj => obj.floorlevel == floorlevel).zones;
       try {
@@ -146,40 +150,47 @@
       } catch (error) {
         console.error("Error setting floorplan image:", error);
       }
+      try {
+        for (zone in zones) {
+          var timestampTemperaturePairs = []; // Changed from timestampZonePairs
+          for (data in orginalSensorData) {
+            if (orginalSensorData[data].metaData.zone == zones[zone].name && orginalSensorData[data].metaData.floor == floorlevel) {
+              timestampTemperaturePairs.push({
+                floor: orginalSensorData[data].metaData.floor,
+                zone: orginalSensorData[data].metaData.zone,
+                temperature: orginalSensorData[data].temperature,
+                timestamp: orginalSensorData[data].timestamp,
+                setTemperature: orginalSensorData[data].setTemperature,
+                upperMargin: orginalSensorData[data].setTemperature +
+                  orginalSensorData[data].upperMargin,
+                lowerMargin: orginalSensorData[data].setTemperature -
+                  orginalSensorData[data].lowerMargin,
+              });
+            }
+          }
+          sensorData[zones[zone].name] = timestampTemperaturePairs;
+        }
+      } catch (error) {
+        console.error("Error setting sensor data:", error);
+      }
 
-      for (zone in zones) {
-        var timestampTemperaturePairs = []; // Changed from timestampZonePairs
-        for (data in orginalSensorData) {
-          if (orginalSensorData[data].metaData.zone == zones[zone].name && orginalSensorData[data].metaData.floor == floorlevel) {
-            timestampTemperaturePairs.push({
-              floor: orginalSensorData[data].metaData.floor,
-              zone: orginalSensorData[data].metaData.zone,
-              temperature: orginalSensorData[data].temperature,
-              timestamp: orginalSensorData[data].timestamp,
-              setTemperature: orginalSensorData[data].setTemperature,
-              upperMargin: orginalSensorData[data].setTemperature +
-                orginalSensorData[data].upperMargin,
-              lowerMargin: orginalSensorData[data].setTemperature -
-                orginalSensorData[data].lowerMargin,
+      try {
+        var timestampEnergyPairs = [];
+        for (data in originalEnergyData) {
+          if (originalEnergyData[data].metaData.floor == floorlevel) {
+            timestampEnergyPairs.push({
+              floor: originalEnergyData[data].metaData.floor,
+              energy: originalEnergyData[data].energy,
+              timestamp: originalEnergyData[data].metaData.timestamp
             });
           }
+          floor = $('#floorSelector').val();
+          energyData[floor] = timestampEnergyPairs;
         }
-        sensorData[zones[zone].name] = timestampTemperaturePairs;
+      } catch (error) {
+        console.error("Error setting energy data:", error);
       }
 
-      var timestampEnergyPairs = [];
-      for (data in originalEnergyData) {
-        if (originalEnergyData[data].metaData.floor == floorlevel) {
-          timestampEnergyPairs.push({
-            floor: originalEnergyData[data].metaData.floor,
-            zone: originalEnergyData[data].metaData.zone,
-            energy: originalEnergyData[data].energy,
-            timestamp: originalEnergyData[data].timestamp
-          });
-        }
-        floor = $('#floorSelector').val();
-        energyData[floor] = timestampEnergyPairs;
-      }
     }
   </script>
   <script>
@@ -207,6 +218,7 @@
       createArea();
       updatetemperature();
       updateEnergy();
+      loadEnergyChart();
       console.log("received energy data");
     });
     window.addEventListener("click", function(event) {
@@ -725,66 +737,143 @@
 
     }
 
+
+    loadEnergyChart();
+
     function updateEnergy() {
+      var energyAlert = document.createElement("li");
+      energyAlert.id = "energyAlert";
+      var currentTime = new Date();
+      console.log(currentTime)
+      currentTime = currentTime.getTime();
       energyMeter = document.getElementById("energyMeter");
+      var alertList = document.getElementById("alertMessageList");
+      try {
+        var tempTime = new Date(energyData["1"][0].timestamp)
+        var milisecondtempTime = tempTime.getTime();
+      } catch {
+        //nothing
+      }
+
       floor = $('#floorSelector').val();
-      energyMeter.textContent = energyData[floor][0].energy + "kwh";
+      if (!energyData[floor]) {
+        energyMeter.textContent = "ERROR";
+        energyAlert.textContent = "No Energy Reading available for this floor";
+        alertMessageList.appendChild(energyAlert);
+        energyMeter.addEventListener("click", function() {
+          $('#offcanvas').offcanvas('show')
+          energyAlert.classList.add('highlight');
+          alertMessageList.appendChild(energyAlert);
+          $('#offcanvas').on('hidden.bs.offcanvas', function() {
+            energyAlert.classList.remove('highlight');
+          });
+        });
+
+        var energyCanvas = document.getElementById("energyChart");
+        energyCanvas.addEventListener("click", function() {
+          $('#offcanvas').offcanvas('show')
+          energyAlert.classList.add('highlight');
+          alertMessageList.appendChild(energyAlert);
+          $('#offcanvas').on('hidden.bs.offcanvas', function() {
+            energyAlert.classList.remove('highlight');
+          });
+        });
+        return;
+      } else if (currentTime - milisecondtempTime > 3600000) {
+
+        var timeDiffMin = Math.floor(((currentTime - milisecondtempTime) / 60000));
+        energyAlert.textContent = "Energy Readings last updated " + timeDiffMin + " minutes ago";
+        energyMeter.textContent = energyData[floor][0].energy + "kwh";
+        alertMessageList.appendChild(energyAlert);
+      } else {
+        console.log("updating energy");
+        energyMeter.textContent = energyData[floor][0].energy + "kwh";
+      }
+      console.log(tempTime)
 
     }
 
+
     function loadEnergyChart() {
-      floor = $('#floorSelector').val();
-      var ChartData = energyData[floor];
-      var chart = document.getElementById("energyChart");
-      var ctx = chart.getContext("2d");
-      var energy = [];
-      var energyChanges = [];
-      var label = [];
-      for (data in ChartData) {
-        energy.push(ChartData[data].energy);
-        if (data > 0) {
-          var energyChange = ChartData[data].energy - ChartData[data - 1].energy;
-        } else {
-          var energyChange = 0;
+      if (!dynamicCharts["energyChart"]) {
+        floor = $('#floorSelector').val();
+        var ChartData = energyData[floor];
+        var chart = document.getElementById("energyChart");
+        var ctx = chart.getContext("2d");
+        var energy = [];
+        var energyChanges = [];
+        var label = [];
+        for (data in ChartData) {
+          energy.push(ChartData[data].energy);
+          if (data > 0) {
+            var energyChange = ChartData[data].energy - ChartData[data - 1].energy;
+          } else {
+            var energyChange = 0;
+          }
+          energyChanges.push(energyChange);
+          label.push(ChartData[data].timestamp);
         }
-        energyChanges.push(energyChange);
-        label.push(ChartData[data].timestamp);
-      }
-      energy.reverse();
-      energyChanges.reverse();
-      label.reverse();
+        energy.reverse();
+        energyChanges.reverse();
+        label.reverse();
 
-      var data = {
-        labels: label,
-        datasets: [{
-          label: "Energy",
-          data: energy,
-          fill: false,
-          borderColor: "rgb(75, 192, 192)",
-          tension: 0.1,
-          pointStyle: "none",
-          pointRadius: 0
-        }, ],
-
-      }
-      const energyChartConfig = {
-        type: 'line',
-        data: data,
-        options: {
-          legend: {
-            display: false,
-            usePointStyle: true,
-          },
+        var data = {
+          labels: label,
+          datasets: [{
+            label: "Energy",
+            data: energy,
+            fill: false,
+            borderColor: "rgb(75, 192, 192)",
+            tension: 0.1,
+            pointStyle: "none",
+            pointRadius: 0
+          }, ],
 
         }
-      }
-      dynamicCharts["energyChart"] = new Chart(ctx, energyChartConfig);
-      console.log(energyData);
+        const energyChartConfig = {
+          type: 'line',
+          data: data,
+          options: {
+            legend: {
+              display: false,
+              usePointStyle: true,
+            },
 
+          }
+        }
+        dynamicCharts["energyChart"] = new Chart(ctx, energyChartConfig);
+      } else {
+        var ChartData = energyData[floor];
+        var energy = [];
+        var energyChanges = [];
+        var label = [];
+        for (data in ChartData) {
+          energy.push(ChartData[data].energy);
+          if (data > 0) {
+            var energyChange = ChartData[data].energy - ChartData[data - 1].energy;
+          } else {
+            var energyChange = 0;
+          }
+          energyChanges.push(energyChange);
+          label.push(ChartData[data].timestamp);
+        }
+        energy.reverse();
+        energyChanges.reverse();
+        label.reverse();
+        dynamicCharts["energyChart"].data.labels = label;
+        dynamicCharts["energyChart"].data.datasets[0].data = energy;
+        dynamicCharts["energyChart"].update();
+      }
     }
 
     updateEnergy();
-    loadEnergyChart();
+  </script>
+  <script>
+    $(document).ready(function() {
+      $('#warning').on('click', function() {
+        $('#offcanvas').offcanvas('show')
+      });
+    });
   </script>
 </body>
 

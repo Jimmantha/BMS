@@ -14,7 +14,6 @@
     "express": "^4.19.2",
     "fetch": "^1.1.0",
     "http": "^0.0.1-security",
-    "moment-timezone": "^0.5.45",
     "mongoose": "^8.3.4",
     "mqtt": "^5.6.1",
     "path": "^0.12.7",

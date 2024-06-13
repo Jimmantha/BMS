@@ -84,7 +84,7 @@
         upperMargin.push(zoneData[data].upperMargin)
         lowerMargin.push(zoneData[data].lowerMargin)
         setTemp.push(zoneData[data].setTemperature)
-        time.push(tempTime)
+        time.push(tempTime.getHours() + ":" + tempTime.getMinutes());
       }
       console.log(tempTime);
       var currentTime = new Date();
