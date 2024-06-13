@@ -52,7 +52,7 @@ mongoose.connect('mongodb+srv://pleasepeople123:VfLWNiTsHAUOZjkY@cluster0.75o7ls
 
 
 // Connect to the MQTT broker
-const client = mqtt.connect('mqtt://172.23.18.169:1883');
+const client = mqtt.connect('mqtt://localhost:1883');
 
 // Create a schema for the sensor data
 const sensorDataSchema = new mongoose.Schema({
@@ -175,7 +175,6 @@ client.on('message', async (topic, message) => {
             newSensorData.save().then(() => {
                 sensorSaveTime = new Date();
             });
-            console.log('saved energy reading');
         } else if (sensorSaveTime == undefined) {
             newSensorData.save().then(() => {
                 sensorSaveTime = new Date();
