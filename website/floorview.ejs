@@ -818,58 +818,8 @@
 
 
 
-        if (timeGrannularity == "day") {
-          var energyDataset = energyData[floorlevel];
-
-          var currentDate = new Date();
-          var currentDay = currentDate.getDate();
-
-          var endEnergyUsed = [];
-          for (var i = 0; i < 24; i++) {
-            for (data in energyData[floorlevel]) {
-              var tempTime = new Date(energyData[floorlevel][data].timestamp);
-              if (tempTime.getDate() == currentDay && tempTime.getHours() == i) {
-                endEnergyUsed.push(energyData[floorlevel][data].energy);
-                break;
-              }
-            }
-            if (!endEnergyUsed[i]) {
-              endEnergyUsed.push(0);
-            }
-          }
-
-
-          energyDataset.reverse();
-
-          var initalEnergyUsed = [];
-          for (var i = 0; i < 24; i++) {
-            for (data in energyData[floorlevel]) {
-              var tempTime = new Date(energyData[floorlevel][data].timestamp);
-              if (tempTime.getDate() == currentDay && tempTime.getHours() == i) {
-                initalEnergyUsed.push(energyData[floorlevel][data].energy);
-                break;
-              }
-            }
-            if (!initalEnergyUsed[i]) {
-              initalEnergyUsed.push(0);
-            }
-          }
-
-          var dayEnergyUsed = []
-          for (var i = 0; i < 24; i++) {
-            dayEnergyUsed.push(endEnergyUsed[i] - initalEnergyUsed[i]);
-          }
-
-
-
-          for (var i = 0; i < 24; i++) {
-            labels.push(i + ":00");
-          }
-
-          energyDataset.reverse();
-
-          console.log(dayEnergyUsed, labels)
-        }
+        var [dayEnergyUsed, labels] = energyChartValue(timeGrannularity, floorlevel)
+        console.log(dayEnergyUsed, )
 
         var energyChartData = {
           labels: labels,
@@ -877,10 +827,15 @@
             label: "Energy Used(KWH)",
             data: dayEnergyUsed,
             fill: "yellow",
+            backgroundColor: "yellow",
             borderColor: "rgb(196, 196, 0)",
             tension: 0.1,
             radius: 1,
           }, ]
+        }
+
+        var backArrow = {
+
         }
 
         var energyConfig = {
@@ -896,6 +851,7 @@
                 display: true,
                 text: 'Energy used on ' + new Date().toLocaleDateString() + ' (kwh)',
               },
+              backArrow
             },
           },
         }
@@ -903,61 +859,7 @@
         dynamicCharts["energyChart"] = new Chart(energyCtx, energyConfig);
       } else {
 
-        if (timeGrannularity == "day") {
-          var energyDataset = energyData[floorlevel];
-
-          var currentDate = new Date();
-          var currentDay = currentDate.getDate();
-
-          var endEnergyUsed = [];
-          for (var i = 0; i < 24; i++) {
-            for (data in energyData[floorlevel]) {
-              var tempTime = new Date(energyData[floorlevel][data].timestamp);
-              if (tempTime.getDate() == currentDay && tempTime.getHours() == i) {
-                endEnergyUsed.push(energyData[floorlevel][data].energy);
-                break;
-              }
-            }
-            if (!endEnergyUsed[i]) {
-              endEnergyUsed.push(0);
-            }
-          }
-
-
-          energyDataset.reverse();
-
-          var initalEnergyUsed = [];
-          for (var i = 0; i < 24; i++) {
-            for (data in energyData[floorlevel]) {
-              var tempTime = new Date(energyData[floorlevel][data].timestamp);
-              if (tempTime.getDate() == currentDay && tempTime.getHours() == i) {
-                initalEnergyUsed.push(energyData[floorlevel][data].energy);
-                break;
-              }
-            }
-            if (!initalEnergyUsed[i]) {
-              initalEnergyUsed.push(0);
-            }
-          }
-
-          var dayEnergyUsed = []
-          for (var i = 0; i < 24; i++) {
-            dayEnergyUsed.push(endEnergyUsed[i] - initalEnergyUsed[i]);
-          }
-
-
-
-          for (var i = 0; i < 24; i++) {
-            labels.push(i + ":00");
-          }
-
-          energyDataset.reverse();
-
-          console.log(dayEnergyUsed, labels)
-        }
-
-
-
+        [dayEnergyUsed, labels] = energyChartValue(timeGrannularity, floorlevel)
 
         dynamicCharts["energyChart"].config.data.labels = labels;
         dynamicCharts["energyChart"].config.data.datasets[0].data = dayEnergyUsed;
@@ -966,7 +868,61 @@
 
     }
 
+    function energyChartValue(timeGrannularity, floorlevel) {
+      var labels = [];
+      if (timeGrannularity == "day") {
+        var energyDataset = energyData[floorlevel];
 
+        var currentDate = new Date();
+        var currentDay = currentDate.getDate();
+
+        var endEnergyUsed = [];
+        for (var i = 0; i < 24; i++) {
+          for (data in energyData[floorlevel]) {
+            var tempTime = new Date(energyData[floorlevel][data].timestamp);
+            if (tempTime.getDate() == currentDay && tempTime.getHours() == i) {
+              endEnergyUsed.push(energyData[floorlevel][data].energy);
+              break;
+            }
+          }
+          if (!endEnergyUsed[i]) {
+            endEnergyUsed.push(0);
+          }
+        }
+        energyDataset.reverse();
+
+        var initalEnergyUsed = [];
+        for (var i = 0; i < 24; i++) {
+          for (data in energyData[floorlevel]) {
+            var tempTime = new Date(energyData[floorlevel][data].timestamp);
+            if (tempTime.getDate() == currentDay && tempTime.getHours() == i) {
+              initalEnergyUsed.push(energyData[floorlevel][data].energy);
+              break;
+            }
+          }
+          if (!initalEnergyUsed[i]) {
+            initalEnergyUsed.push(0);
+          }
+        }
+
+        var dayEnergyUsed = []
+        for (var i = 0; i < 24; i++) {
+          dayEnergyUsed.push(endEnergyUsed[i] - initalEnergyUsed[i]);
+        }
+
+
+
+        for (var i = 0; i < 24; i++) {
+          labels.push(i + ":00");
+        }
+
+        energyDataset.reverse();
+
+        console.log(dayEnergyUsed, labels)
+      }
+      return [dayEnergyUsed, labels]; 
+
+    }
 
     loadEnergyChart();
     updateEnergy();
