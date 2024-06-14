@@ -52,7 +52,7 @@ mongoose.connect('mongodb+srv://pleasepeople123:VfLWNiTsHAUOZjkY@cluster0.75o7ls
 
 
 // Connect to the MQTT broker
-const client = mqtt.connect('mqtt://localhost:1883');
+const client = mqtt.connect('mqtt://172.23.18.169:1883');
 
 // Create a schema for the sensor data
 const sensorDataSchema = new mongoose.Schema({
@@ -172,11 +172,11 @@ client.on('message', async (topic, message) => {
         var currenttime = new Date();
 
         if (currenttime - sensorSaveTime > 60000) { //300000ms = 5 minutes
-            newSensorData.save().then(() => {
+            await newSensorData.save().then(() => {
                 sensorSaveTime = new Date();
             });
         } else if (sensorSaveTime == undefined) {
-            newSensorData.save().then(() => {
+            await newSensorData.save().then(() => {
                 sensorSaveTime = new Date();
             });
             console.log('saved undefined');
@@ -187,23 +187,23 @@ client.on('message', async (topic, message) => {
         energy = data.energy.toFixed(2);
         console.log(data);
         var date = new Date(Date.now());
-        date.setHours(date.getHours() + 8);
+        date.setHours(date.getHours());
         const newEnergyReading = new EnergyReading({
             metaData: {
                 floor: 1,
                 zone: "Zone1"
             },
             energy: energy,
-            timestamp: date,
+            timestamp: new Date(),
         });
         var currenttime = new Date();
-        if (currenttime - energySaveTime > 60000) { //300000ms = 5 minutes
-            newEnergyReading.save().then(() => {
+        if (currenttime - energySaveTime > 10000) { //300000ms = 5 minutes
+            await newEnergyReading.save().then(() => {
                 energySaveTime = new Date();
             });
             console.log('saved energy reading');
         } else if (energySaveTime == undefined) {
-            newEnergyReading.save().then(() => {
+            await newEnergyReading.save().then(() => {
                 energySaveTime = new Date();
             });
             console.log('saved undefined');
@@ -216,12 +216,12 @@ client.on('message', async (topic, message) => {
 // Fetch 50 latest sensor data from MongoDB 
 async function getSensorData() {
     //limit to 1200 for 
-    var data = await SensorData.find().sort({ timestamp: -1 }).limit(50);
+    var data = await SensorData.find().sort({ timestamp: -1 });
     return data;
 }
 
 async function getEnergyData() {
-    var data = await EnergyReading.find().sort({ timestamp: -1 }).limit(50);
+    var data = await EnergyReading.find().sort({ timestamp: -1 });
     return data;
 }
 

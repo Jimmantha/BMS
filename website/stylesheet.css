@@ -126,6 +126,7 @@ body {
 
 .alert-text{
     color: red;
+    cursor: pointer;
 }
 
 .highlight{

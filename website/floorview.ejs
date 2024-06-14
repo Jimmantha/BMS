@@ -52,7 +52,7 @@
           <div class="row">
             <div class="col ">
               <div class="row justify-content-end">
-                <select id="timeInterval" class="form-control select">
+                <select id="timeGrannularity" class="form-control select">
                   <option value="day">Day</option>
                   <option value="week">Week</option>
                   <option value="month">Month</option>
@@ -88,8 +88,8 @@
     </div>
 
     <div class="fixed-bottom title ms-1 alert-text ps-3 m-0" id="warning">
-    
-      Alerts
+
+      ^Alerts
     </div>
   </div>
   </div>
@@ -183,7 +183,7 @@
             timestampEnergyPairs.push({
               floor: originalEnergyData[data].metaData.floor,
               energy: originalEnergyData[data].energy,
-              timestamp: originalEnergyData[data].metaData.timestamp
+              timestamp: originalEnergyData[data].timestamp
             });
           }
           floor = $('#floorSelector').val();
@@ -742,13 +742,13 @@
     }
 
 
-    loadEnergyChart();
+
 
     function updateEnergy() {
       var energyAlert = document.createElement("li");
       energyAlert.id = "energyAlert";
       var currentTime = new Date();
-      console.log(currentTime)
+      //    console.log(currentTime)
       currentTime = currentTime.getTime();
       energyMeter = document.getElementById("energyMeter");
       var alertList = document.getElementById("alertMessageList");
@@ -772,7 +772,6 @@
             energyAlert.classList.remove('highlight');
           });
         });
-        alertCount++;
         var energyCanvas = document.getElementById("energyChart");
         energyCanvas.addEventListener("click", function() {
           $('#offcanvas').offcanvas('show')
@@ -794,100 +793,105 @@
         alertCount++;
         updateAlertCount();
       } else {
-        console.log("updating energy");
+        //   console.log("updating energy");
         energyMeter.textContent = energyData[floor][0].energy + "kwh";
       }
-      console.log(tempTime)
+      //  console.log(tempTime)
 
     }
 
-    function updateAlertCount () {
-      $('#warning').text("Alerts(" + alertCount +")");
+    function updateAlertCount() {
+      $('#warning').text("🠡 Alerts(" + alertCount + ")");
     }
+
+
+
     function loadEnergyChart() {
+      var labels = [];
+      var energyDataset = [];
+      var floorlevel = $('#floorSelector').val();
+      var timeGrannularity = $('#timeGrannularity').val();
+
       if (!dynamicCharts["energyChart"]) {
-        floor = $('#floorSelector').val();
-        var ChartData = energyData[floor];
-        var chart = document.getElementById("energyChart");
-        var ctx = chart.getContext("2d");
-        var energy = [];
-        var energyChanges = [];
-        var label = [];
-        for (data in ChartData) {
-          energy.push(ChartData[data].energy);
-          if (data > 0) {
-            var energyChange = ChartData[data].energy - ChartData[data - 1].energy;
-          } else {
-            var energyChange = 0;
-          }
-          energyChanges.push(energyChange);
-          label.push(ChartData[data].timestamp);
-        }
-        energy.reverse();
-        energyChanges.reverse();
-        label.reverse();
+        var energyCanvas = document.getElementById("energyChart");
+        var energyCtx = energyCanvas.getContext("2d");
+        
 
-        var data = {
-          labels: label,
+
+
+        for (data in energyData[floorlevel]) {
+          energyDataset.push(energyData[floorlevel][data].energy);
+          var tempTime = new Date(energyData[floorlevel][data].timestamp);
+          labels.push(tempTime.getHours() + ":" + tempTime.getMinutes());
+        }
+
+        labels.reverse();
+        energyDataset.reverse();
+
+        console.log(energyDataset, labels)
+
+        var energyChartData = {
+          labels: labels,
           datasets: [{
-            label: "Energy",
-            data: energy,
+            label: "Energy Used(KWH)",
+            data: energyDataset,
             fill: false,
-            borderColor: "rgb(75, 192, 192)",
+            borderColor: "rgb(196, 196, 0)",
             tension: 0.1,
-            pointStyle: "none",
-            pointRadius: 0
-          }, ],
-
+            radius: 1,
+          }, ]
         }
-        const energyChartConfig = {
-          type: 'line',
-          data: data,
+
+        var energyConfig = {
+          type: "line",
+          data: energyChartData,
           options: {
-            legend: {
-              display: false,
-              usePointStyle: true,
+            plugins: {
+              legend: {
+                display: false,
+              },
             },
+          },
+        }
 
-          }
-        }
-        dynamicCharts["energyChart"] = new Chart(ctx, energyChartConfig);
+        dynamicCharts["energyChart"] = new Chart(energyCtx, energyConfig);
       } else {
-        var ChartData = energyData[floor];
-        var energy = [];
-        var energyChanges = [];
-        var label = [];
-        for (data in ChartData) {
-          energy.push(ChartData[data].energy);
-          if (data > 0) {
-            var energyChange = ChartData[data].energy - ChartData[data - 1].energy;
-          } else {
-            var energyChange = 0;
-          }
-          energyChanges.push(energyChange);
-          label.push(ChartData[data].timestamp);
+
+        for (data in energyData[floorlevel]) {
+          energyDataset.push(energyData[floorlevel][data].energy);
+          var tempTime = new Date(energyData[floorlevel][data].timestamp);
+          labels.push(tempTime.getHours() + ":" + tempTime.getMinutes());
         }
-        energy.reverse();
-        energyChanges.reverse();
-        label.reverse();
-        dynamicCharts["energyChart"].data.labels = label;
-        dynamicCharts["energyChart"].data.datasets[0].data = energy;
+
+        labels.reverse();
+        energyDataset.reverse();
+
+
+        dynamicCharts["energyChart"].config.data.labels = labels;
+        dynamicCharts["energyChart"].config.data.datasets[0].data = energyDataset;
         dynamicCharts["energyChart"].update();
       }
+
     }
-   
+
+    $('#timeGrannularity').on('change', function() {
+      var value = $('#timeGrannularity').val(); //day,week,month
+      console.log(value);
+      loadEnergyChart();
+      console.log(value);
+    });
+
+    loadEnergyChart();
     updateEnergy();
     updateAlertCount();
   </script>
   <script>
     $(document).ready(function() {
       $('#warning').on('click', function() {
-        $('#warning').text("Alerts(" + alertCount +")");
+        $('#warning').text("🠡 Alerts(" + alertCount + ")");
         $('#offcanvas').offcanvas('show')
       });
     });
-
-
   </script>
 </body>
 
