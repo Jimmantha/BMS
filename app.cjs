@@ -50,9 +50,9 @@ mongoose.connect('mongodb+srv://pleasepeople123:VfLWNiTsHAUOZjkY@cluster0.75o7ls
     console.log('connected to db');
 }).catch(err => console.log(err));
 
-
+//172.23.18.169 dev mqtt broker
 // Connect to the MQTT broker
-const client = mqtt.connect('mqtt://localhost:1883');
+const client = mqtt.connect('mqtt://172.23.18.169:1883');
 
 // Create a schema for the sensor data
 const sensorDataSchema = new mongoose.Schema({

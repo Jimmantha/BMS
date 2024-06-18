@@ -51,12 +51,19 @@
           </div>
           <div class="row">
             <div class="col ">
-              <div class="row justify-content-end">
-                <select id="timeGrannularity" class="form-control select">
-                  <option value="day">Day</option>
-                  <option value="week">Week</option>
-                  <option value="month">Month</option>
-                </select>
+              <div class="row ">
+                <div class="col">
+                  <input type="date" id="datepicker" class="form-control" value="<%= new Date().toISOString().split('T')[0] %>"> 
+                  <!-- '2023-06-21T00:00:00.000Z' split at-->
+                   </div> 
+                <div class="col">
+                  <select id="timeGrannularity" class="form-control select">
+                    <option value="day">Day</option>
+                    <option value="week">Week</option>
+                    <option value="month">Month</option>
+                  </select>
+                </div>
+
               </div>
 
               <canvas id="energyChart"> </canvas>
@@ -811,12 +818,12 @@
       var energyDataset = [];
       var floorlevel = $('#floorSelector').val();
       var timeGrannularity = $('#timeGrannularity').val();
+      var selectedDay = $('#datepicker').val();
+      console.log(selectedDay)
 
       if (!dynamicCharts["energyChart"]) {
         var energyCanvas = document.getElementById("energyChart");
         var energyCtx = energyCanvas.getContext("2d");
-
-
 
         var [dayEnergyUsed, labels] = energyChartValue(timeGrannularity, floorlevel)
         console.log(dayEnergyUsed, )
@@ -849,7 +856,7 @@
               },
               title: {
                 display: true,
-                text: 'Energy used on ' + new Date().toLocaleDateString() + ' (kwh)',
+                text: 'Energy used on ' + new Date(selectedDay).toLocaleDateString() + ' (kwh)',
               },
               backArrow
             },
@@ -859,22 +866,23 @@
         dynamicCharts["energyChart"] = new Chart(energyCtx, energyConfig);
       } else {
 
-        [dayEnergyUsed, labels] = energyChartValue(timeGrannularity, floorlevel)
+        [dayEnergyUsed, labels] = energyChartValue(timeGrannularity, floorlevel,selectedDay)
 
         dynamicCharts["energyChart"].config.data.labels = labels;
         dynamicCharts["energyChart"].config.data.datasets[0].data = dayEnergyUsed;
         dynamicCharts["energyChart"].update();
+        dynamicCharts["energyChart"].config.options.plugins.title.text = 'Energy used on ' + new Date(selectedDay).toLocaleDateString() + ' (kwh)';
       }
 
     }
 
-    function energyChartValue(timeGrannularity, floorlevel) {
+    function energyChartValue(timeGrannularity, floorlevel,selectedDay) {
       var labels = [];
       if (timeGrannularity == "day") {
         var energyDataset = energyData[floorlevel];
 
-        var currentDate = new Date();
-        var currentDay = currentDate.getDate();
+        var currentDate = new Date(selectedDay)
+        var currentDay = currentDate.getDate() ;
 
         var endEnergyUsed = [];
         for (var i = 0; i < 24; i++) {
@@ -931,6 +939,12 @@
     }
 
     $('#timeGrannularity').on('change', function() {
+      loadEnergyChart();
+    });
+
+    $('#datepicker').on('change', function() {
+      selectedDay = $('#datepicker').val();
+      dynamicCharts["energyChart"].config.options.plugins.title.text = 'Energy used on ' + new Date(selectedDay).toLocaleDateString() + ' (kwh)';
       loadEnergyChart();
     });
     loadEnergyChart();
