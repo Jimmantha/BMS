@@ -53,9 +53,9 @@
             <div class="col ">
               <div class="row ">
                 <div class="col">
-                  <input type="date" id="datepicker" class="form-control" value="<%= new Date().toISOString().split('T')[0] %>"> 
+                  <input type="date" id="datepicker" class="form-control" value="<%= new Date().toISOString().split('T')[0] %>">
                   <!-- '2023-06-21T00:00:00.000Z' split at-->
-                   </div> 
+                </div>
                 <div class="col">
                   <select id="timeGrannularity" class="form-control select">
                     <option value="day">Day</option>
@@ -866,25 +866,27 @@
         dynamicCharts["energyChart"] = new Chart(energyCtx, energyConfig);
       } else {
 
-        [dayEnergyUsed, labels] = energyChartValue(timeGrannularity, floorlevel,selectedDay)
+        [dayEnergyUsed, labels] = energyChartValue(timeGrannularity, floorlevel, selectedDay)
 
         dynamicCharts["energyChart"].config.data.labels = labels;
         dynamicCharts["energyChart"].config.data.datasets[0].data = dayEnergyUsed;
         dynamicCharts["energyChart"].update();
-        dynamicCharts["energyChart"].config.options.plugins.title.text = 'Energy used on ' + new Date(selectedDay).toLocaleDateString() + ' (kwh)';
+        if (timeGrannularity == "day") {
+          dynamicCharts["energyChart"].config.options.plugins.title.text = 'Energy used on ' + new Date(selectedDay).toLocaleDateString() + ' (kwh)';
+        } else if (timeGrannularity == "week") {
+          dynamicCharts["energyChart"].config.options.plugins.title.text = 'Energy used on ' + new Date(selectedDay).toLocaleDateString().split('T')[0] + ' (kwh)';
+        }
       }
-
     }
 
-    function energyChartValue(timeGrannularity, floorlevel,selectedDay) {
+    function energyChartValue(timeGrannularity, floorlevel, selectedDay) {
       var labels = [];
+      var currentDate = new Date(selectedDay)
+      var currentDay = currentDate.getDate()
+      var energyDataset = energyData[floorlevel];
+      var endEnergyUsed = [];
       if (timeGrannularity == "day") {
-        var energyDataset = energyData[floorlevel];
 
-        var currentDate = new Date(selectedDay)
-        var currentDay = currentDate.getDate() ;
-
-        var endEnergyUsed = [];
         for (var i = 0; i < 24; i++) {
           for (data in energyData[floorlevel]) {
             var tempTime = new Date(energyData[floorlevel][data].timestamp);
@@ -894,7 +896,7 @@
             }
           }
           if (!endEnergyUsed[i]) {
-            endEnergyUsed.push(0);
+            endEnergyUsed.push(0); //no energy used for hour
           }
         }
         energyDataset.reverse();
@@ -909,7 +911,7 @@
             }
           }
           if (!initalEnergyUsed[i]) {
-            initalEnergyUsed.push(0);
+            initalEnergyUsed.push(0); //no energy used for hour
           }
         }
 
@@ -927,14 +929,61 @@
         energyDataset.reverse();
 
         console.log(dayEnergyUsed, labels)
-      }
-      else if (timeGrannularity == "week"){
-        console.error("Week not implemented yet")
-      }
-      else if (timeGrannularity == "month"){
+      } else if (timeGrannularity == "week") {
+        var day = currentDate.getDay();
+        //find the diff from day to 1 start
+        var offset = day - 1;
+        //find the start of the week
+        var start = new Date(currentDate.setDate(currentDate.getDate() - offset));
+        //push weekdates to labels
+        var labels = [];
+        for (var i = 0; i < 7; i++) {
+          var tempDate = new Date(start);
+          tempDate.setDate(tempDate.getDate() + i);
+          labels.push(tempDate.toLocaleDateString().split('T')[0]);
+        }
+
+        console.log(labels)
+
+        var endEnergy = [];
+        var initalEnergyUsed = [];
+
+        for (date in labels) {
+          for (data in energyDataset) {
+            var tempTime = new Date(energyDataset[data].timestamp);
+            var tempTime = tempTime.toLocaleDateString().split('T')[0];
+            if (tempTime == labels[date]) {
+              endEnergy.push(energyDataset[data].energy);
+              break;
+            }
+          }
+          if (!endEnergy[date]) {
+            endEnergy.push(0);
+          }
+        }
+
+        energyDataset.reverse();
+        for (date in labels) {
+          for (data in energyDataset) {
+            var tempTime = new Date(energyDataset[data].timestamp);
+            var tempTime = tempTime.toLocaleDateString().split('T')[0];
+            if (tempTime == labels[date]) {
+              initalEnergyUsed.push(energyDataset[data].energy);
+              break;
+            }
+          }
+          if (!endEnergy[date]) {
+            initalEnergyUsed.push(0);
+          }
+        }
+        var dayEnergyUsed = []
+        for (var i = 0; i < 7; i++) {
+          dayEnergyUsed.push(endEnergy[i] - initalEnergyUsed[i]);
+        }
+      } else if (timeGrannularity == "month") {
         console.error("Month not implemented yet")
       }
-      return [dayEnergyUsed, labels]; 
+      return [dayEnergyUsed, labels];
 
     }
 
