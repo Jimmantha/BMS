@@ -787,7 +787,7 @@
       } else if (currentTime - milisecondtempTime > 3600000) {
 
         var timeDiffMin = Math.floor(((currentTime - milisecondtempTime) / 60000));
-        energyAlert.textContent = "Energy Readings last updated " + timeDiffMin + " minutes ago";
+        energyAlert.textContent = "Energy Readings last updated " + new Date(energyData[floorlevel][0].timestamp);
         energyMeter.textContent = energyData[floor][0].energy + "kwh";
         alertMessageList.appendChild(energyAlert);
         alertCount++;
@@ -920,10 +920,19 @@
 
         console.log(dayEnergyUsed, labels)
       }
+      else if (timeGrannularity == "week"){
+        console.error("Week not implemented yet")
+      }
+      else if (timeGrannularity == "month"){
+        console.error("Month not implemented yet")
+      }
       return [dayEnergyUsed, labels]; 
 
     }
 
+    $('#timeGrannularity').on('change', function() {
+      loadEnergyChart();
+    });
     loadEnergyChart();
     updateEnergy();
     updateAlertCount();
