@@ -61,6 +61,7 @@
                     <option value="day">Day</option>
                     <option value="week">Week</option>
                     <option value="month">Month</option>
+                    <option value="year">Year</option>
                   </select>
                 </div>
 
@@ -825,7 +826,7 @@
         var energyCanvas = document.getElementById("energyChart");
         var energyCtx = energyCanvas.getContext("2d");
 
-        var [dayEnergyUsed, labels] = energyChartValue(timeGrannularity, floorlevel)
+        var [dayEnergyUsed, labels] = energyChartValue(timeGrannularity, floorlevel, selectedDay)
         console.log(dayEnergyUsed, )
 
         var energyChartData = {
@@ -841,7 +842,7 @@
           }, ]
         }
 
-        var backArrow = {
+        var clickData = {
 
         }
 
@@ -849,7 +850,13 @@
           type: "bar",
           data: energyChartData,
           options: {
-
+            scales: {
+              xAxes: [{
+                ticks: {
+                  autoSkip: false
+                }
+              }]
+            },
             plugins: {
               legend: {
                 display: false,
@@ -858,9 +865,13 @@
                 display: true,
                 text: 'Energy used on ' + new Date(selectedDay).toLocaleDateString() + ' (kwh)',
               },
-              backArrow
+              clickData: {
+                onClick: function(e, item) {
+                  console.log(e, item, index)
+                }
+              },
             },
-          },
+          }
         }
 
         dynamicCharts["energyChart"] = new Chart(energyCtx, energyConfig);
@@ -879,18 +890,22 @@
       }
     }
 
+    function daysInMonth(month, year) {
+      return new Date(year, month + 1, 0).getDate();
+    }
+
     function energyChartValue(timeGrannularity, floorlevel, selectedDay) {
       var labels = [];
-      var currentDate = new Date(selectedDay)
-      var currentDay = currentDate.getDate()
+      var selectedDate = new Date(selectedDay)
+      var currentDay = selectedDate.getDate()
       var energyDataset = energyData[floorlevel];
-      var endEnergyUsed = [];
       if (timeGrannularity == "day") {
-
+        var endEnergyUsed = [];
         for (var i = 0; i < 24; i++) {
           for (data in energyData[floorlevel]) {
+
             var tempTime = new Date(energyData[floorlevel][data].timestamp);
-            if (tempTime.getDate() == currentDay && tempTime.getHours() == i) {
+            if (tempTime.getDate() === currentDay && tempTime.getHours() == i && tempTime.getMonth() === selectedDate.getMonth() && tempTime.getFullYear() === selectedDate.getFullYear()) {
               endEnergyUsed.push(energyData[floorlevel][data].energy);
               break;
             }
@@ -930,11 +945,11 @@
 
         console.log(dayEnergyUsed, labels)
       } else if (timeGrannularity == "week") {
-        var day = currentDate.getDay();
+        var day = selectedDate.getDay();
         //find the diff from day to 1 start
         var offset = day - 1;
         //find the start of the week
-        var start = new Date(currentDate.setDate(currentDate.getDate() - offset));
+        var start = new Date(selectedDate.setDate(selectedDate.getDate() - offset));
         //push weekdates to labels
         var labels = [];
         for (var i = 0; i < 7; i++) {
@@ -976,12 +991,110 @@
             initalEnergyUsed.push(0);
           }
         }
+
+        energyDataset.reverse();
         var dayEnergyUsed = []
         for (var i = 0; i < 7; i++) {
           dayEnergyUsed.push(endEnergy[i] - initalEnergyUsed[i]);
         }
       } else if (timeGrannularity == "month") {
-        console.error("Month not implemented yet")
+        var month = selectedDate.getMonth();
+        var year = selectedDate.getFullYear();
+
+        var totalDays = daysInMonth(month, year);
+
+        var labels = [];
+        for (var i = 1; i <= totalDays; i++) {
+          labels.push(i);
+        }
+
+        var endEnergy = [];
+        var initialEnergyUsed = [];
+
+        // Collect endEnergy and initialEnergyUsed
+        for (var i = 1; i <= totalDays; i++) {
+          for (data in energyDataset) {
+            var tempTime = new Date(energyDataset[data].timestamp);
+            if (tempTime.getDate() == i && tempTime.getMonth() == month && tempTime.getFullYear() == year) {
+              endEnergy.push(energyDataset[data].energy);
+              break;
+            }
+          }
+          if (!endEnergy[i - 1]) {
+            endEnergy.push(0);
+          }
+        }
+
+        energyDataset.reverse();
+        for (var i = 1; i <= totalDays; i++) {
+          for (data in energyDataset) {
+            var tempTime = new Date(energyDataset[data].timestamp);
+            if (tempTime.getDate() == i && tempTime.getMonth() == month && tempTime.getFullYear() == year) {
+              initialEnergyUsed.push(energyDataset[data].energy);
+              break;
+            }
+          }
+          if (!endEnergy[i - 1]) {
+            initialEnergyUsed.push(0);
+          }
+        }
+        energyDataset.reverse();
+
+        // Calculate EnergyUsed
+        var EnergyUsed = [];
+        for (var i = 0; i < totalDays; i++) {
+          EnergyUsed.push(endEnergy[i] - initialEnergyUsed[i]);
+        }
+
+        console.log(EnergyUsed);
+        return [EnergyUsed, labels];
+      } else if (timeGrannularity == "year") {
+        var month = selectedDate.getMonth();
+        var year = selectedDate.getFullYear();
+        var labels = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        var ddmmyy = [];
+        for (var i = 0; i < 12; i++) {
+          var tempDate = new Date(year, i, 1);
+          ddmmyy.push(tempDate);
+        }
+        var endEnergy = [];
+        var initalEnergyUsed = [];
+
+        for (date in ddmmyy) {
+          console.log(ddmmyy[date])
+          var month = ddmmyy[date].getMonth();
+          var year = ddmmyy[date].getFullYear();
+          for (data in energyDataset) {
+            var tempTime = new Date(energyDataset[data].timestamp);
+            if (tempTime.getMonth() == month && tempTime.getFullYear() == year) {
+              endEnergy.push(energyDataset[data].energy);
+              break;
+            }
+          }
+          if (!endEnergy[date]) {
+            endEnergy.push(0);
+          }
+        }
+        energyDataset.reverse();
+        for (date in ddmmyy) {
+          var month = ddmmyy[date].getMonth();
+          var year = ddmmyy[date].getFullYear();
+          for (data in energyDataset) {
+            var tempTime = new Date(energyDataset[data].timestamp);
+            if (tempTime.getMonth() == month && tempTime.getFullYear() == year) {
+              initalEnergyUsed.push(energyDataset[data].energy);
+              break;
+            }
+          }
+          if (!endEnergy[date]) {
+            initalEnergyUsed.push(0);
+          }
+        }
+        energyDataset.reverse();
+        var dayEnergyUsed = []
+        for (var i = 0; i < 12; i++) {
+          dayEnergyUsed.push(endEnergy[i] - initalEnergyUsed[i]);
+        }
       }
       return [dayEnergyUsed, labels];
 
