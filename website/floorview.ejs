@@ -57,7 +57,7 @@
                   <!-- '2023-06-21T00:00:00.000Z' split at-->
                 </div>
                 <div class="col">
-                  <select id="timeGrannularity" class="form-control select">
+                  <select id="timeGranularity" class="form-control select">
                     <option value="day">Day</option>
                     <option value="week">Week</option>
                     <option value="month">Month</option>
@@ -125,6 +125,31 @@
       </div>
     </div>
   </div>
+  <script>
+    //function 
+
+    function monthNameToNumber(monthName) {
+    // Mapping of month names to their respective numbers
+    const monthMap = {
+        "January": 1,
+        "February": 2,
+        "March": 3,
+        "April": 4,
+        "May": 5,
+        "June": 6,
+        "July": 7,
+        "August": 8,
+        "September": 9,
+        "October": 10,
+        "November": 11,
+        "December": 12
+    };
+
+    // Convert the month name to its corresponding number
+    return monthMap[monthName];
+}
+
+  </script>
   <script>
     var ejsData = <%- JSON.stringify(data) %>;
     var orginalSensorData = <%- JSON.stringify(sensorData) %>;
@@ -818,7 +843,7 @@
       var labels = [];
       var energyDataset = [];
       var floorlevel = $('#floorSelector').val();
-      var timeGrannularity = $('#timeGrannularity').val();
+      var timeGranularity = $('#timeGranularity').val();
       var selectedDay = $('#datepicker').val();
       console.log(selectedDay)
 
@@ -826,7 +851,7 @@
         var energyCanvas = document.getElementById("energyChart");
         var energyCtx = energyCanvas.getContext("2d");
 
-        var [dayEnergyUsed, labels] = energyChartValue(timeGrannularity, floorlevel, selectedDay)
+        var [dayEnergyUsed, labels] = energyChartValue(timeGranularity, floorlevel, selectedDay)
         console.log(dayEnergyUsed, )
 
         var energyChartData = {
@@ -840,10 +865,6 @@
             tension: 0.1,
             radius: 1,
           }, ]
-        }
-
-        var clickData = {
-
         }
 
         var energyConfig = {
@@ -865,28 +886,55 @@
                 display: true,
                 text: 'Energy used on ' + new Date(selectedDay).toLocaleDateString() + ' (kwh)',
               },
-              clickData: {
-                onClick: function(e, item) {
-                  console.log(e, item, index)
-                }
-              },
+              
             },
-          }
+          },
         }
 
         dynamicCharts["energyChart"] = new Chart(energyCtx, energyConfig);
+        energyChartTitle(selectedDay)
+        energyCanvas.addEventListener("click", energyClickHandler)
       } else {
 
-        [dayEnergyUsed, labels] = energyChartValue(timeGrannularity, floorlevel, selectedDay)
+        [dayEnergyUsed, labels] = energyChartValue(timeGranularity, floorlevel, selectedDay)
 
         dynamicCharts["energyChart"].config.data.labels = labels;
         dynamicCharts["energyChart"].config.data.datasets[0].data = dayEnergyUsed;
         dynamicCharts["energyChart"].update();
-        if (timeGrannularity == "day") {
-          dynamicCharts["energyChart"].config.options.plugins.title.text = 'Energy used on ' + new Date(selectedDay).toLocaleDateString() + ' (kwh)';
-        } else if (timeGrannularity == "week") {
-          dynamicCharts["energyChart"].config.options.plugins.title.text = 'Energy used on ' + new Date(selectedDay).toLocaleDateString().split('T')[0] + ' (kwh)';
+        energyChartTitle(selectedDay)
+
+      }
+    }
+
+    function energyClickHandler(click) {
+      var timeGranularity = $('#timeGranularity').val();
+      var date = $('#datepicker').val();
+      var date = new Date(date);
+      var month = date.getMonth();
+      var year = date.getFullYear();
+      const points = dynamicCharts["energyChart"].getElementsAtEventForMode(click, 'nearest', {
+        intersect: true
+      }, true);
+      if(points.length > 0){
+        const firstPoint = points[0];
+        const label = dynamicCharts["energyChart"].data.labels[firstPoint.index];
+        const value = dynamicCharts["energyChart"].data.datasets[firstPoint.datasetIndex].data[firstPoint.index];
+        console.log(label, value)
+        if(timeGranularity == "month"){
+          var tempTime = new Date(year, month, label+1)
+          console.log(tempTime)
+          var datepicker = document.getElementById("datepicker");
+          datepicker.value = tempTime.toISOString().split('T')[0];
+          $('#timeGranularity').val("day")
         }
+        else if(timeGranularity == "year"){
+          var month = monthNameToNumber(label)
+          var tempTime = new Date(year, month, 1)
+          var datepicker = document.getElementById("datepicker");
+          datepicker.value = tempTime.toISOString().split('T')[0];
+          $('#timeGranularity').val("month")
+        }
+        loadEnergyChart()
       }
     }
 
@@ -894,19 +942,43 @@
       return new Date(year, month + 1, 0).getDate();
     }
 
-    function energyChartValue(timeGrannularity, floorlevel, selectedDay) {
+    function energyChartTitle(selectedDay) {
+      var timeGranularity = $('#timeGranularity').val();
+
+      if (timeGranularity == "day") {
+        dynamicCharts["energyChart"].config.options.plugins.title.text = 'Energy used on ' + new Date(selectedDay).toLocaleDateString() + ' (kwh)';
+      } else if (timeGranularity == "week") {
+        let selectedDate = new Date(selectedDay);
+        let startDate = new Date(selectedDate);
+        startDate.setDate(selectedDate.getDate() - selectedDate.getDay() + 1);
+        let endDate = new Date(startDate);
+        endDate.setDate(startDate.getDate() + 6);
+        dynamicCharts["energyChart"].config.options.plugins.title.text = 'Energy used from ' + startDate.toLocaleDateString() + ' to ' + endDate.toLocaleDateString() + ' (kwh)';
+      } else if (timeGranularity == "month") {
+        dynamicCharts["energyChart"].config.options.plugins.title.text = 'Energy used during ' + new Date(selectedDay).toLocaleString('default', {
+          month: 'long',
+          year: 'numeric'
+        }) + ' (kwh)';
+      } else if (timeGranularity == "year") {
+        dynamicCharts["energyChart"].config.options.plugins.title.text = 'Energy used during ' + new Date(selectedDay).getFullYear() + ' (kwh)';
+      }
+      dynamicCharts["energyChart"].update();
+
+    }
+
+    function energyChartValue(timeGranularity, floorlevel, selectedDay) {
       var labels = [];
       var selectedDate = new Date(selectedDay)
       var currentDay = selectedDate.getDate()
       var energyDataset = energyData[floorlevel];
-      if (timeGrannularity == "day") {
+      console.log(energyDataset)
+      if (timeGranularity == "day") {
         var endEnergyUsed = [];
         for (var i = 0; i < 24; i++) {
-          for (data in energyData[floorlevel]) {
-
-            var tempTime = new Date(energyData[floorlevel][data].timestamp);
-            if (tempTime.getDate() === currentDay && tempTime.getHours() == i && tempTime.getMonth() === selectedDate.getMonth() && tempTime.getFullYear() === selectedDate.getFullYear()) {
-              endEnergyUsed.push(energyData[floorlevel][data].energy);
+          for (data in energyDataset) {
+            var tempTime = new Date(energyDataset[data].timestamp);
+            if (tempTime.getDate() == currentDay && tempTime.getHours() == i && tempTime.getMonth() == selectedDate.getMonth() && tempTime.getFullYear() == selectedDate.getFullYear()){
+              endEnergyUsed.push(energyDataset[data].energy);
               break;
             }
           }
@@ -918,10 +990,10 @@
 
         var initalEnergyUsed = [];
         for (var i = 0; i < 24; i++) {
-          for (data in energyData[floorlevel]) {
-            var tempTime = new Date(energyData[floorlevel][data].timestamp);
-            if (tempTime.getDate() == currentDay && tempTime.getHours() == i) {
-              initalEnergyUsed.push(energyData[floorlevel][data].energy);
+          for(data in energyDataset){
+            var tempTime = new Date(energyDataset[data].timestamp);
+            if (tempTime.getDate() == currentDay && tempTime.getHours() == i && tempTime.getMonth() == selectedDate.getMonth() && tempTime.getFullYear() == selectedDate.getFullYear()){
+              initalEnergyUsed.push(energyDataset[data].energy);
               break;
             }
           }
@@ -929,7 +1001,6 @@
             initalEnergyUsed.push(0); //no energy used for hour
           }
         }
-
         var dayEnergyUsed = []
         for (var i = 0; i < 24; i++) {
           dayEnergyUsed.push(endEnergyUsed[i] - initalEnergyUsed[i]);
@@ -944,7 +1015,7 @@
         energyDataset.reverse();
 
         console.log(dayEnergyUsed, labels)
-      } else if (timeGrannularity == "week") {
+      } else if (timeGranularity == "week") {
         var day = selectedDate.getDay();
         //find the diff from day to 1 start
         var offset = day - 1;
@@ -997,7 +1068,7 @@
         for (var i = 0; i < 7; i++) {
           dayEnergyUsed.push(endEnergy[i] - initalEnergyUsed[i]);
         }
-      } else if (timeGrannularity == "month") {
+      } else if (timeGranularity == "month") {
         var month = selectedDate.getMonth();
         var year = selectedDate.getFullYear();
 
@@ -1048,7 +1119,7 @@
 
         console.log(EnergyUsed);
         return [EnergyUsed, labels];
-      } else if (timeGrannularity == "year") {
+      } else if (timeGranularity == "year") {
         var month = selectedDate.getMonth();
         var year = selectedDate.getFullYear();
         var labels = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -1100,15 +1171,15 @@
 
     }
 
-    $('#timeGrannularity').on('change', function() {
+    $('#timeGranularity').on('change', function() {
       loadEnergyChart();
     });
 
     $('#datepicker').on('change', function() {
       selectedDay = $('#datepicker').val();
-      dynamicCharts["energyChart"].config.options.plugins.title.text = 'Energy used on ' + new Date(selectedDay).toLocaleDateString() + ' (kwh)';
       loadEnergyChart();
     });
+
     loadEnergyChart();
     updateEnergy();
     updateAlertCount();
