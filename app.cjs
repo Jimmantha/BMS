@@ -104,10 +104,11 @@ io.on('connection', async (socket) => {
     })
 
     socket.on('change', (data) => {
-        setTemp = JSON.parse(JSON.stringify(data));
-        dataSend = "set_temp_" + setTemp.temperature + ',' + "set_error_high_" + setTemp.margin + ',' + "set_error_low_" + setTemp.margin;
-        console.log('Temperature:', data.temperature);
-        client.publish('coolerControl', dataSend);
+
+        setTemp = data.setTemperature;
+        dataPayload = "set_temp_" + setTemp;
+        client.publish('coolerControl', dataPayload);
+        sensorSaveTime = undefined;
     });
 
     socket.on('floorplan', async (data) => {
@@ -129,6 +130,7 @@ io.on('connection', async (socket) => {
         await newFloor.save();
         console.log('newFloor', newFloor)
         socket.emit("ready", { message: "Floorplan saved" });
+        
     });
 
     socket.on('change', (data)=> {
@@ -151,10 +153,7 @@ var energySaveTime
 client.on('message', async (topic, message) => {
     if (topic == 'sensorReadings') {
         data = JSON.parse(message);
-        console.log(data);
         var date = new Date(Date.now());
-        date.setHours(date.getHours());
-        // issue inserting date.now() into mongodb changes back to gmt tho the date is correct for now manually add 8 hours to get the correct time
         const newSensorData = new SensorData({
             metaData: {
                 floor: 1,
@@ -171,7 +170,7 @@ client.on('message', async (topic, message) => {
         // Save the sensor data to MongoDB  
         var currenttime = new Date();
 
-        if (currenttime - sensorSaveTime > 60000) { //300000ms = 5 minutes
+        if (currenttime - sensorSaveTime > 10000) { //300000ms = 5 minutes
             await newSensorData.save().then(() => {
                 sensorSaveTime = new Date();
             });
@@ -179,8 +178,9 @@ client.on('message', async (topic, message) => {
             await newSensorData.save().then(() => {
                 sensorSaveTime = new Date();
             });
-            console.log('saved undefined');
         }
+        data = await getSensorData();
+        io.emit('sensorData', { sensorData: data });
     }
     if (topic == 'energyReadings') {
         data = JSON.parse(message);

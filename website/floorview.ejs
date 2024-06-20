@@ -162,6 +162,7 @@
   </script>
   <script>
     var alertCount = 0;
+    var currentClickedZone;
     floorNames = []
     $("#floorSelector").empty();
     for (var data in ejsData) {
@@ -249,6 +250,9 @@
       alertCount = 0;
       loadData();
       createArea();
+      if (currentClickedZone) {
+        loadDetails(currentClickedZone);
+      }
       updatetemperature();
     });
     socket.on("energyData", function(data) {
@@ -330,7 +334,6 @@
         fillOpacity: 0.2,
 
         onClick: function(e) {
-
           loadDetails(e);
 
         },
@@ -503,7 +506,9 @@
       var set = [];
       var labels = [];
 
-      var dynamicChartName = "myChart1_" + key;
+      var dynamicChartName = "tempChart_" + key;
+      var currentTime = new Date();
+
 
       // Get the sensor data for the given zone key
       var zoneData = sensorData[key];
@@ -511,10 +516,14 @@
         // Iterate over the sensor data and push to temp and labels arrays
         for (var i = 0; i < zoneData.length; i++) {
           temp.push(zoneData[i].temperature.toFixed(2));
-          labels.push(zoneData[i].timestamp.split("T")[1].substring(0, 8));
-          upper.push(zoneData[i].upperMargin);
-          lower.push(zoneData[i].lowerMargin);
-          set.push(zoneData[i].setTemperature);
+          var tempTime = new Date(zoneData[i].timestamp);
+          if (tempTime.getTime() >= currentTime.getTime() - 3600000) {
+            temp.push(zoneData[i].temperature.toFixed(2));
+            labels.push(tempTime.getHours() + ":" + tempTime.getMinutes() + ":" + tempTime.getSeconds());
+            upper.push(zoneData[i].upperMargin);
+            lower.push(zoneData[i].lowerMargin);
+            set.push(zoneData[i].setTemperature);
+          }
         }
       }
       temp.reverse();
@@ -536,7 +545,7 @@
             borderColor: "rgb(75, 192, 192)",
             tension: 0.1,
             pointStyle: "none",
-            pointRadius: 0,
+            pointRadius: 1,
 
           },
           {
@@ -545,7 +554,7 @@
             fill: false,
             borderColor: "red",
             tension: 0.1,
-            pointRadius: 0,
+            pointRadius: 1,
             pointStyle: "dash",
           },
           {
@@ -554,7 +563,7 @@
             fill: false,
             borderColor: "blue",
             tension: 0.1,
-            pointRadius: 0,
+            pointRadius: 1,
             pointstyle: "dash",
           },
           {
@@ -563,7 +572,7 @@
             fill: false,
             borderColor: "green",
             tension: 0.1,
-            pointRadius: 0,
+            pointRadius: 1,
             pointstyle: "dash",
           },
         ],
@@ -620,156 +629,167 @@
   </script>
   <script>
     function loadDetails(zone) {
-      var title = document.getElementById("moreDetailTitle");
-      title.textContent = "Zone Details: " + zone.key;  
-      var table = document.getElementById("moreDetails");
-      table.innerHTML = "";
-      rowhead = document.createElement("div");
-      rowhead.classList.add("row", "m-2");
+      if (currentClickedZone != zone) {
+        currentClickedZone = zone;
+        var title = document.getElementById("moreDetailTitle");
+        title.textContent = "Zone Details: " + zone.key;
+        var table = document.getElementById("moreDetails");
+        table.innerHTML = "";
+        rowhead = document.createElement("div");
+        rowhead.classList.add("row", "m-2");
 
 
-      col1 = document.createElement("div");
-      col1.classList.add("col", "text-start");
+        col1 = document.createElement("div");
+        col1.classList.add("col", "text-start");
 
-      col2 = document.createElement("div");
-      col2.classList.add("col", "text-end");
+        col2 = document.createElement("div");
+        col2.classList.add("col", "text-end");
 
-      var creationTime = document.createElement("div");
-      creationTime.classList.add("col", "text-end");
-      creationTime.id = "creationTime";
-      creationTime.textContent = "Creation Time: " + new Date().toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-      col2.appendChild(creationTime);
-
-      var moreDetailsButton = document.createElement("submit");
-      moreDetailsButton.classList.add("btn", "btn-primary");
-      moreDetailsButton.textContent = "More Details";
-      var floorlevel = $('#floorSelector').val();
-      moreDetailsButton.addEventListener("click", function() {
-        window.location.href = "/moreDetails/?zone=" + zone.key + "&floorlevel=" + floorlevel;
-      });
-      col1.appendChild(moreDetailsButton);
-
-      rowhead.appendChild(col1);
-      rowhead.appendChild(col2);
-
-      table.appendChild(rowhead);
-
-      var zoneName = zone.key;
-
-
-
-      var table = document.getElementById("gaugeTable")
-      table.innerHTML = "";
-      var zoneName = zone.key;
-      var row1 = document.createElement("div");
-      row1.classList.add("row", "align-items-center", "justify-content-center", "text-center");
-
-      var title = document.createElement("div")
-      title.classList.add("col", "text-center");
-      title.textContent = zoneName;
-
-      var editButtonContainer = document.createElement("div");
-      editButtonContainer.classList.add("row", "align-content-end", "text-end");
-
-      var editButton = document.createElement("button");
-      editButton.classList.add("btn", "btn-secondary", "text-en", "editButton");
-      editButton.textContent = "Edit";
-      editButton.addEventListener("click", function() {
-        var editTemp = sensorData[zoneName][0].setTemperature;
-        tempReading.textContent = editTemp + "C";
-
-
-        var increaseButtonContianer = document.createElement("div");
-        increaseButtonContianer.classList.add("col", "text-center", "d-flex", "justify-content-center", "align-items-center");
-        var increaseButton = document.createElement("button");
-        increaseButton.classList.add("btn", "btn-success");
-        increaseButton.textContent = "+";
-        increaseButton.addEventListener("click", function() {
-          editTemp += 1;
-          tempReading.textContent = editTemp + "C";
+        var creationTime = document.createElement("div");
+        creationTime.classList.add("col", "text-end");
+        creationTime.id = "creationTime";
+        creationTime.textContent = "Creation Time: " + new Date().toLocaleTimeString([], {
+          hour: '2-digit',
+          minute: '2-digit'
         });
-        increaseButtonContianer.appendChild(increaseButton);
+        col2.appendChild(creationTime);
 
-
-        var decreaseButtonContianer = document.createElement("div");
-        decreaseButtonContianer.classList.add("col", "text-center", "d-flex", "justify-content-center", "align-items-center");
-        var decreaseButton = document.createElement("button");
-        decreaseButton.classList.add("btn", "btn-danger");
-        decreaseButton.textContent = "-";
-        decreaseButton.addEventListener("click", function() {
-          editTemp -= 1;
-          tempReading.textContent = editTemp + "C";
+        var moreDetailsButton = document.createElement("submit");
+        moreDetailsButton.classList.add("btn", "btn-primary");
+        moreDetailsButton.textContent = "More Details";
+        var floorlevel = $('#floorSelector').val();
+        moreDetailsButton.addEventListener("click", function() {
+          window.location.href = "/moreDetails/?zone=" + zone.key + "&floorlevel=" + floorlevel;
         });
-        decreaseButtonContianer.appendChild(decreaseButton);
+        col1.appendChild(moreDetailsButton);
+
+        rowhead.appendChild(col1);
+        rowhead.appendChild(col2);
+
+        table.appendChild(rowhead);
+
+        var zoneName = zone.key;
 
 
-        row2.innerHTML = "";
-        row2.appendChild(increaseButtonContianer);
+
+        var table = document.getElementById("gaugeTable")
+        table.innerHTML = "";
+        var zoneName = zone.key;
+        var row1 = document.createElement("div");
+        row1.classList.add("row", "align-items-center", "justify-content-center", "text-center");
+
+        var title = document.createElement("div")
+        title.classList.add("col", "text-center");
+        title.textContent = zoneName;
+
+        var editButtonContainer = document.createElement("div");
+        editButtonContainer.classList.add("row", "align-content-end", "text-end");
+
+        var editButton = document.createElement("button");
+        editButton.classList.add("btn", "btn-secondary", "text-en", "editButton");
+        editButton.textContent = "Edit";
+        editButton.addEventListener("click", function() {
+          editTemp = sensorData[zoneName][0].setTemperature;
+          tempReading.textContent = editTemp + "C";
+
+
+          var increaseButtonContianer = document.createElement("div");
+          increaseButtonContianer.classList.add("col", "text-center", "d-flex", "justify-content-center", "align-items-center");
+          var increaseButton = document.createElement("button");
+          increaseButton.classList.add("btn", "btn-success");
+          increaseButton.textContent = "+";
+          increaseButton.addEventListener("click", function() {
+            editTemp += 1;
+            tempReading.textContent = editTemp + "C";
+          });
+          increaseButtonContianer.appendChild(increaseButton);
+
+
+          var decreaseButtonContianer = document.createElement("div");
+          decreaseButtonContianer.classList.add("col", "text-center", "d-flex", "justify-content-center", "align-items-center");
+          var decreaseButton = document.createElement("button");
+          decreaseButton.classList.add("btn", "btn-danger");
+          decreaseButton.textContent = "-";
+          decreaseButton.addEventListener("click", function() {
+            editTemp -= 1;
+            tempReading.textContent = editTemp + "C";
+          });
+          decreaseButtonContianer.appendChild(decreaseButton);
+
+
+          row2.innerHTML = "";
+          row2.appendChild(increaseButtonContianer);
+          row2.appendChild(tempReading);
+          row2.appendChild(decreaseButtonContianer);
+          editButtonContainer.removeChild(editButton);
+
+          var closeButton = document.createElement("button");
+          closeButton.classList.add("btn", "btn-danger", "text-en", "editButton");
+          closeButton.textContent = "x";
+          closeButton.addEventListener("click", function() {
+            row2.innerHTML = "";
+            row2.appendChild(tempReading);
+            editButtonContainer.removeChild(closeButton);
+            editButtonContainer.appendChild(editButton);
+            table.removeChild(confirmButtonContainer);
+            tempReading.textContent = sensorData[zoneName][0].setTemperature + "C";
+            tempReading.id = "tempReading";
+          });
+          editButtonContainer.appendChild(closeButton);
+
+          confirmButtonContainer = document.createElement("div");
+          confirmButtonContainer.classList.add("row", "text-center");
+          var confirmButton = document.createElement("button");
+          confirmButton.classList.add("btn", "btn-success", );
+          confirmButton.textContent = "Confirm";
+          confirmButton.id = "confirmButton";
+          confirmButton.addEventListener("click", function() {
+            console.log("editTemp: ", editTemp)
+            socket.emit("change", {
+              setTemperature: editTemp,
+              zone: zoneName,
+              floor: floorlevel
+            })
+
+            row2.innerHTML = "";
+            tempReading.textContent = sensorData[zoneName][0].setTemperature + "C";
+            row2.appendChild(tempReading);
+            editButtonContainer.removeChild(closeButton);
+            editButtonContainer.appendChild(editButton);
+            table.removeChild(confirmButtonContainer);
+          });
+          confirmButtonContainer.appendChild(confirmButton);
+          table.appendChild(confirmButtonContainer);
+
+        });
+
+        editButtonContainer.appendChild(editButton);
+        table.appendChild(editButtonContainer);
+
+        var row2 = document.createElement("div");
+        row2.classList.add("row");
+        var tempReading = document.createElement("div");
+        tempReading.classList.add("col", "text-center", "mt-5", "temp-meter");
+        tempReading.id = "tempReading";
+        tempReading.textContent = "gauge";
+        tempReading.textContent = sensorData[zoneName][0].setTemperature + "C";
+
+
+
+        row1.appendChild(title);
         row2.appendChild(tempReading);
-        row2.appendChild(decreaseButtonContianer);
-        editButtonContainer.removeChild(editButton);
-
-        var closeButton = document.createElement("button");
-        closeButton.classList.add("btn", "btn-danger", "text-en", "editButton");
-        closeButton.textContent = "x";
-        closeButton.addEventListener("click", function() {
-          row2.innerHTML = "";
-          row2.appendChild(tempReading);
-          editButtonContainer.removeChild(closeButton);
-          editButtonContainer.appendChild(editButton);
-          table.removeChild(confirmButtonContainer);
-          tempReading.textContent = sensorData[zoneName][0].setTemperature + "C";
-        });
-        editButtonContainer.appendChild(closeButton);
-
-        confirmButtonContainer = document.createElement("div");
-        confirmButtonContainer.classList.add("row", "text-center");
-        var confirmButton = document.createElement("button");
-        confirmButton.classList.add("btn", "btn-success", );
-        confirmButton.textContent = "Confirm";
-        confirmButton.addEventListener("click", function() {
-          var reason = prompt("Enter reason:");
-          socket.emit("change", {
-            setTemperature: editTemp,
-            zone: zoneName,
-            floor: floorlevel
-          })
-
-          row2.innerHTML = "";
-          tempReading.textContent = sensorData[zoneName][0].setTemperature + "C";
-          row2.appendChild(tempReading);
-          editButtonContainer.removeChild(closeButton);
-          editButtonContainer.appendChild(editButton);
-          table.removeChild(confirmButtonContainer);
-        });
-        confirmButtonContainer.appendChild(confirmButton);
-        table.appendChild(confirmButtonContainer);
-
-      });
-
-      editButtonContainer.appendChild(editButton);
-      table.appendChild(editButtonContainer);
-
-      var row2 = document.createElement("div");
-      row2.classList.add("row");
-      var tempReading = document.createElement("div");
-      tempReading.classList.add("col", "text-center", "mt-5", "temp-meter");
-      tempReading.textContent = "gauge";
-      tempReading.textContent = sensorData[zoneName][0].setTemperature + "C";
 
 
+        table.appendChild(row1);
+        table.appendChild(row2);
+        loadCharts(zoneName);
+      } else if (currentClickedZone == zone) {
+        if (!document.getElementById("confirmButton")) {
 
-      row1.appendChild(title);
-      row2.appendChild(tempReading);
-
-
-      table.appendChild(row1);
-      table.appendChild(row2);
-      loadCharts(zoneName);
-
+          var tempreading = document.getElementById("tempReading");
+          tempreading.textContent = sensorData[zone.key][0].setTemperature + "C";
+        }
+      }
     }
 
     function loadCharts(key) {
@@ -836,10 +856,10 @@
         var month = currentTime.getMonth();
         var energyDataset = energyData[floor];
 
-        var endEnergyUsed 
-        for(data in energyDataset){
+        var endEnergyUsed
+        for (data in energyDataset) {
           var tempTime = new Date(energyDataset[data].timestamp)
-          if(tempTime.getMonth() == month && tempTime.getFullYear() == year){
+          if (tempTime.getMonth() == month && tempTime.getFullYear() == year) {
             endEnergyUsed = energyDataset[data].energy
             break
           }
@@ -847,9 +867,9 @@
         energyDataset.reverse()
 
         var initalEnergyUsed
-        for(data in energyDataset){
+        for (data in energyDataset) {
           var tempTime = new Date(energyDataset[data].timestamp)
-          if(tempTime.getMonth() == month && tempTime.getFullYear() == year){
+          if (tempTime.getMonth() == month && tempTime.getFullYear() == year) {
             initalEnergyUsed = energyDataset[data].energy
             break
           }
@@ -857,7 +877,7 @@
         energyDataset.reverse()
         var energyUsed = (endEnergyUsed - initalEnergyUsed).toFixed(2);
         energyMeter.textContent = energyUsed + "kwh";
-        
+
       } else {
         //   console.log("updating energy");
         var currentTime = new Date()
@@ -865,10 +885,10 @@
         var month = currentTime.getMonth();
         var energyDataset = energyData[floor];
 
-        var endEnergyUsed 
-        for(data in energyDataset){
+        var endEnergyUsed
+        for (data in energyDataset) {
           var tempTime = new Date(energyDataset[data].timestamp)
-          if(tempTime.getMonth() == month && tempTime.getFullYear() == year){
+          if (tempTime.getMonth() == month && tempTime.getFullYear() == year) {
             endEnergyUsed = energyDataset[data].energy
             break
           }
@@ -876,9 +896,9 @@
         energyDataset.reverse()
 
         var initalEnergyUsed
-        for(data in energyDataset){
+        for (data in energyDataset) {
           var tempTime = new Date(energyDataset[data].timestamp)
-          if(tempTime.getMonth() == month && tempTime.getFullYear() == year){
+          if (tempTime.getMonth() == month && tempTime.getFullYear() == year) {
             initalEnergyUsed = energyDataset[data].energy
             break
           }
