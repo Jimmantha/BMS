@@ -19,7 +19,7 @@
       <div class="col text-center">
         temperature Details
       </div>
-      <div class="col text-center">
+      <div class="col text-center" id="moreDetailTitle">
         Zone Details
       </div>
     </div>
@@ -43,10 +43,10 @@
           </div>
           <div class="row title mt-3">
             <div class="col text-center">
-              Chart
+              Energy Use
             </div>
             <div class="col text-center">
-              Total Energy (month)
+              Total Energy used Current Month
             </div>
           </div>
           <div class="row">
@@ -129,8 +129,8 @@
     //function 
 
     function monthNameToNumber(monthName) {
-    // Mapping of month names to their respective numbers
-    const monthMap = {
+      // Mapping of month names to their respective numbers
+      const monthMap = {
         "January": 1,
         "February": 2,
         "March": 3,
@@ -143,12 +143,15 @@
         "October": 10,
         "November": 11,
         "December": 12
-    };
+      };
 
-    // Convert the month name to its corresponding number
-    return monthMap[monthName];
-}
+      // Convert the month name to its corresponding number
+      return monthMap[monthName];
+    }
 
+    function daysInMonth(month, year) {
+      return new Date(year, month + 1, 0).getDate();
+    }
   </script>
   <script>
     var ejsData = <%- JSON.stringify(data) %>;
@@ -617,6 +620,8 @@
   </script>
   <script>
     function loadDetails(zone) {
+      var title = document.getElementById("moreDetailTitle");
+      title.textContent = "Zone Details: " + zone.key;  
       var table = document.getElementById("moreDetails");
       table.innerHTML = "";
       rowhead = document.createElement("div");
@@ -716,6 +721,7 @@
           editButtonContainer.removeChild(closeButton);
           editButtonContainer.appendChild(editButton);
           table.removeChild(confirmButtonContainer);
+          tempReading.textContent = sensorData[zoneName][0].setTemperature + "C";
         });
         editButtonContainer.appendChild(closeButton);
 
@@ -821,13 +827,65 @@
 
         var timeDiffMin = Math.floor(((currentTime - milisecondtempTime) / 60000));
         energyAlert.textContent = "Energy Readings last updated " + new Date(energyData[floorlevel][0].timestamp);
-        energyMeter.textContent = energyData[floor][0].energy + "kwh";
         alertMessageList.appendChild(energyAlert);
         alertCount++;
         updateAlertCount();
+
+        var currentTime = new Date()
+        var year = currentTime.getFullYear();
+        var month = currentTime.getMonth();
+        var energyDataset = energyData[floor];
+
+        var endEnergyUsed 
+        for(data in energyDataset){
+          var tempTime = new Date(energyDataset[data].timestamp)
+          if(tempTime.getMonth() == month && tempTime.getFullYear() == year){
+            endEnergyUsed = energyDataset[data].energy
+            break
+          }
+        }
+        energyDataset.reverse()
+
+        var initalEnergyUsed
+        for(data in energyDataset){
+          var tempTime = new Date(energyDataset[data].timestamp)
+          if(tempTime.getMonth() == month && tempTime.getFullYear() == year){
+            initalEnergyUsed = energyDataset[data].energy
+            break
+          }
+        }
+        energyDataset.reverse()
+        var energyUsed = (endEnergyUsed - initalEnergyUsed).toFixed(2);
+        energyMeter.textContent = energyUsed + "kwh";
+        
       } else {
         //   console.log("updating energy");
-        energyMeter.textContent = energyData[floor][0].energy + "kwh";
+        var currentTime = new Date()
+        var year = currentTime.getFullYear();
+        var month = currentTime.getMonth();
+        var energyDataset = energyData[floor];
+
+        var endEnergyUsed 
+        for(data in energyDataset){
+          var tempTime = new Date(energyDataset[data].timestamp)
+          if(tempTime.getMonth() == month && tempTime.getFullYear() == year){
+            endEnergyUsed = energyDataset[data].energy
+            break
+          }
+        }
+        energyDataset.reverse()
+
+        var initalEnergyUsed
+        for(data in energyDataset){
+          var tempTime = new Date(energyDataset[data].timestamp)
+          if(tempTime.getMonth() == month && tempTime.getFullYear() == year){
+            initalEnergyUsed = energyDataset[data].energy
+            break
+          }
+        }
+        energyDataset.reverse()
+        var energyUsed = (endEnergyUsed - initalEnergyUsed).toFixed(2);
+        energyMeter.textContent = energyUsed + "kwh";
       }
       //  console.log(tempTime)
 
@@ -886,7 +944,7 @@
                 display: true,
                 text: 'Energy used on ' + new Date(selectedDay).toLocaleDateString() + ' (kwh)',
               },
-              
+
             },
           },
         }
@@ -915,19 +973,18 @@
       const points = dynamicCharts["energyChart"].getElementsAtEventForMode(click, 'nearest', {
         intersect: true
       }, true);
-      if(points.length > 0){
+      if (points.length > 0) {
         const firstPoint = points[0];
         const label = dynamicCharts["energyChart"].data.labels[firstPoint.index];
         const value = dynamicCharts["energyChart"].data.datasets[firstPoint.datasetIndex].data[firstPoint.index];
         console.log(label, value)
-        if(timeGranularity == "month"){
-          var tempTime = new Date(year, month, label+1)
+        if (timeGranularity == "month") {
+          var tempTime = new Date(year, month, label + 1)
           console.log(tempTime)
           var datepicker = document.getElementById("datepicker");
           datepicker.value = tempTime.toISOString().split('T')[0];
           $('#timeGranularity').val("day")
-        }
-        else if(timeGranularity == "year"){
+        } else if (timeGranularity == "year") {
           var month = monthNameToNumber(label)
           var tempTime = new Date(year, month, 1)
           var datepicker = document.getElementById("datepicker");
@@ -938,9 +995,7 @@
       }
     }
 
-    function daysInMonth(month, year) {
-      return new Date(year, month + 1, 0).getDate();
-    }
+
 
     function energyChartTitle(selectedDay) {
       var timeGranularity = $('#timeGranularity').val();
@@ -977,7 +1032,7 @@
         for (var i = 0; i < 24; i++) {
           for (data in energyDataset) {
             var tempTime = new Date(energyDataset[data].timestamp);
-            if (tempTime.getDate() == currentDay && tempTime.getHours() == i && tempTime.getMonth() == selectedDate.getMonth() && tempTime.getFullYear() == selectedDate.getFullYear()){
+            if (tempTime.getDate() == currentDay && tempTime.getHours() == i && tempTime.getMonth() == selectedDate.getMonth() && tempTime.getFullYear() == selectedDate.getFullYear()) {
               endEnergyUsed.push(energyDataset[data].energy);
               break;
             }
@@ -990,9 +1045,9 @@
 
         var initalEnergyUsed = [];
         for (var i = 0; i < 24; i++) {
-          for(data in energyDataset){
+          for (data in energyDataset) {
             var tempTime = new Date(energyDataset[data].timestamp);
-            if (tempTime.getDate() == currentDay && tempTime.getHours() == i && tempTime.getMonth() == selectedDate.getMonth() && tempTime.getFullYear() == selectedDate.getFullYear()){
+            if (tempTime.getDate() == currentDay && tempTime.getHours() == i && tempTime.getMonth() == selectedDate.getMonth() && tempTime.getFullYear() == selectedDate.getFullYear()) {
               initalEnergyUsed.push(energyDataset[data].energy);
               break;
             }
