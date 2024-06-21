@@ -737,15 +737,39 @@
         title.classList.add("col", "text-center");
         title.textContent = zoneName;
 
+        var editnStateIndicatorContainer = document.createElement("div");
+        editnStateIndicatorContainer.classList.add("row", "align-content-end", "text-end");
+
         var editButtonContainer = document.createElement("div");
-        editButtonContainer.classList.add("row", "align-content-end", "text-end");
+        editButtonContainer.classList.add("col", "align-content-start","text-start");
 
         var stateIndicatorContainer = document.createElement("div");
         stateIndicatorContainer.classList.add("col", "text-center", "d-flex", "justify-content-center", "align-items-center");
         var stateIndicatortext = document.createElement("div");
-        stateIndicatortext.text = "Status: ";
+        stateIndicatortext.innerHTML = "Status: ";
 
         var stateIndicator = document.createElement("div"); 
+        stateIndicator.setAttribute("data-bs-toggle", "tooltip");
+        stateIndicator.setAttribute("data-bs-placement", "top");
+        stateIndicator.setAttribute("title", "Click to toggle state");
+        stateIndicator.addEventListener("mouseover", function(){
+          stateIndicator.style.cursor = "pointer";
+
+        });
+
+
+        stateIndicator.id = "stateIndicator";
+        if(zone.state){
+          stateIndicator.textContent = "🟢";
+        } else {
+          stateIndicator.textContent = "🔴";
+        }
+        stateIndicatorContainer.appendChild(stateIndicatortext);
+        stateIndicatorContainer.appendChild(stateIndicator);
+
+        editnStateIndicatorContainer.appendChild(editButtonContainer);
+        editnStateIndicatorContainer.appendChild(stateIndicatorContainer);
+        
 
 
         var editButton = document.createElement("button");
@@ -827,7 +851,7 @@
         });
 
         editButtonContainer.appendChild(editButton);
-        table.appendChild(editButtonContainer);
+        table.appendChild(editnStateIndicatorContainer);
 
         var row2 = document.createElement("div");
         row2.classList.add("row");
