@@ -685,6 +685,11 @@
         var editButtonContainer = document.createElement("div");
         editButtonContainer.classList.add("row", "align-content-end", "text-end");
 
+        var stateIndicatorContainer = document.createElement("div");
+        stateIndicatorContainer.classList.add("col", "text-center", "d-flex", "justify-content-center", "align-items-center");
+        var stateIndicatortext = document.createElement("div");
+
+
         var editButton = document.createElement("button");
         editButton.classList.add("btn", "btn-secondary", "text-en", "editButton");
         editButton.textContent = "Edit";
@@ -785,10 +790,50 @@
         loadCharts(zoneName);
       } else if (currentClickedZone == zone) {
         if (!document.getElementById("confirmButton")) {
-
+          //currentClickedZone is object where the name of click is zone is in key, named "key"
           var tempreading = document.getElementById("tempReading");
           tempreading.textContent = sensorData[zone.key][0].setTemperature + "C";
+          zone = currentClickedZone.key;
+
+
+          var oldDatasest = dynamicCharts["tempChart_" + zone].config.data.datasets;
+          var temp = [];
+          var upper = [];
+          var lower = [];
+          var set = [];
+          var labels = [];
+          var currentTime = new Date();
+          var zoneData = sensorData[zone];
+          if (zoneData) {
+            for (var i = 0; i < zoneData.length; i++) {
+              temp.push(zoneData[i].temperature.toFixed(2));
+              var tempTime = new Date(zoneData[i].timestamp);
+              if (tempTime.getTime() >= currentTime.getTime() - 3600000) {
+                temp.push(zoneData[i].temperature.toFixed(2));
+                labels.push(tempTime.getHours() + ":" + tempTime.getMinutes() + ":" + tempTime.getSeconds());
+                upper.push(zoneData[i].upperMargin);
+                lower.push(zoneData[i].lowerMargin);
+                set.push(zoneData[i].setTemperature);
+              }
+            }
+          }
+          temp.reverse();
+          labels.reverse();
+          upper.reverse();
+          lower.reverse();
+          set.reverse();
+          oldDatasest[0].data = temp;
+          oldDatasest[1].data = upper;
+          oldDatasest[2].data = lower;
+          oldDatasest[3].data = set;
+          dynamicCharts["tempChart_" + zone].config.data.labels = labels;
+          dynamicCharts["tempChart_" + zone].config.datasets = oldDatasest;
+          dynamicCharts["tempChart_" + zone].update();
+
+
         }
+
+
       }
     }
 
@@ -929,8 +974,8 @@
         var energyCanvas = document.getElementById("energyChart");
         var energyCtx = energyCanvas.getContext("2d");
 
-        var [dayEnergyUsed, labels] = energyChartValue(timeGranularity, floorlevel, selectedDay)
-        console.log(dayEnergyUsed, )
+        var [dayEnergyUsed, labels, average] = energyChartValue(timeGranularity, floorlevel, selectedDay)
+        console.log(dayEnergyUsed, average)
 
         var energyChartData = {
           labels: labels,
@@ -944,6 +989,8 @@
             radius: 1,
           }, ]
         }
+
+
 
         var energyConfig = {
           type: "bar",
@@ -1036,8 +1083,11 @@
         }) + ' (kwh)';
       } else if (timeGranularity == "year") {
         dynamicCharts["energyChart"].config.options.plugins.title.text = 'Energy used during ' + new Date(selectedDay).getFullYear() + ' (kwh)';
-        var name = currentClickedZone.key;
-        
+        try {
+          var name = currentClickedZone.key;
+        } catch {
+          console.log("no zone selected")
+        }
       }
       dynamicCharts["energyChart"].update();
 
@@ -1082,7 +1132,11 @@
         for (var i = 0; i < 24; i++) {
           dayEnergyUsed.push(endEnergyUsed[i] - initalEnergyUsed[i]);
         }
-
+        var average = 0;
+        for (var i = 0; i < 24; i++) {
+          average += dayEnergyUsed[i];
+        }
+        average = average / 24;
 
 
         for (var i = 0; i < 24; i++) {
@@ -1145,6 +1199,11 @@
         for (var i = 0; i < 7; i++) {
           dayEnergyUsed.push(endEnergy[i] - initalEnergyUsed[i]);
         }
+        var average = 0;
+        for (var i = 0; i < 7; i++) {
+          average += dayEnergyUsed[i];
+        }
+        average = average / 7;
       } else if (timeGranularity == "month") {
         var month = selectedDate.getMonth();
         var year = selectedDate.getFullYear();
@@ -1189,13 +1248,18 @@
         energyDataset.reverse();
 
         // Calculate EnergyUsed
-        var EnergyUsed = [];
+        var dayEnergyUsed = [];
         for (var i = 0; i < totalDays; i++) {
-          EnergyUsed.push(endEnergy[i] - initialEnergyUsed[i]);
+          dayEnergyUsed.push(endEnergy[i] - initialEnergyUsed[i]);
         }
 
-        console.log(EnergyUsed);
-        return [EnergyUsed, labels];
+
+        var average = 0;
+        for (var i = 0; i < totalDays; i++) {
+          average += dayEnergyUsed[i];
+        }
+        average = average / totalDays;
+        return [dayEnergyUsed, labels, average];
       } else if (timeGranularity == "year") {
         var month = selectedDate.getMonth();
         var year = selectedDate.getFullYear();
@@ -1243,8 +1307,15 @@
         for (var i = 0; i < 12; i++) {
           dayEnergyUsed.push(endEnergy[i] - initalEnergyUsed[i]);
         }
+
+        var average = 0;
+        for (var i = 0; i < 12; i++) {
+          average += dayEnergyUsed[i];
+        }
+        average = average / 12;
       }
-      return [dayEnergyUsed, labels];
+      console.log(average)
+      return [dayEnergyUsed, labels, average];
 
     }
 
