@@ -14,7 +14,7 @@
   <div class="table">
     <div class="row title">
       <div class="col text-center">
-        Floorview
+        Floorview <span style="color:red; background-color: rgba(127, 255, 212, 0); ">🟢🔴⚪</span>
       </div>
       <div class="col text-center">
         temperature Details
@@ -178,6 +178,13 @@
       // Clear alerts
       $("#alertMessageList").empty();
 
+      if(document.getElementById("lastUpdatedTime")){
+        document.getElementById("lastUpdatedTime").textContent = "Updated Time: " + new Date().toLocaleTimeString([], {
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      }
+
 
       floorlevel = $("#floorSelector").val();
       zones = ejsData.find(obj => obj.floorlevel == floorlevel).zones;
@@ -204,6 +211,7 @@
                   orginalSensorData[data].upperMargin,
                 lowerMargin: orginalSensorData[data].setTemperature -
                   orginalSensorData[data].lowerMargin,
+                humidity: orginalSensorData[data].humidity,
               });
             }
           }
@@ -586,11 +594,12 @@
               display: false, // Remove legend
             },
           },
+          animation: false
         },
       };
       var tempContainer = document.createElement("div");
       tempContainer.id = "tempContainer";
-      tempContainer.textContent = "Temperature over past hour"
+      tempContainer.textContent = "Temperature over past hour (°C)"
       tempContainer.classList.add("p-3", "text-center", "border")
       tempContainer.appendChild(tempChart);
 
@@ -605,12 +614,58 @@
       var HumidityChart = document.createElement("canvas");
       var HumidityChartContainer = document.createElement("div");
       HumidityChartContainer.id = "energyUseContainer";
-      HumidityChartContainer.textContent = "Humidity use over past hour";
+      HumidityChartContainer.textContent = "Humidity over past hour (%Rh)";
       HumidityChartContainer.classList.add("p-3", "mt-2", "text-center", "border")
       HumidityChartContainer.appendChild(HumidityChart);
 
       var moreDetails = document.getElementById("moreDetails");
       moreDetails.appendChild(HumidityChartContainer);
+
+      var humi = [];
+      var labels = [];
+      var dynamicChartName = "humidityChart_" + key;
+      var currentTime = new Date();
+
+      var zoneData = sensorData[key];
+      if (zoneData) {
+        for (var i = 0; i < zoneData.length; i++) {
+          humi.push(zoneData[i].humidity.toFixed(2));
+          var tempTime = new Date(zoneData[i].timestamp);
+          if (tempTime.getTime() >= currentTime.getTime() - 3600000) {
+            humi.push(zoneData[i].humidity.toFixed(2));
+            labels.push(tempTime.getHours() + ":" + tempTime.getMinutes() + ":" + tempTime.getSeconds());
+          }
+        }
+      }
+      humi.reverse();
+      labels.reverse();
+
+      var data = {
+        labels: labels,
+        datasets: [{
+          label: "humidity",
+          data: humi,
+          fill: false,
+          borderColor: "rgb(75, 192, 192)",
+          tension: 0.1,
+          pointStyle: "none",
+          pointRadius: 1,
+        }, ],
+      };
+      var config = {
+        type: "line",
+        data: data,
+        options: {
+          plugins: {
+            legend: {
+              display: false,
+            },
+          },
+          animation: false,
+        },
+      };
+
+      dynamicCharts[dynamicChartName] = new Chart(HumidityChart, config);
     }
 
     function loadPIRChart(key) {
@@ -647,8 +702,8 @@
 
         var creationTime = document.createElement("div");
         creationTime.classList.add("col", "text-end");
-        creationTime.id = "creationTime";
-        creationTime.textContent = "Creation Time: " + new Date().toLocaleTimeString([], {
+        creationTime.id = "LastUpdatedTime";
+        creationTime.textContent = "Updated Time: " + new Date().toLocaleTimeString([], {
           hour: '2-digit',
           minute: '2-digit'
         });
@@ -688,6 +743,9 @@
         var stateIndicatorContainer = document.createElement("div");
         stateIndicatorContainer.classList.add("col", "text-center", "d-flex", "justify-content-center", "align-items-center");
         var stateIndicatortext = document.createElement("div");
+        stateIndicatortext.text = "Status: ";
+
+        var stateIndicator = document.createElement("div"); 
 
 
         var editButton = document.createElement("button");
@@ -829,6 +887,25 @@
           dynamicCharts["tempChart_" + zone].config.data.labels = labels;
           dynamicCharts["tempChart_" + zone].config.datasets = oldDatasest;
           dynamicCharts["tempChart_" + zone].update();
+
+          var humi = [];
+          var humiLabels = [];
+          for(data in zoneData){
+            humi.push(zoneData[data].humidity.toFixed(2));
+            var tempTime = new Date(zoneData[data].timestamp);
+            if (tempTime.getTime() >= currentTime.getTime() - 3600000) {
+              humi.push(zoneData[data].humidity.toFixed(2));
+              humiLabels.push(tempTime.getHours() + ":" + tempTime.getMinutes() + ":" + tempTime.getSeconds());
+            }
+          }
+          humi.reverse();
+          humiLabels.reverse();
+          dynamicCharts["humidityChart_" + zone].config.data.labels = humiLabels;
+          dynamicCharts["humidityChart_" + zone].config.data.datasets[0].data = humi;
+          dynamicCharts["humidityChart_" + zone].update();
+          
+          
+
 
 
         }
@@ -1044,10 +1121,8 @@
         const firstPoint = points[0];
         const label = dynamicCharts["energyChart"].data.labels[firstPoint.index];
         const value = dynamicCharts["energyChart"].data.datasets[firstPoint.datasetIndex].data[firstPoint.index];
-        console.log(label, value)
         if (timeGranularity == "month") {
           var tempTime = new Date(year, month, label + 1)
-          console.log(tempTime)
           var datepicker = document.getElementById("datepicker");
           datepicker.value = tempTime.toISOString().split('T')[0];
           $('#timeGranularity').val("day")
@@ -1273,7 +1348,6 @@
         var initalEnergyUsed = [];
 
         for (date in ddmmyy) {
-          console.log(ddmmyy[date])
           var month = ddmmyy[date].getMonth();
           var year = ddmmyy[date].getFullYear();
           for (data in energyDataset) {
@@ -1314,7 +1388,6 @@
         }
         average = average / 12;
       }
-      console.log(average)
       return [dayEnergyUsed, labels, average];
 
     }

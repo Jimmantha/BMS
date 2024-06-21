@@ -76,6 +76,7 @@ const energyReading = new mongoose.Schema({
     },
     energy: Number,
     timestamp: Date,
+    status: Boolean
 });
 
 // Create a model for the sensor data
@@ -164,8 +165,10 @@ client.on('message', async (topic, message) => {
             setTemperature: data.temperature_set_to,
             upperMargin: data.upper_margin,
             lowerMargin: data.lower_margin,
-            humidity: data.humidity
+            humidity: data.humidity,
         });
+
+        
 
         // Save the sensor data to MongoDB  
         var currenttime = new Date();
