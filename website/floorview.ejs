@@ -1036,6 +1036,8 @@
         }) + ' (kwh)';
       } else if (timeGranularity == "year") {
         dynamicCharts["energyChart"].config.options.plugins.title.text = 'Energy used during ' + new Date(selectedDay).getFullYear() + ' (kwh)';
+        var name = currentClickedZone.key;
+        
       }
       dynamicCharts["energyChart"].update();
 

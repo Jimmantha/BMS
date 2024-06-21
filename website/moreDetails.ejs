@@ -70,12 +70,21 @@
     var zone = <%- JSON.stringify(zone) %>;
     var floor = <%- JSON.stringify(floorlevel) %>;
     console.log(zone, floor, zoneData);
-    $("#floorSelector").hide();
     var tempData = []
     var upperMargin = []
     var lowerMargin = []
     var setTemp = []
     var time = []
+    function loadPageTitle() {
+      var pageTitle = document.getElementById("floorSelector");
+    var newTitle = document.createElement("option");
+    newTitle.innerHTML = "Floor " + floor + " - " + zone;
+    pageTitle.disabled = true;
+    pageTitle.appendChild(newTitle);
+    
+    }
+    loadPageTitle();
+
     currentTime = new Date();
     for (data in zoneData) {
       var tempTime = new Date(zoneData[data].timestamp)
