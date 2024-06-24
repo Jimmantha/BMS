@@ -67,6 +67,7 @@ const sensorDataSchema = new mongoose.Schema({
     upperMargin: Number,
     lowerMargin: Number,
     humidity: Number,
+    Status: Boolean
 });
 
 const energyReading = new mongoose.Schema({
@@ -76,7 +77,7 @@ const energyReading = new mongoose.Schema({
     },
     energy: Number,
     timestamp: Date,
-    status: Boolean
+    State: Boolean
 });
 
 // Create a model for the sensor data
@@ -155,6 +156,7 @@ client.on('message', async (topic, message) => {
     if (topic == 'sensorReadings') {
         data = JSON.parse(message);
         var date = new Date(Date.now());
+
         const newSensorData = new SensorData({
             metaData: {
                 floor: 1,
@@ -166,8 +168,10 @@ client.on('message', async (topic, message) => {
             upperMargin: data.upper_margin,
             lowerMargin: data.lower_margin,
             humidity: data.humidity,
+            Status: data.aircon_statues
         });
 
+        console.log(newSensorData); 
         
 
         // Save the sensor data to MongoDB  
@@ -227,6 +231,8 @@ async function getEnergyData() {
     var data = await EnergyReading.find().sort({ timestamp: -1 });
     return data;
 }
+
+
 
 
 app.set('views', path.join(__dirname, 'website'));

@@ -212,6 +212,7 @@
                 lowerMargin: orginalSensorData[data].setTemperature -
                   orginalSensorData[data].lowerMargin,
                 humidity: orginalSensorData[data].humidity,
+                status: orginalSensorData[data].Status,
               });
             }
           }
@@ -756,13 +757,13 @@
           stateIndicator.style.cursor = "pointer";
 
         });
-
+        stateIndicatorContainer.style.fontSize = "1.5rem";
 
         stateIndicator.id = "stateIndicator";
-        if(zone.state){
-          stateIndicator.textContent = "🟢";
+        if(sensorData[zoneName][0].status){
+          stateIndicator.textContent = "🟢 ON";
         } else {
-          stateIndicator.textContent = "🔴";
+          stateIndicator.textContent = "🔴 OFF";
         }
         stateIndicatorContainer.appendChild(stateIndicatortext);
         stateIndicatorContainer.appendChild(stateIndicator);
@@ -778,6 +779,7 @@
         editButton.addEventListener("click", function() {
           editTemp = sensorData[zoneName][0].setTemperature;
           tempReading.textContent = editTemp + "C";
+          
 
 
           var increaseButtonContianer = document.createElement("div");
@@ -888,7 +890,6 @@
           var zoneData = sensorData[zone];
           if (zoneData) {
             for (var i = 0; i < zoneData.length; i++) {
-              temp.push(zoneData[i].temperature.toFixed(2));
               var tempTime = new Date(zoneData[i].timestamp);
               if (tempTime.getTime() >= currentTime.getTime() - 3600000) {
                 temp.push(zoneData[i].temperature.toFixed(2));
@@ -957,6 +958,7 @@
       currentTime = currentTime.getTime();
       energyMeter = document.getElementById("energyMeter");
       var alertList = document.getElementById("alertMessageList");
+      alertList.style.listStyle = "none";
       try {
         var tempTime = new Date(energyData["1"][0].timestamp)
         var milisecondtempTime = tempTime.getTime();
@@ -988,7 +990,6 @@
         });
         alertCount++;
         updateAlertCount();
-        return;
       } else if (currentTime - milisecondtempTime > 3600000) {
 
         var timeDiffMin = Math.floor(((currentTime - milisecondtempTime) / 60000));
