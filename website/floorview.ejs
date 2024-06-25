@@ -357,6 +357,16 @@
           loadDetails(e);
 
         },
+        onAutoResize: function() {
+          var image = document.getElementById("floorplan");
+          var width = image.clientWidth;
+          var height = image.clientHeight;
+          console.log(width, height)
+          var canvas = document.getElementById("shadeCanvas");
+          canvas.width = width;
+          canvas.height = height;
+          updatetemperature();
+        }
       });
       try {
         var areaOptions = {
@@ -1440,12 +1450,6 @@
     updateAlertCount();
   </script>
   <script>
-    $(document).ready(function() {
-      initializeCanvas();
-    });
-    $(window).bind("load", function() {
-      initializeCanvas();
-     })
     $(document).ready(function() {
       $('#warning').on('click', function() {
         $('#warning').text("🠡 Alerts(" + alertCount + ")");
