@@ -28,7 +28,7 @@
         <div class="table">
           <div class="row">
             <div class="col">
-              <div class="row" style="height: 44vh;background-color: rgba(240, 248, 255, 0);">
+              <div class="row" style="background-color: rgba(240, 248, 255, 0);">
                 <div class="col-6 m-4">
                   <canvas class="p-0" id="shadeCanvas" style="position: absolute; z-index: -1;  "></canvas>
                   <img src="https://placehold.co/600x400" alt="" id="floorplan" style="position: absolute; top: 0; left: 0;" usemap="#testmap" />
@@ -88,7 +88,7 @@
         Alerts
         <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
       </div>
-      <div class="offcanvas-body m-3" id="AlertMessages" style="overflow-y:s">
+      <div class="offcanvas-body m-3" id="AlertMessages" style="overflow-y:scroll">
         <ul id="alertMessageList">
 
         </ul>
@@ -152,6 +152,15 @@
     function daysInMonth(month, year) {
       return new Date(year, month + 1, 0).getDate();
     }
+
+    function initializeCanvas() {
+      var width = $("#floorplan").width();
+      var height = $("#floorplan").height();
+      console.log(width, height);
+      var canvas = document.getElementById("shadeCanvas");
+      canvas.width = width;
+      canvas.height = height;
+    }
   </script>
   <script>
     var ejsData = <%- JSON.stringify(data) %>;
@@ -178,7 +187,7 @@
       // Clear alerts
       $("#alertMessageList").empty();
 
-      if(document.getElementById("lastUpdatedTime")){
+      if (document.getElementById("lastUpdatedTime")) {
         document.getElementById("lastUpdatedTime").textContent = "Updated Time: " + new Date().toLocaleTimeString([], {
           hour: '2-digit',
           minute: '2-digit'
@@ -340,7 +349,7 @@
         showToolTip: true,
         mapKey: "id",
         singleSelect: true,
-        fillOpacity: 0.2,
+
         enableAutoResizeSupport: true,
         autoResize: true,
 
@@ -743,25 +752,25 @@
         editnStateIndicatorContainer.classList.add("row", "align-content-end", "text-end");
 
         var editButtonContainer = document.createElement("div");
-        editButtonContainer.classList.add("col", "align-content-start","text-start");
+        editButtonContainer.classList.add("col", "align-content-start", "text-start");
 
         var stateIndicatorContainer = document.createElement("div");
         stateIndicatorContainer.classList.add("col", "text-center", "d-flex", "justify-content-center", "align-items-center");
         var stateIndicatortext = document.createElement("div");
         stateIndicatortext.innerHTML = "Status: ";
 
-        var stateIndicator = document.createElement("div"); 
+        var stateIndicator = document.createElement("div");
         stateIndicator.setAttribute("data-bs-toggle", "tooltip");
         stateIndicator.setAttribute("data-bs-placement", "top");
         stateIndicator.setAttribute("title", "Click to toggle state");
-        stateIndicator.addEventListener("mouseover", function(){
+        stateIndicator.addEventListener("mouseover", function() {
           stateIndicator.style.cursor = "pointer";
 
         });
         stateIndicatorContainer.style.fontSize = "1.5rem";
 
         stateIndicator.id = "stateIndicator";
-        if(sensorData[zoneName][0].status){
+        if (sensorData[zoneName][0].status) {
           stateIndicator.textContent = "🟢 ON";
         } else {
           stateIndicator.textContent = "🔴 OFF";
@@ -771,7 +780,7 @@
 
         editnStateIndicatorContainer.appendChild(editButtonContainer);
         editnStateIndicatorContainer.appendChild(stateIndicatorContainer);
-        
+
 
 
         var editButton = document.createElement("button");
@@ -780,7 +789,7 @@
         editButton.addEventListener("click", function() {
           editTemp = sensorData[zoneName][0].setTemperature;
           tempReading.textContent = editTemp + "C";
-          
+
 
 
           var increaseButtonContianer = document.createElement("div");
@@ -916,7 +925,7 @@
 
           var humi = [];
           var humiLabels = [];
-          for(data in zoneData){
+          for (data in zoneData) {
             humi.push(zoneData[data].humidity.toFixed(2));
             var tempTime = new Date(zoneData[data].timestamp);
             if (tempTime.getTime() >= currentTime.getTime() - 3600000) {
@@ -929,8 +938,7 @@
           dynamicCharts["humidityChart_" + zone].config.data.labels = humiLabels;
           dynamicCharts["humidityChart_" + zone].config.data.datasets[0].data = humi;
           dynamicCharts["humidityChart_" + zone].update();
-          
-          
+
 
 
 
@@ -1432,8 +1440,12 @@
     updateAlertCount();
   </script>
   <script>
-
-
+    $(document).ready(function() {
+      initializeCanvas();
+    });
+    $(window).bind("load", function() {
+      initializeCanvas();
+     })
     $(document).ready(function() {
       $('#warning').on('click', function() {
         $('#warning').text("🠡 Alerts(" + alertCount + ")");
