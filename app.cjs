@@ -58,8 +58,7 @@ const client = mqtt.connect('mqtt://172.23.16.143:1883:1883');
 // Create a schema for the sensor data
 const sensorDataSchema = new mongoose.Schema({
     metaData: {
-        floor: String,
-        floor: Number,
+        floor: Schema.Types.Mixed,
         zone: String
     },
     temperature: Number,
@@ -73,8 +72,7 @@ const sensorDataSchema = new mongoose.Schema({
 
 const energyReading = new mongoose.Schema({
     metaData: {
-        floor: String,
-        floor: Number,
+        floor: [String , Number],
     },
     energy: Number,
     timestamp: Date,
@@ -145,6 +143,7 @@ io.on('connection', async (socket) => {
 
 // Subscribe to the sensorReadings topic
 client.on('connect', () => {
+    console.log('connected to MQTT broker');
     client.subscribe('sensorReadings');
     client.subscribe('energyReadings');
     console.log('connected to MQTT broker');
@@ -154,13 +153,22 @@ var sensorSaveTime
 var energySaveTime
 // Listen for messages on the sensorReadings topic
 client.on('message', async (topic, message) => {
+    console.log('received message on topic:', topic);
     if (topic == 'sensorReadings') {
         data = JSON.parse(message);
         var date = new Date(Date.now());
-
+        var status = data.aircon_status;
+        var floor = data.Floor.toString();
+        var zones = await floorDetails.find({'floorlevel': floor}, { 'zones.setTemperature': 1 , "_id": 0});
+        zones = JSON.parse(JSON.stringify(zones)); //need convert to json
+        var setTemp = zones[0].zones[0].setTemperature;
+        if(setTemp != data.temperature_set_to){
+            console.log('set_temp_' + setTemp       )
+            client.publish('coolerControl', 'set_temp_' + setTemp);
+        }
         const newSensorData = new SensorData({
             metaData: {
-                floor: data.Floor,
+                floor: floor,
                 zone: data.zone
             },
             temperature: data.temperature,
@@ -169,11 +177,8 @@ client.on('message', async (topic, message) => {
             upperMargin: data.upper_margin,
             lowerMargin: data.lower_margin,
             humidity: data.humidity,
-            Status: data.aircon_statues
+            Status: status
         });
-
-        console.log(newSensorData); 
-        
 
         // Save the sensor data to MongoDB  
         var currenttime = new Date();

@@ -212,7 +212,6 @@
           var timestampTemperaturePairs = []; // Changed from timestampZonePairs
           for (data in orginalSensorData) {
             if (orginalSensorData[data].hasOwnProperty("metaData")) {
-              console.log(data)
               if (orginalSensorData[data].metaData.zone == zones[zone].name && orginalSensorData[0].metaData.floor == floorlevel) {
 
                 timestampTemperaturePairs.push({
@@ -785,10 +784,17 @@
         stateIndicatorContainer.style.fontSize = "1.5rem";
 
         stateIndicator.id = "stateIndicator";
-        if (sensorData[zoneName][0].status) {
+        if (sensorData[zoneName][0].status == true) {
           stateIndicator.textContent = "🟢 ON";
-        } else {
+        } else if (!sensorData[zoneName][0].status == false) {
           stateIndicator.textContent = "🔴 OFF";
+        }else{
+          stateIndicator.textContent = "⚪ Unknown";
+          var stateAlert = document.createElement("li");
+          stateAlert.classList.add("alert", "alert-warning");
+          stateAlert.textContent = "Zone " + zoneName + " has unknown status";
+          document.getElementById("alertMessageList").appendChild(stateAlert);
+
         }
         stateIndicatorContainer.appendChild(stateIndicatortext);
         stateIndicatorContainer.appendChild(stateIndicator);
