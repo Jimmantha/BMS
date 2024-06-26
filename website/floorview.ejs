@@ -164,6 +164,8 @@
   </script>
   <script>
     var ejsData = <%- JSON.stringify(data) %>;
+  </script>
+  <script>
     var orginalSensorData = <%- JSON.stringify(sensorData) %>;
   </script>
   <script>
@@ -209,20 +211,24 @@
         for (zone in zones) {
           var timestampTemperaturePairs = []; // Changed from timestampZonePairs
           for (data in orginalSensorData) {
-            if (orginalSensorData[data].metaData.zone == zones[zone].name && orginalSensorData[data].metaData.floor == floorlevel) {
-              timestampTemperaturePairs.push({
-                floor: orginalSensorData[data].metaData.floor,
-                zone: orginalSensorData[data].metaData.zone,
-                temperature: orginalSensorData[data].temperature,
-                timestamp: orginalSensorData[data].timestamp,
-                setTemperature: orginalSensorData[data].setTemperature,
-                upperMargin: orginalSensorData[data].setTemperature +
-                  orginalSensorData[data].upperMargin,
-                lowerMargin: orginalSensorData[data].setTemperature -
-                  orginalSensorData[data].lowerMargin,
-                humidity: orginalSensorData[data].humidity,
-                status: orginalSensorData[data].Status,
-              });
+            if (orginalSensorData[data].hasOwnProperty("metaData")) {
+              console.log(data)
+              if (orginalSensorData[data].metaData.zone == zones[zone].name && orginalSensorData[0].metaData.floor == floorlevel) {
+
+                timestampTemperaturePairs.push({
+                  floor: orginalSensorData[data].metaData.floor,
+                  zone: orginalSensorData[data].metaData.zone,
+                  temperature: orginalSensorData[data].temperature,
+                  timestamp: orginalSensorData[data].timestamp,
+                  setTemperature: orginalSensorData[data].setTemperature,
+                  upperMargin: orginalSensorData[data].setTemperature +
+                    orginalSensorData[data].upperMargin,
+                  lowerMargin: orginalSensorData[data].setTemperature -
+                    orginalSensorData[data].lowerMargin,
+                  humidity: orginalSensorData[data].humidity,
+                  status: orginalSensorData[data].Status,
+                });
+              }
             }
           }
           sensorData[zones[zone].name] = timestampTemperaturePairs;
@@ -361,11 +367,10 @@
           var image = document.getElementById("floorplan");
           var width = image.clientWidth;
           var height = image.clientHeight;
-          console.log(width, height)
           var canvas = document.getElementById("shadeCanvas");
           canvas.width = width;
           canvas.height = height;
-          updatetemperature();
+          updatetemperature(); // imagemapster clears canvas on resize thus need redraw
         }
       });
       try {
@@ -948,10 +953,6 @@
           dynamicCharts["humidityChart_" + zone].config.data.labels = humiLabels;
           dynamicCharts["humidityChart_" + zone].config.data.datasets[0].data = humi;
           dynamicCharts["humidityChart_" + zone].update();
-
-
-
-
         }
 
 
@@ -986,7 +987,7 @@
       }
 
       floor = $('#floorSelector').val();
-      if (!energyData[floor]) {
+      if (!energyData[floor] || !energyData) {
         energyMeter.textContent = "ERROR";
         energyAlert.textContent = "No Energy Reading available for this floor";
         alertMessageList.appendChild(energyAlert);

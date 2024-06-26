@@ -94,13 +94,13 @@ body {
 
 .temp-meter{
     font-family: digital;
-    font-size: 80px;
+    font-size: 4vw;
 }
 
 .Energy-meter{
     font-family: digital;
     color: #000000;
-    font-size: 7vh;
+    font-size: 6vh;
     background-color: white;
     text-align: center;
     margin:100px auto;
