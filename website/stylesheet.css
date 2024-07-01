@@ -80,7 +80,6 @@ body {
 
 .meter{
     background-color: rgb(55, 55, 55) !important;
-    height: 30vh;
     width: 80%;
 
 }
@@ -100,18 +99,18 @@ body {
 .Energy-meter{
     font-family: digital;
     color: #000000;
-    font-size: 6vh;
+    font-size: 2.7vw;
     background-color: white;
     text-align: center;
-    margin:100px auto;
+    margin:12vh;
     margin-left: 20px;
     margin-right: 20px;
 }
 
-.editButton{
-    width:3vw
-}
 
+.indicator-text{
+    font-size: 1.5vw;
+}
 .select{
     width:12vw;
     font-size:1.5vh;

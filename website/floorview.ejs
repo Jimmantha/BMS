@@ -50,13 +50,13 @@
             </div>
           </div>
           <div class="row">
-            <div class="col ">
+            <div class="col-6 ">
               <div class="row ">
                 <div class="col">
                   <input type="date" id="datepicker" class="form-control" value="<%= new Date().toISOString().split('T')[0] %>">
                   <!-- '2023-06-21T00:00:00.000Z' split at-->
                 </div>
-                <div class="col">
+                <div class="col-6">
                   <select id="timeGranularity" class="form-control select">
                     <option value="day">Day</option>
                     <option value="week">Week</option>
@@ -74,7 +74,7 @@
 
                 <!-- meter -->
                 <div class="container Energy-meter " id="energyMeter">
-                  748kwh
+                  Error
                 </div>
               </div>
             </div>
@@ -769,8 +769,9 @@
         editButtonContainer.classList.add("col", "align-content-start", "text-start");
 
         var stateIndicatorContainer = document.createElement("div");
-        stateIndicatorContainer.classList.add("col", "text-center", "d-flex", "justify-content-center", "align-items-center");
+        stateIndicatorContainer.classList.add("col", "text-center", "d-flex", "justify-content-center", "align-items-center", "indicator-text");
         var stateIndicatortext = document.createElement("div");
+        stateIndicatortext.classList.add("indicator-text");
         stateIndicatortext.innerHTML = "Status: ";
 
         var stateIndicator = document.createElement("div");
@@ -781,7 +782,7 @@
           stateIndicator.style.cursor = "pointer";
 
         });
-        stateIndicatorContainer.style.fontSize = "1.5rem";
+      
 
         stateIndicator.id = "stateIndicator";
         if (sensorData[zoneName][0].status == true) {
@@ -805,7 +806,7 @@
 
 
         var editButton = document.createElement("button");
-        editButton.classList.add("btn", "btn-secondary", "text-en", "editButton");
+        editButton.classList.add("btn", "btn-secondary", "text-en", "editButton","indicator-text");
         editButton.textContent = "Edit";
         editButton.addEventListener("click", function() {
           editTemp = sensorData[zoneName][0].setTemperature;

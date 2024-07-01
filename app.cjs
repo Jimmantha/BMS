@@ -26,6 +26,7 @@ const ZoneSchema = new Schema({
     endY: { type: Number, required: false },
     name: { type: String, required: false },
     shape: { type: String, required: true },
+    setTemperature: { type: Number, required: false },
 });
 
 const floorplan = new Schema({
@@ -53,7 +54,7 @@ mongoose.connect('mongodb+srv://pleasepeople123:VfLWNiTsHAUOZjkY@cluster0.75o7ls
 //172.23.18.169:1883 dev mqtt broker address 
 //172.23.16.143:1883 dev mqtt broker address 
 // Connect to the MQTT broker
-const client = mqtt.connect('mqtt://172.23.16.143:1883:1883');
+const client = mqtt.connect('mqtt://localhost:1883');
 
 // Create a schema for the sensor data
 const sensorDataSchema = new mongoose.Schema({
@@ -72,7 +73,7 @@ const sensorDataSchema = new mongoose.Schema({
 
 const energyReading = new mongoose.Schema({
     metaData: {
-        floor: [String , Number],
+        floor: Schema.Types.Mixed,
     },
     energy: Number,
     timestamp: Date,
@@ -104,12 +105,14 @@ io.on('connection', async (socket) => {
 
     })
 
-    socket.on('change', (data) => {
+    socket.on('change', async (data) => {
 
         setTemp = data.setTemperature;
         dataPayload = "set_temp_" + setTemp;
         client.publish('coolerControl', dataPayload);
-        sensorSaveTime = undefined;
+        console.log(data.zone,data.floor,setTemp)
+        zone = await floorDetails.findOne({ 'floorlevel': data.floor, 'zones.name': data.zone }, { 'zones.setTemperature': 1});
+        await updateZoneTemperature(data.floor, data.zone, setTemp);
     });
 
     socket.on('floorplan', async (data) => {
@@ -119,6 +122,8 @@ io.on('connection', async (socket) => {
         for (var zone in zones) {
             var tempZone = zones[zone];
             tempZone.name = zone;
+            tempZone.setTemperature = 20;
+            tempZone.status = false;
             console.log('tempZone', tempZone)
             FinZone.push(tempZone)
         }
@@ -141,12 +146,25 @@ io.on('connection', async (socket) => {
     sensorData = await getSensorData();
 });
 
+//function to update document in mongodb
+const updateZoneTemperature = async (floor, zoneName, setTemp) => {
+    var floorplan = await floorDetails.findOne({ 'floorlevel': floor });
+    var floorplan = JSON.parse(JSON.stringify(floorplan));
+    var floorplan = floorplan.zones.find(zone => zone.name == zoneName).setTemperature = setTemp;
+    console.log('floorplan', floorplan);
+    await floorDetails.deleteOne({ 'floorlevel' : floor})
+    floorplan = JSON.parse(floorplan);
+    await floorDetails.create(floorplan);
+    console.log('updated');
+  };
+
+
+
 // Subscribe to the sensorReadings topic
 client.on('connect', () => {
     console.log('connected to MQTT broker');
     client.subscribe('sensorReadings');
     client.subscribe('energyReadings');
-    console.log('connected to MQTT broker');
 });
 
 var sensorSaveTime
