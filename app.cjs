@@ -110,8 +110,6 @@ io.on('connection', async (socket) => {
         setTemp = data.setTemperature;
         dataPayload = "set_temp_" + setTemp;
         client.publish('coolerControl', dataPayload);
-        console.log(data.zone,data.floor,setTemp)
-        zone = await floorDetails.findOne({ 'floorlevel': data.floor, 'zones.name': data.zone }, { 'zones.setTemperature': 1});
         await updateZoneTemperature(data.floor, data.zone, setTemp);
     });
 
@@ -136,10 +134,10 @@ io.on('connection', async (socket) => {
         await newFloor.save();
         console.log('newFloor', newFloor)
         socket.emit("ready", { message: "Floorplan saved" });
-        
+
     });
 
-    socket.on('change', (data)=> {
+    socket.on('change', (data) => {
         console.log(data);
     })
 
@@ -148,15 +146,17 @@ io.on('connection', async (socket) => {
 
 //function to update document in mongodb
 const updateZoneTemperature = async (floor, zoneName, setTemp) => {
-    var floorplan = await floorDetails.findOne({ 'floorlevel': floor });
-    var floorplan = JSON.parse(JSON.stringify(floorplan));
-    var floorplan = floorplan.zones.find(zone => zone.name == zoneName).setTemperature = setTemp;
-    console.log('floorplan', floorplan);
-    await floorDetails.deleteOne({ 'floorlevel' : floor})
-    floorplan = JSON.parse(floorplan);
-    await floorDetails.create(floorplan);
-    console.log('updated');
-  };
+    console.log('updateZoneTemperature', floor, zoneName, setTemp)
+    try {
+        const updatedZone = await floorDetails.findOneAndUpdate(
+            { 'zones.name': zoneName, 'floorlevel': floor },
+            { $set: { 'zones.$.setTemperature': setTemp } },
+            { new: true }
+        );
+    } catch (err) {
+        console.error(err);
+    }
+};
 
 
 
@@ -177,11 +177,11 @@ client.on('message', async (topic, message) => {
         var date = new Date(Date.now());
         var status = data.aircon_status;
         var floor = data.Floor.toString();
-        var zones = await floorDetails.find({'floorlevel': floor}, { 'zones.setTemperature': 1 , "_id": 0});
+        var zones = await floorDetails.find({ 'floorlevel': floor }, { 'zones.setTemperature': 1, "_id": 0 });
         zones = JSON.parse(JSON.stringify(zones)); //need convert to json
         var setTemp = zones[0].zones[0].setTemperature;
-        if(setTemp != data.temperature_set_to){
-            console.log('set_temp_' + setTemp       )
+        if (setTemp != data.temperature_set_to) {
+            console.log('set_temp_' + setTemp)
             client.publish('coolerControl', 'set_temp_' + setTemp);
         }
         const newSensorData = new SensorData({
