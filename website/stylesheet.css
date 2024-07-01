@@ -109,7 +109,7 @@ body {
 
 
 .indicator-text{
-    font-size: 1.5vw;
+    font-size: 1.1vw;
 }
 .select{
     width:12vw;
@@ -133,4 +133,9 @@ body {
 @font-face{
     font-family:'digital';
     src: url('./DIGITALDREAM.ttf');
+}
+
+.form-switch .form-check-input:checked {
+    background-color: green;
+    border-color: green;
 }

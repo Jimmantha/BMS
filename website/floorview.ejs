@@ -17,7 +17,7 @@
         Floorview <span style="color:red; background-color: rgba(127, 255, 212, 0); ">🟢🔴⚪</span>
       </div>
       <div class="col text-center">
-        temperature Details
+        Aircon Control
       </div>
       <div class="col text-center" id="moreDetailTitle">
         Zone Details
@@ -479,47 +479,6 @@
 
 
 
-    $("#editButton").click(function() {
-      var name = modal.querySelector(".modal-title").textContent;
-      modal.querySelector(".modal-title").textContent = "Edit " + modal.querySelector(".modal-title").textContent;
-      modal.querySelector(".modal-header");
-      document.getElementById("editButton").style.display = "none";
-      var div = document.createElement("div");
-      div.textContent = "set temp: ";
-      var setTempInput = document.createElement("input");
-      setTempInput.id = "setInput";
-      setTempInput.type = "number";
-      setTempInput.value =
-        sensorData[name][0].setTemperature;
-
-      var margin = document.createElement("div");
-      margin.textContent = "margin: ";
-      var marginInput = document.createElement("input");
-      marginInput.id = "Margin";
-      marginInput.type = "number";
-      marginInput.value = (-(sensorData[name][0].setTemperature - sensorData[name][0].upperMargin));
-      margin.appendChild(marginInput);
-
-      var button = document.createElement("button");
-      button.classList.add("btn", "ms-3", "btn-primary");
-      button.textContent = "update";
-      button.id = "update";
-      button.addEventListener("click", function() {
-        var newTemp = setTempInput.value;
-        var newMargin = marginInput.value;
-        socket.emit("change", {
-          temperature: newTemp,
-          margin: newMargin
-        });
-        modal.querySelector(".modal-footer").removeChild(button);
-        closeModal();
-      });
-      modal.querySelector(".modal-body").innerHTML = "";
-      modal.querySelector(".modal-body").appendChild(div);
-      div.appendChild(setTempInput);
-      div.appendChild(margin);
-      modal.querySelector(".modal-footer").appendChild(button);
-    });
     updatetemperature();
   </script>
   <script>
@@ -769,35 +728,30 @@
         editButtonContainer.classList.add("col", "align-content-start", "text-start");
 
         var stateIndicatorContainer = document.createElement("div");
-        stateIndicatorContainer.classList.add("col", "text-center", "d-flex", "justify-content-center", "align-items-center", "indicator-text");
-        var stateIndicatortext = document.createElement("div");
-        stateIndicatortext.classList.add("indicator-text");
-        stateIndicatortext.innerHTML = "Status: ";
+        stateIndicatorContainer.classList.add("col", "text-center", "d-flex", "justify-content-end", "align-items-end", "indicator-text");
 
         var stateIndicator = document.createElement("div");
-        stateIndicator.setAttribute("data-bs-toggle", "tooltip");
-        stateIndicator.setAttribute("data-bs-placement", "top");
-        stateIndicator.setAttribute("title", "Click to toggle state");
-        stateIndicator.addEventListener("mouseover", function() {
-          stateIndicator.style.cursor = "pointer";
+        stateIndicator.classList.add("form-check", "form-switch");
 
-        });
-      
+        var stateIndicatorInput = document.createElement("input");
+        stateIndicatorInput.classList.add("form-check-input");
+        stateIndicatorInput.setAttribute("role", "switch");
+        stateIndicatorInput.setAttribute("type", "checkbox");
+        stateIndicatorInput.setAttribute("id", "flexSwitchCheckDefault");
+        stateIndicatorInput.setAttribute("checked", "");
+        stateIndicatorInput.disabled = true;
+        stateIndicatorInput.id = "stateIndicatorInput"
 
-        stateIndicator.id = "stateIndicator";
-        if (sensorData[zoneName][0].status == true) {
-          stateIndicator.textContent = "🟢 ON";
-        } else if (!sensorData[zoneName][0].status == false) {
-          stateIndicator.textContent = "🔴 OFF";
-        }else{
-          stateIndicator.textContent = "⚪ Unknown";
-          var stateAlert = document.createElement("li");
-          stateAlert.classList.add("alert", "alert-warning");
-          stateAlert.textContent = "Zone " + zoneName + " has unknown status";
-          document.getElementById("alertMessageList").appendChild(stateAlert);
+        var stateIndicatorLabel = document.createElement("label");
+        stateIndicatorLabel.classList.add("form-check-label");
+        stateIndicatorLabel.setAttribute("for", "flexSwitchCheckDefault");
+        stateIndicatorLabel.textContent = "Aircon";
 
-        }
-        stateIndicatorContainer.appendChild(stateIndicatortext);
+        stateIndicator.appendChild(stateIndicatorInput);
+        stateIndicator.appendChild(stateIndicatorLabel);
+
+
+
         stateIndicatorContainer.appendChild(stateIndicator);
 
         editnStateIndicatorContainer.appendChild(editButtonContainer);
@@ -806,12 +760,15 @@
 
 
         var editButton = document.createElement("button");
-        editButton.classList.add("btn", "btn-secondary", "text-en", "editButton","indicator-text");
+        editButton.classList.add("btn", "btn-secondary", "text-en", "editButton", "indicator-text");
         editButton.textContent = "Edit";
         editButton.addEventListener("click", function() {
           editTemp = sensorData[zoneName][0].setTemperature;
           tempReading.textContent = editTemp + "C";
 
+          //add state indicator toggle switch
+          stateIndicatorInput.disabled = false;
+          var stateIndicatorToggle = document.createElement("input")
 
 
           var increaseButtonContianer = document.createElement("div");
@@ -855,6 +812,7 @@
             table.removeChild(confirmButtonContainer);
             tempReading.textContent = sensorData[zoneName][0].setTemperature + "C";
             tempReading.id = "tempReading";
+            stateIndicatorInput.disabled = true;
           });
           editButtonContainer.appendChild(closeButton);
 
@@ -906,7 +864,7 @@
         loadCharts(zoneName);
       } else if (currentClickedZone == zone) {
         if (!document.getElementById("confirmButton")) {
-          //currentClickedZone is object where the name of click is zone is in key, named "key"
+          //currentClickedZone is an object where the name of the clicked zone is in key, named "key". Thus, currentClickedZone.key will net you the name of the clicked zone
           var tempreading = document.getElementById("tempReading");
           tempreading.textContent = sensorData[zone.key][0].setTemperature + "C";
           zone = currentClickedZone.key;
