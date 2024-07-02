@@ -278,24 +278,29 @@
     var sensorData = {};
     loadData();
     socket.on("floorDetails", function(data) {
+      console.log('change', data.Status);
       var floor = data.floorlevel;
       var zones = data.zone;
       var setTemperature = data.setTemperature;
+      var Status = data.Status;
       console.log("received floor details floor: " + floor + " zones: " + zones + " setTemperature: " + setTemperature);
       ejsData.find(element => {
         return element.floorlevel == floor
       }).zones.find(element => {
         return element.name == zones
       }).setTemperature = setTemperature;
+
       ejsData.find(element => {
         return element.floorlevel == floor
       }).zones.find(element => {
         return element.name == zones
-      }).Status = status;
+      }).Status = data.Status;
       if (currentClickedZone) {
         loadDetails(currentClickedZone);
       }
-
+      loadData();
+      createArea();
+      updatetemperature();
     })
     socket.on("sensorData", function(data) {
       orginalSensorData = data.sensorData;
@@ -455,8 +460,7 @@
           var endY = (zonePosition.endY / 400) * shadeCanvas.height;
         }
         var zoneDetails = getZone($('#floorSelector').val(), zones[zone].name);
-        console.log(zoneDetails.Status);
-        if (zoneDetails.Status) {
+        if (zoneDetails.Status == true) {
           try {
             var temperatureGradient =
               (sensorData[zones[zone].name][0].temperature -
@@ -467,9 +471,11 @@
             var blue = Math.round(255 * (1 - temperatureGradient));
             ctx.fillStyle = "rgba(" + red / 2 + ", 255, " + blue + ", 0.5)";
           } catch (error) {
-            ctx.fillStyle = "rgba(128, 128, 128, 0.5)"; // Set fillStyle to grey
+            console,log("Error setting temperature gradient:", error);
+            ctx.fillStyle = "rgba(255, 255, 255, 1)"; // Set fillStyle to grey
           }
         } else {
+          console.log("zone is off");
           ctx.fillStyle = "rgba(128, 128, 128, 0.5)"; // Set fillStyle to grey
         }
         if (zones[zone].shape == "rect") {
@@ -776,10 +782,10 @@
         stateIndicatorInput.setAttribute("role", "switch");
         stateIndicatorInput.setAttribute("type", "checkbox");
         stateIndicatorInput.setAttribute("id", "airconStatusSwitch");
-        // to implement state indicator logic 
-        //...
+        stateIndicatorInput.setAttribute("checked", "true");
+        
         var zoneDetails = getZone(floorlevel, zoneName);
-        if (zoneDetails.Status == true) {
+        if (zoneDetails.Status == true|| zoneDetails.Status == "true") {
           stateIndicatorInput.checked = true;
         } else {
           stateIndicatorInput.checked = false;
@@ -866,7 +872,6 @@
             if (zone.Status == true) {
               console.log("checked")
               stateIndicatorInput.checked = true;
-              stateIndicatorInput.setAttribute
             } else {
               console.log("unchecked")
               stateIndicatorInput.checked = false;

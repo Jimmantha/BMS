@@ -107,13 +107,14 @@ io.on('connection', async (socket) => {
     })
 
     socket.on('change', async (data) => {
+
         setTemp = data.setTemperature;
         console.log(data)
         dataPayload = "set_temp_" + setTemp;
         client.publish('coolerControl', dataPayload);
         await updateZoneTemperature(data.floor, data.zone, setTemp);
         await updateZoneStatus(data.floor, data.zone, data.Status);
-        io.emit('floorDetails', { floorlevel: data.floor, zone: data.zone, setTemperature: setTemp, status: data.Status});
+        io.emit('floorDetails', { floorlevel: data.floor, zone: data.zone, setTemperature: setTemp, Status: data.Status});
     });
 
     socket.on('floorplan', async (data) => {
