@@ -14,7 +14,7 @@
   <div class="table">
     <div class="row title">
       <div class="col text-center">
-        Floorview <span style="color:red; background-color: rgba(127, 255, 212, 0); ">🟢🔴⚪</span>
+        Floorview
       </div>
       <div class="col text-center">
         Aircon Control
@@ -153,6 +153,16 @@
       return new Date(year, month + 1, 0).getDate();
     }
 
+    function getZone(floorlevel, zoneName) {
+      var floor = ejsData.find(element => {
+        return element.floorlevel == floorlevel
+      })
+      var zone = floor.zones.find(element => {
+        return element.name == zoneName
+      })
+      return zone;
+    }
+
     function initializeCanvas() {
       var width = $("#floorplan").width();
       var height = $("#floorplan").height();
@@ -267,6 +277,26 @@
     image.src = floorplan;
     var sensorData = {};
     loadData();
+    socket.on("floorDetails", function(data) {
+      var floor = data.floorlevel;
+      var zones = data.zone;
+      var setTemperature = data.setTemperature;
+      console.log("received floor details floor: " + floor + " zones: " + zones + " setTemperature: " + setTemperature);
+      ejsData.find(element => {
+        return element.floorlevel == floor
+      }).zones.find(element => {
+        return element.name == zones
+      }).setTemperature = setTemperature;
+      ejsData.find(element => {
+        return element.floorlevel == floor
+      }).zones.find(element => {
+        return element.name == zones
+      }).Status = status;
+      if (currentClickedZone) {
+        loadDetails(currentClickedZone);
+      }
+
+    })
     socket.on("sensorData", function(data) {
       orginalSensorData = data.sensorData;
       console.log("received sensor data");
@@ -424,16 +454,22 @@
           var endX = (zonePosition.endX / 600) * shadeCanvas.width;
           var endY = (zonePosition.endY / 400) * shadeCanvas.height;
         }
-        try {
-          var temperatureGradient =
-            (sensorData[zones[zone].name][0].temperature -
-              sensorData[zones[zone].name][0].lowerMargin) /
-            (sensorData[zones[zone].name][0].upperMargin -
-              sensorData[zones[zone].name][0].lowerMargin);
-          var red = Math.round(255 * temperatureGradient);
-          var blue = Math.round(255 * (1 - temperatureGradient));
-          ctx.fillStyle = "rgba(" + red / 2 + ", 255, " + blue + ", 0.5)";
-        } catch (error) {
+        var zoneDetails = getZone($('#floorSelector').val(), zones[zone].name);
+        console.log(zoneDetails.Status);
+        if (zoneDetails.Status) {
+          try {
+            var temperatureGradient =
+              (sensorData[zones[zone].name][0].temperature -
+                sensorData[zones[zone].name][0].lowerMargin) /
+              (sensorData[zones[zone].name][0].upperMargin -
+                sensorData[zones[zone].name][0].lowerMargin);
+            var red = Math.round(255 * temperatureGradient);
+            var blue = Math.round(255 * (1 - temperatureGradient));
+            ctx.fillStyle = "rgba(" + red / 2 + ", 255, " + blue + ", 0.5)";
+          } catch (error) {
+            ctx.fillStyle = "rgba(128, 128, 128, 0.5)"; // Set fillStyle to grey
+          }
+        } else {
           ctx.fillStyle = "rgba(128, 128, 128, 0.5)"; // Set fillStyle to grey
         }
         if (zones[zone].shape == "rect") {
@@ -670,6 +706,8 @@
     function loadDetails(zone) {
       if (currentClickedZone != zone) {
         currentClickedZone = zone;
+
+
         var title = document.getElementById("moreDetailTitle");
         title.textContent = "Zone Details: " + zone.key;
         var table = document.getElementById("moreDetails");
@@ -737,14 +775,24 @@
         stateIndicatorInput.classList.add("form-check-input");
         stateIndicatorInput.setAttribute("role", "switch");
         stateIndicatorInput.setAttribute("type", "checkbox");
-        stateIndicatorInput.setAttribute("id", "flexSwitchCheckDefault");
-        stateIndicatorInput.setAttribute("checked", "");
+        stateIndicatorInput.setAttribute("id", "airconStatusSwitch");
+        // to implement state indicator logic 
+        //...
+        var zoneDetails = getZone(floorlevel, zoneName);
+        if (zoneDetails.Status == true) {
+          stateIndicatorInput.checked = true;
+        } else {
+          stateIndicatorInput.checked = false;
+        }
+
+
+
         stateIndicatorInput.disabled = true;
         stateIndicatorInput.id = "stateIndicatorInput"
 
         var stateIndicatorLabel = document.createElement("label");
         stateIndicatorLabel.classList.add("form-check-label");
-        stateIndicatorLabel.setAttribute("for", "flexSwitchCheckDefault");
+        stateIndicatorLabel.setAttribute("for", "airconStatusSwitch");
         stateIndicatorLabel.textContent = "Aircon";
 
         stateIndicator.appendChild(stateIndicatorInput);
@@ -763,7 +811,8 @@
         editButton.classList.add("btn", "btn-secondary", "text-en", "editButton", "indicator-text");
         editButton.textContent = "Edit";
         editButton.addEventListener("click", function() {
-          editTemp = sensorData[zoneName][0].setTemperature;
+          var zone = getZone(floorlevel, currentClickedZone.key);
+          editTemp = zone.setTemperature;
           tempReading.textContent = editTemp + "C";
 
           //add state indicator toggle switch
@@ -810,9 +859,20 @@
             editButtonContainer.removeChild(closeButton);
             editButtonContainer.appendChild(editButton);
             table.removeChild(confirmButtonContainer);
-            tempReading.textContent = sensorData[zoneName][0].setTemperature + "C";
+            var zone = getZone(floorlevel, currentClickedZone.key);
+            tempReading.textContent = zone.setTemperature + "C";
             tempReading.id = "tempReading";
+            console.log(zone.Status)
+            if (zone.Status == true) {
+              console.log("checked")
+              stateIndicatorInput.checked = true;
+              stateIndicatorInput.setAttribute
+            } else {
+              console.log("unchecked")
+              stateIndicatorInput.checked = false;
+            }
             stateIndicatorInput.disabled = true;
+
           });
           editButtonContainer.appendChild(closeButton);
 
@@ -823,22 +883,29 @@
           confirmButton.textContent = "Confirm";
           confirmButton.id = "confirmButton";
           confirmButton.addEventListener("click", function() {
+            var state = document.getElementById("stateIndicatorInput").checked;
+            state = state.toLocaleString();
+            console.log("state: ", state)
             console.log("editTemp: ", editTemp)
             socket.emit("change", {
               setTemperature: editTemp,
               zone: zoneName,
-              floor: floorlevel
+              floor: floorlevel,
+              Status: state
             })
 
             row2.innerHTML = "";
-            tempReading.textContent = sensorData[zoneName][0].setTemperature + "C";
+            var zone = getZone(floorlevel, currentClickedZone.key);
+            tempReading.textContent = zone.setTemperature + "C";
             row2.appendChild(tempReading);
             editButtonContainer.removeChild(closeButton);
             editButtonContainer.appendChild(editButton);
             table.removeChild(confirmButtonContainer);
+            stateIndicatorInput.disabled = true;
           });
           confirmButtonContainer.appendChild(confirmButton);
           table.appendChild(confirmButtonContainer);
+
 
         });
 
@@ -851,7 +918,8 @@
         tempReading.classList.add("col", "text-center", "mt-5", "temp-meter");
         tempReading.id = "tempReading";
         tempReading.textContent = "gauge";
-        tempReading.textContent = sensorData[zoneName][0].setTemperature + "C";
+        var zone = getZone(floorlevel, currentClickedZone.key);
+        tempReading.textContent = zone.setTemperature + "C";
 
 
 
@@ -865,8 +933,10 @@
       } else if (currentClickedZone == zone) {
         if (!document.getElementById("confirmButton")) {
           //currentClickedZone is an object where the name of the clicked zone is in key, named "key". Thus, currentClickedZone.key will net you the name of the clicked zone
+          floorlevel = $('#floorSelector').val();
           var tempreading = document.getElementById("tempReading");
-          tempreading.textContent = sensorData[zone.key][0].setTemperature + "C";
+          zoneData = getZone(floorlevel, currentClickedZone.key);
+          tempreading.textContent = zoneData.setTemperature + "C";
           zone = currentClickedZone.key;
 
 
@@ -1183,7 +1253,6 @@
       var selectedDate = new Date(selectedDay)
       var currentDay = selectedDate.getDate()
       var energyDataset = energyData[floorlevel];
-      console.log(energyDataset)
       if (timeGranularity == "day") {
         var endEnergyUsed = [];
         for (var i = 0; i < 24; i++) {

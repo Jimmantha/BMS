@@ -26,6 +26,7 @@ const ZoneSchema = new Schema({
     endY: { type: Number, required: false },
     name: { type: String, required: false },
     shape: { type: String, required: true },
+    Status: { type: Boolean, required: false },
     setTemperature: { type: Number, required: false },
 });
 
@@ -106,11 +107,13 @@ io.on('connection', async (socket) => {
     })
 
     socket.on('change', async (data) => {
-
         setTemp = data.setTemperature;
+        console.log(data)
         dataPayload = "set_temp_" + setTemp;
         client.publish('coolerControl', dataPayload);
         await updateZoneTemperature(data.floor, data.zone, setTemp);
+        await updateZoneStatus(data.floor, data.zone, data.Status);
+        io.emit('floorDetails', { floorlevel: data.floor, zone: data.zone, setTemperature: setTemp, status: data.Status});
     });
 
     socket.on('floorplan', async (data) => {
@@ -121,7 +124,7 @@ io.on('connection', async (socket) => {
             var tempZone = zones[zone];
             tempZone.name = zone;
             tempZone.setTemperature = 20;
-            tempZone.status = false;
+            tempZone.Status = false;
             console.log('tempZone', tempZone)
             FinZone.push(tempZone)
         }
@@ -137,9 +140,6 @@ io.on('connection', async (socket) => {
 
     });
 
-    socket.on('change', (data) => {
-        console.log(data);
-    })
 
     sensorData = await getSensorData();
 });
@@ -151,6 +151,20 @@ const updateZoneTemperature = async (floor, zoneName, setTemp) => {
         const updatedZone = await floorDetails.findOneAndUpdate(
             { 'zones.name': zoneName, 'floorlevel': floor },
             { $set: { 'zones.$.setTemperature': setTemp } },
+            { new: true }
+        );
+    } catch (err) {
+        console.error(err);
+    }
+};
+
+//function to update document in mongodb
+const updateZoneStatus = async (floor, zoneName, status) => {
+    console.log('updateZoneStatus', floor, zoneName, status)
+    try {
+        const updatedZone = await floorDetails.findOneAndUpdate(
+            { 'zones.name': zoneName, 'floorlevel': floor },
+            { $set: { 'zones.$.Status': status } },
             { new: true }
         );
     } catch (err) {
