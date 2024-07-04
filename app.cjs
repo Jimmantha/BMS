@@ -26,7 +26,7 @@ const ZoneSchema = new Schema({
     endY: { type: Number, required: false },
     name: { type: String, required: false },
     shape: { type: String, required: true },
-    Status: { type: Boolean, required: false },
+    airconStatus: { type: Boolean, required: false },
     setTemperature: { type: Number, required: false },
 });
 
@@ -111,9 +111,14 @@ io.on('connection', async (socket) => {
         console.log(data)
         dataPayload = "set_temp_" + setTemp;
         client.publish('coolerControl', dataPayload);
+        if (data.Status == true) {
+            client.publish('coolerControl', 'on');
+        } else {
+            client.publish('coolerControl', 'off');
+        }
         await updateZoneTemperature(data.floor, data.zone, setTemp);
-        await updateZoneStatus(data.floor, data.zone, data.Status);
-        io.emit('floorDetails', { floorlevel: data.floor, zone: data.zone, setTemperature: setTemp, status: data.Status});
+        await updateZoneAirconStatus(data.floor, data.zone, data.Status);
+        io.emit('floorDetails', { floorlevel: data.floor, zone: data.zone, setTemperature: setTemp, airconStatus: data.Status });
     });
 
     socket.on('floorplan', async (data) => {
@@ -124,7 +129,7 @@ io.on('connection', async (socket) => {
             var tempZone = zones[zone];
             tempZone.name = zone;
             tempZone.setTemperature = 20;
-            tempZone.Status = false;
+            tempZone.airconStatus = false;
             console.log('tempZone', tempZone)
             FinZone.push(tempZone)
         }
@@ -159,12 +164,12 @@ const updateZoneTemperature = async (floor, zoneName, setTemp) => {
 };
 
 //function to update document in mongodb
-const updateZoneStatus = async (floor, zoneName, status) => {
+const updateZoneAirconStatus = async (floor, zoneName, status) => {
     console.log('updateZoneStatus', floor, zoneName, status)
     try {
         const updatedZone = await floorDetails.findOneAndUpdate(
             { 'zones.name': zoneName, 'floorlevel': floor },
-            { $set: { 'zones.$.Status': status } },
+            { $set: { 'zones.$.airconStatus': status } },
             { new: true }
         );
     } catch (err) {
@@ -191,12 +196,20 @@ client.on('message', async (topic, message) => {
         var date = new Date(Date.now());
         var status = data.aircon_status;
         var floor = data.Floor.toString();
-        var zones = await floorDetails.find({ 'floorlevel': floor }, { 'zones.setTemperature': 1, "_id": 0 });
+        var zones = await floorDetails.find({ 'floorlevel': floor }, { 'zones.setTemperature': 1, 'zones.airconStatus': 1, "_id": 0 });
         zones = JSON.parse(JSON.stringify(zones)); //need convert to json
         var setTemp = zones[0].zones[0].setTemperature;
+        var airconStatus = zones[0].zones[0].airconStatus;
         if (setTemp != data.temperature_set_to) {
             console.log('set_temp_' + setTemp)
             client.publish('coolerControl', 'set_temp_' + setTemp);
+        }
+        if (airconStatus != data.aircon_status_) {
+            if (data.aircon_status_ == true) {
+                client.publish('coolerControl', 'on');
+            } else {
+                client.publish('coolerControl', 'off');
+            }
         }
         const newSensorData = new SensorData({
             metaData: {
