@@ -112,11 +112,15 @@ io.on('connection', async (socket) => {
         console.log(data)
         dataPayload = "set_temp_" + setTemp;
         client.publish('coolerControl', dataPayload);
-        if (data.Status == true) {
+        if (data.airconState == true) {
             client.publish('coolerControl', 'on');
         } else {
             client.publish('coolerControl', 'off');
         }
+
+        //To add lighting control
+
+
         await updateZoneTemperature(data.floor, data.zone, setTemp);
         await updateZoneAirconState(data.floor, data.zone, data.airconState);
         await updateZoneLightState(data.floor, data.zone, data.lightState);
