@@ -111,6 +111,10 @@ body {
     height:12vh;
 }
 
+.switch-remove-gap{
+    margin-top: -1.5vh;
+}
+
 .indicator-text{
     font-size: 1.1vw;
 }
