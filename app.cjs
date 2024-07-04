@@ -26,8 +26,9 @@ const ZoneSchema = new Schema({
     endY: { type: Number, required: false },
     name: { type: String, required: false },
     shape: { type: String, required: true },
-    airconStatus: { type: Boolean, required: false },
+    airconState: { type: Boolean, required: false },
     setTemperature: { type: Number, required: false },
+    lightStatus: { type: Boolean, required: false },
 });
 
 const floorplan = new Schema({
@@ -117,8 +118,8 @@ io.on('connection', async (socket) => {
             client.publish('coolerControl', 'off');
         }
         await updateZoneTemperature(data.floor, data.zone, setTemp);
-        await updateZoneAirconStatus(data.floor, data.zone, data.Status);
-        io.emit('floorDetails', { floorlevel: data.floor, zone: data.zone, setTemperature: setTemp, airconStatus: data.Status });
+        await updateZoneAirconStatus(data.floor, data.zone, data.airconState);
+        io.emit('floorDetails', { floorlevel: data.floor, zone: data.zone, setTemperature: setTemp, airconState: data.airconState });
     });
 
     socket.on('floorplan', async (data) => {
@@ -129,7 +130,7 @@ io.on('connection', async (socket) => {
             var tempZone = zones[zone];
             tempZone.name = zone;
             tempZone.setTemperature = 20;
-            tempZone.airconStatus = false;
+            tempZone.airconState = false;
             console.log('tempZone', tempZone)
             FinZone.push(tempZone)
         }
@@ -169,7 +170,7 @@ const updateZoneAirconStatus = async (floor, zoneName, status) => {
     try {
         const updatedZone = await floorDetails.findOneAndUpdate(
             { 'zones.name': zoneName, 'floorlevel': floor },
-            { $set: { 'zones.$.airconStatus': status } },
+            { $set: { 'zones.$.airconState': status } },
             { new: true }
         );
     } catch (err) {
@@ -196,15 +197,15 @@ client.on('message', async (topic, message) => {
         var date = new Date(Date.now());
         var status = data.aircon_status;
         var floor = data.Floor.toString();
-        var zones = await floorDetails.find({ 'floorlevel': floor }, { 'zones.setTemperature': 1, 'zones.airconStatus': 1, "_id": 0 });
+        var zones = await floorDetails.find({ 'floorlevel': floor }, { 'zones.setTemperature': 1, 'zones.airconState': 1, "_id": 0 });
         zones = JSON.parse(JSON.stringify(zones)); //need convert to json
         var setTemp = zones[0].zones[0].setTemperature;
-        var airconStatus = zones[0].zones[0].airconStatus;
+        var airconState = zones[0].zones[0].airconState;
         if (setTemp != data.temperature_set_to) {
             console.log('set_temp_' + setTemp)
             client.publish('coolerControl', 'set_temp_' + setTemp);
         }
-        if (airconStatus != data.aircon_status_) {
+        if (airconState != data.aircon_status_) {
             if (data.aircon_status_ == true) {
                 client.publish('coolerControl', 'on');
             } else {
@@ -222,7 +223,7 @@ client.on('message', async (topic, message) => {
             upperMargin: data.upper_margin,
             lowerMargin: data.lower_margin,
             humidity: data.humidity,
-            Status: status
+            airconState: airconState
         });
 
         // Save the sensor data to MongoDB  
@@ -298,7 +299,7 @@ app.get('/', async (req, res) => {
     var sensorData = await getSensorData();
     var energyData = await getEnergyData();
 
-    res.render('floorview', { data: floorDetails, sensorData: sensorData, energyData: energyData });
+    res.render('overview', { data: floorDetails, sensorData: sensorData, energyData: energyData });
 
 });
 

@@ -107,6 +107,9 @@ body {
     margin-right: 20px;
 }
 
+.switch-table-height{
+    height:12vh;
+}
 
 .indicator-text{
     font-size: 1.1vw;

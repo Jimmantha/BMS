@@ -239,7 +239,7 @@
                   lowerMargin: orginalSensorData[data].setTemperature -
                     orginalSensorData[data].lowerMargin,
                   humidity: orginalSensorData[data].humidity,
-                  status: orginalSensorData[data].airconStatus,
+                  status: orginalSensorData[data].airconState,
                 });
               }
             }
@@ -293,18 +293,18 @@
       }).zones.find(element => {
         return element.name == zones
       }).setTemperature = setTemperature;
-      if (data.airconStatus == "true") {
+      if (data.airconState == "true") {
         ejsData.find(element => {
           return element.floorlevel == floor
         }).zones.find(element => {
           return element.name == zones
-        }).airconStatus = true;
+        }).airconState = true;
       } else {
         ejsData.find(element => {
           return element.floorlevel == floor
         }).zones.find(element => {
           return element.name == zones
-        }).airconStatus = false;
+        }).airconState = false;
       }
       if (currentClickedZone) {
         loadDetails(currentClickedZone);
@@ -472,7 +472,7 @@
         }
         var zoneDetails = getZone($('#floorSelector').val(), zones[zone].name);
         console.log("Zone name",zoneDetails.name,"zoneDetails: ", zoneDetails);
-        if (zoneDetails.airconStatus == true) {
+        if (zoneDetails.airconState == true) {
           try {
             var temperatureGradient =
               (sensorData[zones[zone].name][0].temperature -
@@ -487,7 +487,7 @@
             log("Error setting temperature gradient:", error);
             ctx.fillStyle = "rgba(255, 255, 255, 1)"; // Set fillStyle to grey
           }
-        } else if (zoneDetails.airconStatus == false){
+        } else if (zoneDetails.airconState == false){
           console.log("zone is off");
           ctx.fillStyle = "rgba(128, 128, 128, 0.5)"; // Set fillStyle to grey
         }
@@ -780,10 +780,20 @@
         title.textContent = zoneName;
 
         var editnStateIndicatorContainer = document.createElement("div");
-        editnStateIndicatorContainer.classList.add("row", "align-content-end", "text-end");
+        editnStateIndicatorContainer.classList.add("row", "align-content-end", "text-end", "switch-table-height");
+
 
         var editButtonContainer = document.createElement("div");
         editButtonContainer.classList.add("col", "align-content-start", "text-start");
+
+        var switchContainer = document.createElement("div");
+        switchContainer.classList.add("col");
+
+        var switchTable = document.createElement("div");
+        switchTable.classList.add("table");
+
+        var airconSwitchRow = document.createElement("div");
+        airconSwitchRow.classList.add("row", "align-items-center", "justify-content-center", "text-center");
 
         var airconStateIndicatorContainer = document.createElement("div");
         airconStateIndicatorContainer.classList.add("col", "text-center", "d-flex", "justify-content-end", "align-items-end", "indicator-text");
@@ -795,35 +805,73 @@
         airconStateIndicatorInput.classList.add("form-check-input");
         airconStateIndicatorInput.setAttribute("role", "switch");
         airconStateIndicatorInput.setAttribute("type", "checkbox");
-        airconStateIndicatorInput.setAttribute("id", "airconStatusSwitch");
+        airconStateIndicatorInput.setAttribute("id", "airconStateSwitch");
         airconStateIndicatorInput.setAttribute("checked", "true");
 
         var zoneDetails = getZone(floorlevel, zoneName);
-        if (zoneDetails.airconStatus == true || zoneDetails.airconStatus == "true") {
+        if (zoneDetails.airconState == true || zoneDetails.airconState == "true") {
           airconStateIndicatorInput.checked = true;
         } else {
           airconStateIndicatorInput.checked = false;
         }
 
-
+      
 
         airconStateIndicatorInput.disabled = true;
         airconStateIndicatorInput.id = "airconStateIndicatorInput"
 
         var airconStateIndicatorLabel = document.createElement("label");
         airconStateIndicatorLabel.classList.add("form-check-label");
-        airconStateIndicatorLabel.setAttribute("for", "airconStatusSwitch");
+        airconStateIndicatorLabel.setAttribute("for", "airconStateSwitch");
         airconStateIndicatorLabel.textContent = "Aircon";
 
+   
+        airconStateIndicatorContainer.appendChild(airconStateIndicator);
         airconStateIndicator.appendChild(airconStateIndicatorInput);
         airconStateIndicator.appendChild(airconStateIndicatorLabel);
+        airconSwitchRow.appendChild(airconStateIndicatorContainer);
+
+        lightSwitchRow = document.createElement("div");
+        lightSwitchRow.classList.add("row", "align-items-center", "justify-content-center", "text-center");
+
+        lightStateIndicatorContainer = document.createElement("div");
+        lightStateIndicatorContainer.classList.add("col", "text-center", "d-flex", "justify-content-end", "align-items-end", "indicator-text");
+
+        lightStateIndicator = document.createElement("div");
+        lightStateIndicator.classList.add("form-check", "form-switch");
+
+        lightStateIndicatorInput = document.createElement("input");
+        lightStateIndicatorInput.classList.add("form-check-input");
+        lightStateIndicatorInput.setAttribute("role", "switch");
+        lightStateIndicatorInput.setAttribute("type", "checkbox");
+        lightStateIndicatorInput.setAttribute("id", "lightStatusSwitch");
+        lightStateIndicatorInput.setAttribute("checked", "true");
+        lightStateIndicatorInput.disabled = true;
+        lightStateIndicatorInput.id = "lightStateIndicatorInput"
+
+        lightStateIndicatorLabel = document.createElement("label");
+        lightStateIndicatorLabel.classList.add("form-check-label");
+        lightStateIndicatorLabel.setAttribute("for", "lightStatusSwitch");
+        lightStateIndicatorLabel.textContent = "Light";
+
+        lightStateIndicatorContainer.appendChild(lightStateIndicator);
+        lightStateIndicator.appendChild(lightStateIndicatorInput);
+        lightStateIndicator.appendChild(lightStateIndicatorLabel);
+        lightSwitchRow.appendChild(lightStateIndicatorContainer);
+
+        
 
 
+        switchTable.appendChild(airconSwitchRow);
+        switchTable.appendChild(lightSwitchRow);
+        switchContainer.appendChild(switchTable);
+        
 
-        airconStateIndicatorContainer.appendChild(airconStateIndicator);
+        
+
 
         editnStateIndicatorContainer.appendChild(editButtonContainer);
-        editnStateIndicatorContainer.appendChild(airconStateIndicatorContainer);
+        editnStateIndicatorContainer.appendChild(switchContainer);
 
 
 
@@ -902,15 +950,15 @@
           confirmButton.textContent = "Confirm";
           confirmButton.id = "confirmButton";
           confirmButton.addEventListener("click", function() {
-            var state = document.getElementById("airconStateIndicatorInput").checked;
-            state = state.toLocaleString();
-            console.log("state: ", state)
+            var airconState = document.getElementById("airconStateIndicatorInput").checked;
+            airconState = airconState.toLocaleString();
+            console.log("state: ", airconState)
             console.log("editTemp: ", editTemp)
             socket.emit("change", {
               setTemperature: editTemp,
               zone: zoneName,
               floor: floorlevel,
-              Status: state
+              airconState: airconState
             })
 
             row2.innerHTML = "";
@@ -984,7 +1032,8 @@
           upper.reverse();
           lower.reverse();
           set.reverse();
-          oldDatasest[0].data = temp;
+          //[0,1,2,3] = [temp, upper, lower, set] datasets
+          oldDatasest[0].data = temp; 
           oldDatasest[1].data = upper;
           oldDatasest[2].data = lower;
           oldDatasest[3].data = set;
