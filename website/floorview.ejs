@@ -130,6 +130,7 @@
 
     function monthNameToNumber(monthName) {
       // Mapping of month names to their respective numbers
+      //used for chart
       const monthMap = {
         "January": 1,
         "February": 2,
@@ -145,7 +146,6 @@
         "December": 12
       };
 
-      // Convert the month name to its corresponding number
       return monthMap[monthName];
     }
 
@@ -186,13 +186,17 @@
     var currentClickedZone;
     floorNames = []
     $("#floorSelector").empty();
-    for (var data in ejsData) {
-      var option = document.createElement('option');
-      option.value = ejsData[data].floorlevel;
-      option.text = ejsData[data].floorlevel; // Assuming you want to use the same value for the display text
-      $("#floorSelector").append(option);
-      floorNames.push(ejsData[data].floorlevel);
+
+    function poupulateFloorSelector(floorSelectorID) {
+      for (var data in ejsData) {
+        var option = document.createElement('option');
+        option.value = ejsData[data].floorlevel;
+        option.text = ejsData[data].floorlevel; // Assuming you want to use the same value for the display text
+        $("#" + floorSelectorID).append(option);
+        floorNames.push(ejsData[data].floorlevel);
+      }
     }
+    poupulateFloorSelector("floorSelector");
     var energyData = {};
 
     function loadData() {
@@ -235,7 +239,7 @@
                   lowerMargin: orginalSensorData[data].setTemperature -
                     orginalSensorData[data].lowerMargin,
                   humidity: orginalSensorData[data].humidity,
-                  status: orginalSensorData[data].Status,
+                  status: orginalSensorData[data].airconStatus,
                 });
               }
             }
@@ -289,12 +293,19 @@
       }).zones.find(element => {
         return element.name == zones
       }).setTemperature = setTemperature;
-
-      ejsData.find(element => {
-        return element.floorlevel == floor
-      }).zones.find(element => {
-        return element.name == zones
-      }).Status = data.Status;
+      if (data.airconStatus == "true") {
+        ejsData.find(element => {
+          return element.floorlevel == floor
+        }).zones.find(element => {
+          return element.name == zones
+        }).airconStatus = true;
+      } else {
+        ejsData.find(element => {
+          return element.floorlevel == floor
+        }).zones.find(element => {
+          return element.name == zones
+        }).airconStatus = false;
+      }
       if (currentClickedZone) {
         loadDetails(currentClickedZone);
       }
@@ -460,7 +471,8 @@
           var endY = (zonePosition.endY / 400) * shadeCanvas.height;
         }
         var zoneDetails = getZone($('#floorSelector').val(), zones[zone].name);
-        if (zoneDetails.Status == true) {
+        console.log("Zone name",zoneDetails.name,"zoneDetails: ", zoneDetails);
+        if (zoneDetails.airconStatus == true) {
           try {
             var temperatureGradient =
               (sensorData[zones[zone].name][0].temperature -
@@ -471,12 +483,16 @@
             var blue = Math.round(255 * (1 - temperatureGradient));
             ctx.fillStyle = "rgba(" + red / 2 + ", 255, " + blue + ", 0.5)";
           } catch (error) {
-            console,log("Error setting temperature gradient:", error);
+            console,
+            log("Error setting temperature gradient:", error);
             ctx.fillStyle = "rgba(255, 255, 255, 1)"; // Set fillStyle to grey
           }
-        } else {
+        } else if (zoneDetails.airconStatus == false){
           console.log("zone is off");
           ctx.fillStyle = "rgba(128, 128, 128, 0.5)"; // Set fillStyle to grey
+        }
+        else{
+          console.log("zone status is not boolean")
         }
         if (zones[zone].shape == "rect") {
           ctx.beginPath();
@@ -712,8 +728,6 @@
     function loadDetails(zone) {
       if (currentClickedZone != zone) {
         currentClickedZone = zone;
-
-
         var title = document.getElementById("moreDetailTitle");
         title.textContent = "Zone Details: " + zone.key;
         var table = document.getElementById("moreDetails");
@@ -771,45 +785,45 @@
         var editButtonContainer = document.createElement("div");
         editButtonContainer.classList.add("col", "align-content-start", "text-start");
 
-        var stateIndicatorContainer = document.createElement("div");
-        stateIndicatorContainer.classList.add("col", "text-center", "d-flex", "justify-content-end", "align-items-end", "indicator-text");
+        var airconStateIndicatorContainer = document.createElement("div");
+        airconStateIndicatorContainer.classList.add("col", "text-center", "d-flex", "justify-content-end", "align-items-end", "indicator-text");
 
-        var stateIndicator = document.createElement("div");
-        stateIndicator.classList.add("form-check", "form-switch");
+        var airconStateIndicator = document.createElement("div");
+        airconStateIndicator.classList.add("form-check", "form-switch");
 
-        var stateIndicatorInput = document.createElement("input");
-        stateIndicatorInput.classList.add("form-check-input");
-        stateIndicatorInput.setAttribute("role", "switch");
-        stateIndicatorInput.setAttribute("type", "checkbox");
-        stateIndicatorInput.setAttribute("id", "airconStatusSwitch");
-        stateIndicatorInput.setAttribute("checked", "true");
-        
+        var airconStateIndicatorInput = document.createElement("input");
+        airconStateIndicatorInput.classList.add("form-check-input");
+        airconStateIndicatorInput.setAttribute("role", "switch");
+        airconStateIndicatorInput.setAttribute("type", "checkbox");
+        airconStateIndicatorInput.setAttribute("id", "airconStatusSwitch");
+        airconStateIndicatorInput.setAttribute("checked", "true");
+
         var zoneDetails = getZone(floorlevel, zoneName);
-        if (zoneDetails.Status == true|| zoneDetails.Status == "true") {
-          stateIndicatorInput.checked = true;
+        if (zoneDetails.airconStatus == true || zoneDetails.airconStatus == "true") {
+          airconStateIndicatorInput.checked = true;
         } else {
-          stateIndicatorInput.checked = false;
+          airconStateIndicatorInput.checked = false;
         }
 
 
 
-        stateIndicatorInput.disabled = true;
-        stateIndicatorInput.id = "stateIndicatorInput"
+        airconStateIndicatorInput.disabled = true;
+        airconStateIndicatorInput.id = "airconStateIndicatorInput"
 
-        var stateIndicatorLabel = document.createElement("label");
-        stateIndicatorLabel.classList.add("form-check-label");
-        stateIndicatorLabel.setAttribute("for", "airconStatusSwitch");
-        stateIndicatorLabel.textContent = "Aircon";
+        var airconStateIndicatorLabel = document.createElement("label");
+        airconStateIndicatorLabel.classList.add("form-check-label");
+        airconStateIndicatorLabel.setAttribute("for", "airconStatusSwitch");
+        airconStateIndicatorLabel.textContent = "Aircon";
 
-        stateIndicator.appendChild(stateIndicatorInput);
-        stateIndicator.appendChild(stateIndicatorLabel);
+        airconStateIndicator.appendChild(airconStateIndicatorInput);
+        airconStateIndicator.appendChild(airconStateIndicatorLabel);
 
 
 
-        stateIndicatorContainer.appendChild(stateIndicator);
+        airconStateIndicatorContainer.appendChild(airconStateIndicator);
 
         editnStateIndicatorContainer.appendChild(editButtonContainer);
-        editnStateIndicatorContainer.appendChild(stateIndicatorContainer);
+        editnStateIndicatorContainer.appendChild(airconStateIndicatorContainer);
 
 
 
@@ -822,8 +836,8 @@
           tempReading.textContent = editTemp + "C";
 
           //add state indicator toggle switch
-          stateIndicatorInput.disabled = false;
-          var stateIndicatorToggle = document.createElement("input")
+          airconStateIndicatorInput.disabled = false;
+          var airconStateIndicatorToggle = document.createElement("input")
 
 
           var increaseButtonContianer = document.createElement("div");
@@ -871,12 +885,12 @@
             console.log(zone.Status)
             if (zone.Status == true) {
               console.log("checked")
-              stateIndicatorInput.checked = true;
+              airconStateIndicatorInput.checked = true;
             } else {
               console.log("unchecked")
-              stateIndicatorInput.checked = false;
+              airconStateIndicatorInput.checked = false;
             }
-            stateIndicatorInput.disabled = true;
+            airconStateIndicatorInput.disabled = true;
 
           });
           editButtonContainer.appendChild(closeButton);
@@ -888,7 +902,7 @@
           confirmButton.textContent = "Confirm";
           confirmButton.id = "confirmButton";
           confirmButton.addEventListener("click", function() {
-            var state = document.getElementById("stateIndicatorInput").checked;
+            var state = document.getElementById("airconStateIndicatorInput").checked;
             state = state.toLocaleString();
             console.log("state: ", state)
             console.log("editTemp: ", editTemp)
@@ -906,7 +920,7 @@
             editButtonContainer.removeChild(closeButton);
             editButtonContainer.appendChild(editButton);
             table.removeChild(confirmButtonContainer);
-            stateIndicatorInput.disabled = true;
+            airconStateIndicatorInput.disabled = true;
           });
           confirmButtonContainer.appendChild(confirmButton);
           table.appendChild(confirmButtonContainer);
