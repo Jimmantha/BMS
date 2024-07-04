@@ -227,7 +227,7 @@
           for (data in orginalSensorData) {
             if (orginalSensorData[data].hasOwnProperty("metaData")) {
               if (orginalSensorData[data].metaData.zone == zones[zone].name && orginalSensorData[0].metaData.floor == floorlevel) {
-
+                //push new data here
                 timestampTemperaturePairs.push({
                   floor: orginalSensorData[data].metaData.floor,
                   zone: orginalSensorData[data].metaData.zone,
@@ -239,7 +239,6 @@
                   lowerMargin: orginalSensorData[data].setTemperature -
                     orginalSensorData[data].lowerMargin,
                   humidity: orginalSensorData[data].humidity,
-                  status: orginalSensorData[data].airconState,
                 });
               }
             }
@@ -288,11 +287,15 @@
       var setTemperature = data.setTemperature;
       var Status = data.Status;
       console.log("received floor details floor: " + floor + " zones: " + zones + " setTemperature: " + setTemperature);
+
+      //set new setTemp
       ejsData.find(element => {
         return element.floorlevel == floor
       }).zones.find(element => {
         return element.name == zones
       }).setTemperature = setTemperature;
+
+      //set new aircon State : issue using converting to boolean. Limitation: socket can only pass string type 
       if (data.airconState == "true") {
         ejsData.find(element => {
           return element.floorlevel == floor
@@ -306,6 +309,22 @@
           return element.name == zones
         }).airconState = false;
       }
+
+      //set new light state
+      if (data.lightState == "true") {
+        ejsData.find(element => {
+          return element.floorlevel == floor
+        }).zones.find(element => {
+          return element.name == zones
+        }).lightState = true;
+      } else {
+        ejsData.find(element => {
+          return element.floorlevel == floor
+        }).zones.find(element => {
+          return element.name == zones
+        }).lightState = false;
+      }
+
       if (currentClickedZone) {
         loadDetails(currentClickedZone);
       }
@@ -846,13 +865,18 @@
         lightStateIndicatorInput.setAttribute("type", "checkbox");
         lightStateIndicatorInput.setAttribute("id", "lightStatusSwitch");
         lightStateIndicatorInput.setAttribute("checked", "true");
+        if(zoneDetails.lightState == true || zoneDetails.lightState == "true"){
+          lightStateIndicatorInput.checked = true;
+        }else{
+          lightStateIndicatorInput.checked = false;
+        }
         lightStateIndicatorInput.disabled = true;
         lightStateIndicatorInput.id = "lightStateIndicatorInput"
 
         lightStateIndicatorLabel = document.createElement("label");
         lightStateIndicatorLabel.classList.add("form-check-label");
         lightStateIndicatorLabel.setAttribute("for", "lightStatusSwitch");
-        lightStateIndicatorLabel.textContent = "Light";
+        lightStateIndicatorLabel.textContent = "Lights";
 
         lightStateIndicatorContainer.appendChild(lightStateIndicator);
         lightStateIndicator.appendChild(lightStateIndicatorInput);
@@ -885,6 +909,7 @@
 
           //add state indicator toggle switch
           airconStateIndicatorInput.disabled = false;
+          lightStateIndicatorInput.disabled = false;
           var airconStateIndicatorToggle = document.createElement("input")
 
 
@@ -931,14 +956,20 @@
             tempReading.textContent = zone.setTemperature + "C";
             tempReading.id = "tempReading";
             console.log(zone.Status)
-            if (zone.Status == true) {
+            if (zone.airconState == true) {
               console.log("checked")
               airconStateIndicatorInput.checked = true;
             } else {
               console.log("unchecked")
               airconStateIndicatorInput.checked = false;
             }
+            if (zone.lightState == true) {
+              lightStateIndicatorInput.checked = true;
+            } else {
+              lightStateIndicatorInput.checked = false;
+            }
             airconStateIndicatorInput.disabled = true;
+            lightStateIndicatorInput.disabled = true;
 
           });
           editButtonContainer.appendChild(closeButton);
@@ -952,13 +983,18 @@
           confirmButton.addEventListener("click", function() {
             var airconState = document.getElementById("airconStateIndicatorInput").checked;
             airconState = airconState.toLocaleString();
+
+            var lightState = document.getElementById("lightStateIndicatorInput").checked;
+            lightState = lightState.toLocaleString();
+
             console.log("state: ", airconState)
             console.log("editTemp: ", editTemp)
             socket.emit("change", {
               setTemperature: editTemp,
               zone: zoneName,
               floor: floorlevel,
-              airconState: airconState
+              airconState: airconState,
+              lightState: lightState
             })
 
             row2.innerHTML = "";
@@ -969,6 +1005,7 @@
             editButtonContainer.appendChild(editButton);
             table.removeChild(confirmButtonContainer);
             airconStateIndicatorInput.disabled = true;
+            lightStateIndicatorInput.disabled = true;
           });
           confirmButtonContainer.appendChild(confirmButton);
           table.appendChild(confirmButtonContainer);

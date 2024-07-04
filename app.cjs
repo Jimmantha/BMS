@@ -28,7 +28,7 @@ const ZoneSchema = new Schema({
     shape: { type: String, required: true },
     airconState: { type: Boolean, required: false },
     setTemperature: { type: Number, required: false },
-    lightStatus: { type: Boolean, required: false },
+    lightState: { type: Boolean, required: false },
 });
 
 const floorplan = new Schema({
@@ -118,8 +118,10 @@ io.on('connection', async (socket) => {
             client.publish('coolerControl', 'off');
         }
         await updateZoneTemperature(data.floor, data.zone, setTemp);
-        await updateZoneAirconStatus(data.floor, data.zone, data.airconState);
-        io.emit('floorDetails', { floorlevel: data.floor, zone: data.zone, setTemperature: setTemp, airconState: data.airconState });
+        await updateZoneAirconState(data.floor, data.zone, data.airconState);
+        await updateZoneLightState(data.floor, data.zone, data.lightState);
+        io.emit('floorDetails', { floorlevel: data.floor, zone: data.zone, setTemperature: setTemp, airconState: data.airconState,lightState: data.lightState });
+   console.log('change', data.lightState)
     });
 
     socket.on('floorplan', async (data) => {
@@ -131,6 +133,7 @@ io.on('connection', async (socket) => {
             tempZone.name = zone;
             tempZone.setTemperature = 20;
             tempZone.airconState = false;
+            tempZone.lightState = false;
             console.log('tempZone', tempZone)
             FinZone.push(tempZone)
         }
@@ -165,7 +168,7 @@ const updateZoneTemperature = async (floor, zoneName, setTemp) => {
 };
 
 //function to update document in mongodb
-const updateZoneAirconStatus = async (floor, zoneName, status) => {
+const updateZoneAirconState = async (floor, zoneName, status) => {
     console.log('updateZoneStatus', floor, zoneName, status)
     try {
         const updatedZone = await floorDetails.findOneAndUpdate(
@@ -177,6 +180,20 @@ const updateZoneAirconStatus = async (floor, zoneName, status) => {
         console.error(err);
     }
 };
+
+//function to update document in mongodb
+const updateZoneLightState = async (floor, zoneName, status) => {
+    console.log('updateZoneStatus', floor, zoneName, status)
+    try {
+        const updatedZone = await floorDetails.findOneAndUpdate(
+            { 'zones.name': zoneName, 'floorlevel': floor },
+            { $set: { 'zones.$.lightState': status } },
+            { new: true }
+        );
+    } catch (err) {
+        console.error(err);
+    }
+}
 
 
 
