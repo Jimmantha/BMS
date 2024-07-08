@@ -5,10 +5,18 @@
     position: relative;
 }
 
-.mapster_el{
-    opacity: 0.7!important; 
+.mapster_el {
+    opacity: 0.7 !important;
 }
 
+#mapster_wrap_0 {
+    opacity: 0.7 !important;
+    background-color: #bababa00;
+}
+
+.background-transparent{
+  background-color: #bababa00!important;
+}
 .navbar {
     height: 50px;
     background-color: #bababa !important;
@@ -23,8 +31,4 @@
     background-color: rgba(255, 0, 0, 0); /* Semi-transparent red */
     pointer-events: none; /* Allows clicking through the overlay */
   }
-
-#mapster_wrap_0{
-    opacity: 0.7;
-}
 

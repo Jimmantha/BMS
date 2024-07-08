@@ -53,6 +53,9 @@ body {
     min-height: 100%
 }
 
+.transparent {
+    background-color: #bababa00!important;
+}
 
 .mapster_el {
     opacity: 0.7 !important;
