@@ -111,12 +111,19 @@ io.on('connection', async (socket) => {
         setTemp = data.setTemperature;
         console.log(data)
         dataPayload = "set_temp_" + setTemp;
-        client.publish('coolerControl', dataPayload);
-        if (data.airconState == true) {
+        console.log('set_temp_' + setTemp)
+        console.log('data.airconState', data.airconState)
+        if (data.airconState == "true" || data.airconState == true) {
             client.publish('coolerControl', 'on');
         } else {
             client.publish('coolerControl', 'off');
         }
+        if (data.lightState == "true" || data.lightState == true) {
+            client.publish('lightControl', 'on');
+        } else {
+            client.publish('lightControl', 'off');
+        }
+
 
         //To add lighting control
 
@@ -125,7 +132,6 @@ io.on('connection', async (socket) => {
         await updateZoneAirconState(data.floor, data.zone, data.airconState);
         await updateZoneLightState(data.floor, data.zone, data.lightState);
         io.emit('floorDetails', { floorlevel: data.floor, zone: data.zone, setTemperature: setTemp, airconState: data.airconState,lightState: data.lightState });
-   console.log('change', data.lightState)
     });
 
     socket.on('floorplan', async (data) => {
