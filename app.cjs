@@ -123,11 +123,6 @@ io.on('connection', async (socket) => {
         } else {
             client.publish('lightControl', 'off');
         }
-
-
-        //To add lighting control
-
-
         await updateZoneTemperature(data.floor, data.zone, setTemp);
         await updateZoneAirconState(data.floor, data.zone, data.airconState);
         await updateZoneLightState(data.floor, data.zone, data.lightState);
