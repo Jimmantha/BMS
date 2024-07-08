@@ -79,9 +79,9 @@
       </div>
 
 
-      <div class="col-6 pt-5">
+      <div class="col-5 pt-5">
         <!-- table col-->
-        <div class="table border border-black" style="position: absoulte;height: 80vh; overflow-y: scroll;">
+        <div class="table border border-black ms-5" style="position: absoulte;height: 80vh; overflow-y: scroll;">
           <div class="row m-3 sticky-top" style="background-color: white;">
             <div class="col">
               <b style="font-size: 20px;"> Zones: </b>
@@ -115,26 +115,26 @@
     var imageData;
     var zoneLevel = 1;
     var zones = {};
+    reinitializeMapster();
     var floor = zoneLevel.value;
 
     function createZone(zones, canvasID) {
+      $("map").html("");
       canvas = document.getElementById(canvasID);
       ctx = canvas.getContext("2d");
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       for (zone in zones) {
         if (zones[zone].shape == "rect") {
-          ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+          ctx.fillStyle = "rgb(255, 0, 0)";
           if (zones[zone].shape == "rect") {
             var area = document.createElement("area");
             area.setAttribute("shape", "rect");
-            area.setAttribute("coords", zones[zone].startX + "," + zones[zone].startY + "," + zones[zone].endX + "," + zones[zone].endY);
+
             var startX = zones[zone].startX * (canvas.width / zones[zone].orginalwidth);
             var startY = zones[zone].startY * (canvas.height / zones[zone].orginalheight);
             var endX = zones[zone].endX * (canvas.width / zones[zone].orginalwidth);
             var endY = zones[zone].endY * (canvas.height / zones[zone].orginalheight);
-            var area = document.createElement("area");
-            area.setAttribute("shape", "rect");
-            area.setAttribute("coords", zones[zone].startX + "," + zones[zone].startY + "," + zones[zone].endX + "," + zones[zone].endY);
+            area.setAttribute("coords", zones[zone].startX + "," + zones[zone].startY + "," + zones[zone].endX + "," + zones[zone].endY );
             area.setAttribute("ID", zones[zone].name);
             area.setAttribute("href", "#");
             document.querySelector("map").appendChild(area);
@@ -164,48 +164,74 @@
             }
             ctx.fill();
           } else if (shape == poly) {
-            console.log("poly to be done")
+            ctx.fillStyle = "rgb(255, 0, 0, )";
+
           }
+        } else if (zones[zone].shape == "poly") {
+          var area = document.createElement("area");
+          area.setAttribute("shape", "poly");
+          var coords = "";
+
+          ctx.fillStyle = "rgb(255, 0, 0)";
+          ctx.beginPath();
+          ctx.moveTo(zones[zone].xCoords[0], zones[zone].yCoords[0]);
+          for (var i = 1; i < zones[zone].xCoords.length; i++) {
+            var xCoords = zones[zone].xCoords[i] * (canvas.width / zones[zone].orginalwidth);
+            var yCoords = zones[zone].yCoords[i] * (canvas.height / zones[zone].orginalheight);
+            ctx.lineTo(xCoords, yCoords);
+            coords += xCoords + "," + yCoords + ",";
+          }
+          ctx.closePath();
+          ctx.fill();
+
+          area.setAttribute("coords", coords);
+          area.setAttribute("ID", zones[zone].name);
+          area.setAttribute("href", "#");
+          document.querySelector("map").appendChild(area);
+          reinitializeMapster();
         }
+
       }
+
     }
+
 
 
     function reinitializeMapster() {
-      $("img").mapster(
-        (options = {
-          enableAutoResizeSupport: true,
-          autoResize: true,
-          stroke: true,
-          fillColor: "222222",
-          singleSelect: true,
-          mapKey: "id",
-          onClick: function(e) {
 
-            $("input[name='zone']").prop("checked", false);
-            $("input[name='zone'][id='" + zones[e.key].name + "']").prop(
-              "checked",
-              true
-            );
-          },
-          onAutoResize: function() {
-            try {
-              var image = document.getElementById("new-floorplan");
-              var width = image.clientWidth;
-              var height = image.clientHeight;
-              var canvas = document.getElementById("shadeCanvas");
-              canvas.width = width;
-              canvas.height = height;
-            } catch (error) {
-              console.log(error);
-            }
-            createZone(zones, "shadeCanvas");
+      // Unbind mapster
+      $("#new-floorplan").mapster("unbind");
+      // Bind mapster
+      $("#new-floorplan").mapster({
+        enableAutoResizeSupport: true,
+        autoResize: true,
+        stroke: true,
+        fillColor: "222222",
+        singleSelect: true,
+        mapKey: "id",
+        onClick: function(e) {
+          $("input[name='zone']").prop("checked", false);
+          $("input[name='zone'][id='" + zones[e.key].name + "']").prop("checked", true);
+        },
+        onAutoResize: function() {
+          try {
+            var image = document.getElementById("new-floorplan");
+            var width = image.clientWidth;
+            var height = image.clientHeight;
+            var canvas = document.getElementById("shadeCanvas");
+            canvas.width = width;
+            canvas.height = height;
+          } catch (error) {
+            console.log(error);
           }
-        })
-      );
+          createZone(zones, "shadeCanvas");
+        }
+      });
+
+      // Set opacity
       $("#mapster_el").css("opacity", "0.5");
     }
-    reinitializeMapster();
+
     var el = document.getElementById("picture");
     var vanilla = new Croppie(el, {
       viewport: {
@@ -342,7 +368,6 @@
       var radioInput = document.createElement("input");
       radioInput.type = "radio";
       radioInput.name = "zone";
-      radioInput.value = "zone" + zoneCounter;
 
       radioInput.addEventListener("click", function() {
         if (radioInput.id === "") {
@@ -411,7 +436,7 @@
         namelist.splice(namelist.indexOf(zoneName), 1);
         document.querySelector("map").innerHTML = "";
         delete zones[zoneName];
-        createShadenArea();
+        createZone(zones, "shadeCanvas");
       });
 
       col1.appendChild(radioInput);
@@ -431,9 +456,9 @@
     createRadio();
     var zoneCounter = 1;
     $("#addZone").on("click", () => {
+      reinitializeMapster();
       createRadio();
-      createShadenArea();
-
+      createZone(zones, "shadeCanvas");
     })
     $("#zoneList").on("change", "input[name='zone']", function() {
       console.log($(this).val());
@@ -465,6 +490,7 @@
       if (shape == "rect") {
         if (!zones[selectedZone]) {
           zones[selectedZone] = {
+            name: selectedZone,
             shape: "rect",
             startX: x,
             startY: y,
@@ -482,13 +508,14 @@
         if (zones[selectedZone].endX) {
           var canvasID = "shadeCanvas";
           var mapID = "testmap";
-          createZone(zones, canvasID);
+          createZone(zones, "shadeCanvas");
           return;
         }
       }
       if (shape == "poly") {
         if (!zones[selectedZone]) {
           zones[selectedZone] = {
+            name: selectedZone,
             shape: "poly",
             xCoords: [x],
             yCoords: [y],
@@ -517,74 +544,20 @@
             zones[selectedZone].xCoords.push(x);
             zones[selectedZone].yCoords.push(y);
             ctx.beginPath();
-              ctx.arc(x, y, 2, 0, 2 * Math.PI);
-              ctx.fill();
+            ctx.arc(x, y, 2, 0, 2 * Math.PI);
+            ctx.fill();
             if (zones[selectedZone].complete) {
-              createZone();
+              createZone(zones, "shadeCanvas");
+              return;
             }
           }
         }
-
       }
-
       console.log(shape);
+      createZone(zones, "shadeCanvas");
 
     })
 
-
-    function createZone(zones, canvasID) {
-      canvas = document.getElementById(canvasID);
-      ctx = canvas.getContext("2d");
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      for (zone in zones) {
-        if (zones[zone].shape == "rect") {
-          ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
-          if (zones[zone].shape == "rect") {
-            var area = document.createElement("area");
-            area.setAttribute("shape", "rect");
-            area.setAttribute("coords", zones[zone].startX + "," + zones[zone].startY + "," + zones[zone].endX + "," + zones[zone].endY);
-            var startX = zones[zone].startX * (canvas.width / zones[zone].orginalwidth);
-            var startY = zones[zone].startY * (canvas.height / zones[zone].orginalheight);
-            var endX = zones[zone].endX * (canvas.width / zones[zone].orginalwidth);
-            var endY = zones[zone].endY * (canvas.height / zones[zone].orginalheight);
-            var area = document.createElement("area");
-            area.setAttribute("shape", "rect");
-            area.setAttribute("coords", zones[zone].startX + "," + zones[zone].startY + "," + zones[zone].endX + "," + zones[zone].endY);
-            area.setAttribute("ID", zones[zone].name);
-            area.setAttribute("href", "#");
-            document.querySelector("map").appendChild(area);
-
-
-
-            ctx.fillStyle = "rgb(255, 0, 0)";
-            ctx.beginPath();
-            if (endX > startX) {
-              var width = Math.abs(endX - startX);
-              if (endY > startY) {
-                var height = Math.abs(endY - startY);
-                ctx.rect(startX, startY, width, height);
-              } else {
-                var height = Math.abs(startY - endY);
-                ctx.rect(startX, endY, width, height);
-              }
-            } else {
-              var width = Math.abs(startX - endX);
-              if (endY > startY) {
-                var height = Math.abs(endY - startY);
-                ctx.rect(endX, startY, width, height);
-              } else {
-                var height = Math.abs(startY - endY);
-                ctx.rect(endX, endY, width, height);
-              }
-            }
-            ctx.fill();
-          } else if (shape == poly) {
-            ctx.fillStyle = "rgba(255, 0, 0, )";
-
-          }
-        }
-      }
-    }
 
 
 
