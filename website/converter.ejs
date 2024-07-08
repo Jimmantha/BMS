@@ -52,25 +52,25 @@
   <div class="table mt-3 ms-3">
     <div class="row">
 
-      <div class="col-8 ">
-        <div class="row">
-          <div class="d-flex justify-content-center align-items-center">
-            <div class="col text-start">
-              <button type="button" class="btn btn-primary mt-5" data-bs-toggle="modal" data-bs-target="#uploadModal">
-                upload floorplan
-              </button>
-            </div>
-            <div class="col text-center mt-5">
-              Floor Name: 
-              <input type="text" id="floorLevel" />
-            </div>
-            <div class="col text-end">
-              <button type="button" class="btn btn-primary mt-5" id="clear">
-               clear
-              </button>
-            </div>
+      <div class="col">
+
+        <div class="d-flex justify-content-center align-items-center">
+          <div class="col text-start">
+            <button type="button" class="btn btn-primary mt-5" data-bs-toggle="modal" data-bs-target="#uploadModal">
+              upload floorplan
+            </button>
+          </div>
+          <div class="col text-center mt-5">
+            Floor Name:
+            <input type="text" id="floorLevel" />
+          </div>
+          <div class="col text-end">
+            <button type="button" class="btn btn-primary mt-5" id="clear">
+              clear
+            </button>
           </div>
         </div>
+
         <img id="new-floorplan" class="p-6 m-6 z-5" src="https://placehold.co/600x400" usemap="#testmap" style=" position: absolute" />
         <canvas class="p-0 m-0" id="shadeCanvas" style="
                position: relative;
@@ -79,7 +79,12 @@
                width: 600px;
                z-index: -5;
              "></canvas>
-        <div class="table border border-black" style="position: absoulte;height: 40vh; overflow-y: scroll;">
+
+      </div>
+
+
+      <div class="col-6 pt-5"> <!-- table col-->
+        <div class="table border border-black" style="position: absoulte;height: 80vh; overflow-y: scroll;">
           <div class="row m-3 sticky-top" style="background-color: white;">
             <div class="col">
               <b style="font-size: 20px;"> Zones: </b>
@@ -98,6 +103,7 @@
           </div>
         </div>
       </div>
+
     </div>
   </div>
   <map name="testmap">
@@ -295,7 +301,7 @@
           area.setAttribute("ID", zones[zone].name);
           area.setAttribute("href", "#");
           document.querySelector("map").appendChild(area);
-          
+
           ctx.fillStyle = "rgb(255, 0, 0)";
           ctx.beginPath();
           ctx.moveTo(zones[zone].xCords[0] / 600 * canvas.width, zones[zone].yCords[0] / 400 * canvas.height);
@@ -519,7 +525,7 @@
 
 
     $("#submit").click(async function() {
-      if(!document.getElementById("floorLevel").value){
+      if (!document.getElementById("floorLevel").value) {
         alert("Please enter a floor name before submitting.");
         return;
       }
@@ -527,7 +533,7 @@
       socket.emit("getFloorNames")
       await socket.on("floorNames", function(data) {
         console.log(data);
-        if (data.data.find((floor) => floor.floorlevel == floorlevel)){
+        if (data.data.find((floor) => floor.floorlevel == floorlevel)) {
           alert("Floor already exists. Please enter a different floor level.");
           return;
         }
@@ -542,7 +548,7 @@
         data.floorplan = floorDetails;
         data.zones = zones;
         data.floorlevel = floorlevel;
-        
+
 
         socket.emit("floorplan", data, {});
         window.location.href = "/floorview";
@@ -551,13 +557,10 @@
       }
     });
 
-    $(document).ready( () =>  {
+    $(document).ready(() => {
       $("#clear").on("click", () => {
         location.reload();
       })
     })
-    
-
-  
   </script>
 </body>
