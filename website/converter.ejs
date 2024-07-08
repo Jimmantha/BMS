@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DWG to JPEG Conversion</title>
   <%-include("./header")%>
-  <link href="./converterStyle.css" rel="stylesheet" />
+  <link href="./stylesheet.css" rel="stylesheet" />
 </head>
 
 <div class="modal fade flex" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
@@ -70,15 +70,9 @@
             </button>
           </div>
         </div>
-        <div class="position-relative">
-           <img id="new-floorplan" class=" z-5" src="https://placehold.co/600x400" usemap="#testmap" style=" position: relative" />
-          <canvas  id="shadeCanvas" style="
-                 position: absolute;
-                 background-color: rgb(255, 255, 255);
-                 z-index: -5;
-                top:10px;
-                left:10px;
-               "></canvas>
+        <div class="position-relative transparent">
+          <canvas class="p-0" id="shadeCanvas" style="position: absolute; z-index: -1;  "></canvas>
+          <img src="https://placehold.co/600x400" alt="" id="new-floorplan" style="position: absolute; top: 0; left: 0;" usemap="#testmap" />
         </div>
 
 
@@ -110,8 +104,11 @@
     </div>
   </div>
   <map name="testmap">
-
+    <area shape="rect" coords="0,0,50,50" href="page1.html" alt="Area 1">
+    <area shape="circle" coords="100,100,50" href="page2.html" alt="Area 2">
+    <area shape="poly" coords="200,200,250,250,200,300" href="page3.html" alt="Area 3">
   </map>
+
 
   <script>
     var zonelist;
@@ -120,6 +117,60 @@
     var zones = {};
     var floor = zoneLevel.value;
 
+    function createZone(zones, canvasID) {
+      canvas = document.getElementById(canvasID);
+      ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (zone in zones) {
+        if (zones[zone].shape == "rect") {
+          ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+          if (zones[zone].shape == "rect") {
+            var area = document.createElement("area");
+            area.setAttribute("shape", "rect");
+            area.setAttribute("coords", zones[zone].startX + "," + zones[zone].startY + "," + zones[zone].endX + "," + zones[zone].endY);
+            var startX = zones[zone].startX * (canvas.width / zones[zone].orginalwidth);
+            var startY = zones[zone].startY * (canvas.height / zones[zone].orginalheight);
+            var endX = zones[zone].endX * (canvas.width / zones[zone].orginalwidth);
+            var endY = zones[zone].endY * (canvas.height / zones[zone].orginalheight);
+            var area = document.createElement("area");
+            area.setAttribute("shape", "rect");
+            area.setAttribute("coords", zones[zone].startX + "," + zones[zone].startY + "," + zones[zone].endX + "," + zones[zone].endY);
+            area.setAttribute("ID", zones[zone].name);
+            area.setAttribute("href", "#");
+            document.querySelector("map").appendChild(area);
+
+
+
+            ctx.fillStyle = "rgb(255, 0, 0)";
+            ctx.beginPath();
+            if (endX > startX) {
+              var width = Math.abs(endX - startX);
+              if (endY > startY) {
+                var height = Math.abs(endY - startY);
+                ctx.rect(startX, startY, width, height);
+              } else {
+                var height = Math.abs(startY - endY);
+                ctx.rect(startX, endY, width, height);
+              }
+            } else {
+              var width = Math.abs(startX - endX);
+              if (endY > startY) {
+                var height = Math.abs(endY - startY);
+                ctx.rect(endX, startY, width, height);
+              } else {
+                var height = Math.abs(startY - endY);
+                ctx.rect(endX, endY, width, height);
+              }
+            }
+            ctx.fill();
+          } else if (shape == poly) {
+            console.log("poly to be done")
+          }
+        }
+      }
+    }
+
+
     function reinitializeMapster() {
       $("img").mapster(
         (options = {
@@ -127,7 +178,6 @@
           autoResize: true,
           stroke: true,
           fillColor: "222222",
-          fillOpacity: 0.3,
           singleSelect: true,
           mapKey: "id",
           onClick: function(e) {
@@ -149,6 +199,7 @@
             } catch (error) {
               console.log(error);
             }
+            createZone(zones, "shadeCanvas");
           }
         })
       );
@@ -266,72 +317,6 @@
   </script>
   <script>
     let namelist = []; // check if name is already in use
-    function createShadenArea() {
-      var canvas = document.getElementById("shadeCanvas");
-      var ctx = canvas.getContext("2d");
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      for (zone in zones) {
-        if (zones[zone].shape == "rect") {
-          var startX = zones[zone].startX / 600 * canvas.width;
-          var startY = zones[zone].startY / 400 * canvas.height;
-          var endX = zones[zone].endX / 600 * canvas.width;
-          var endY = zones[zone].endY / 400 * canvas.height;
-          var area = document.createElement("area");
-          area.setAttribute("shape", "rect");
-          area.setAttribute("coords", zones[zone].startX + "," + zones[zone].startY + "," + zones[zone].endX + "," + zones[zone].endY);
-          area.setAttribute("ID", zones[zone].name);
-          area.setAttribute("href", "#");
-          document.querySelector("map").appendChild(area);
-
-
-          ctx.fillStyle = "rgb(255, 0, 0)";
-          ctx.beginPath();
-          if (endX > startX) {
-            var width = Math.abs(endX - startX);
-            if (endY > startY) {
-              var height = Math.abs(endY - startY);
-              ctx.rect(startX, startY, width, height);
-            } else {
-              var height = Math.abs(startY - endY);
-              ctx.rect(startX, endY, width, height);
-            }
-          } else {
-            var width = Math.abs(startX - endX);
-            if (endY > startY) {
-              var height = Math.abs(endY - startY);
-              ctx.rect(endX, startY, width, height);
-            } else {
-              var height = Math.abs(startY - endY);
-              ctx.rect(endX, endY, width, height);
-            }
-          }
-          ctx.fill();
-        } else if (zones[zone].shape == "poly") {
-          var area = document.createElement("area");
-          var coords = "";
-          for (var i = 0; i < zones[zone].xCords.length; i++) {
-            coords += zones[zone].xCords[i] + "," + zones[zone].yCords[i] + ",";
-          }
-          coords = coords.slice(0, -1);
-          area.setAttribute("shape", "poly");
-          area.setAttribute("coords", coords);
-          area.setAttribute("ID", zones[zone].name);
-          area.setAttribute("href", "#");
-          document.querySelector("map").appendChild(area);
-
-          ctx.fillStyle = "rgb(255, 0, 0)";
-          ctx.beginPath();
-          ctx.moveTo(zones[zone].xCords[0] / 600 * canvas.width, zones[zone].yCords[0] / 400 * canvas.height);
-          for (var i = 1; i < zones[zone].xCords.length; i++) {
-            ctx.lineTo(zones[zone].xCords[i] / 600 * canvas.width, zones[zone].yCords[i] / 400 * canvas.height);
-          }
-          ctx.closePath();
-          ctx.fill();
-        }
-      }
-      reinitializeMapster();
-
-    }
 
     function createRadio() {
       document.querySelector("map").innerHTML = "";
@@ -461,83 +446,145 @@
       $("#floorSelector").append(newFloorOption);
     });
 
-    $("#new-floorplan").on("click", () => {
+    $("#new-floorplan").on("click", (event) => {
       var canvas = document.getElementById("shadeCanvas");
       var ctx = canvas.getContext("2d");
-      rec = document.getElementById("new-floorplan").getBoundingClientRect();
-      var x = event.clientX - rec.left;
-      var y = event.clientY - rec.top;
+      var floorplan = document.getElementById("new-floorplan");
 
+      var x = event.offsetX;
+      var y = event.offsetY;
+      console.log(x, y);
 
-      var selectedZone = document.querySelector("input[name='zone']:checked");
-
-      if (!selectedZone) {
-        alert("Please select a zone before proceeding.");
+      try {
+        var selectedZone = document.querySelector("input[name='zone']:checked").getAttribute("id");
+        var shape = document.querySelector("input[name='zone']:checked").getAttribute("data-shape");
+      } catch (error) {
+        alert("Please select a zone.");
         return;
       }
-
-      if (!zones[selectedZone.value]) {
-        zones[selectedZone.value] = {
-          xCords: [],
-          yCords: [],
-          com: 0,
-          name: selectedZone.value
-        }
-      }
-
-
-      var shapeInput = document.getElementById("shapeSelect");
-      var shape = selectedZone.getAttribute("data-shape");
       if (shape == "rect") {
-        if (zones[selectedZone.value] && zones[selectedZone.value].startX && !zones[selectedZone.value].endX) {
-          zones[selectedZone.value].endX = x;
-          zones[selectedZone.value].endY = y;
-          zones[selectedZone.value].shape = "rect";
-          createShadenArea();
-        } else if (!zones[selectedZone.value] || !zones[selectedZone.value].startX) {
-          zones[selectedZone.value] = {
+        if (!zones[selectedZone]) {
+          zones[selectedZone] = {
+            shape: "rect",
             startX: x,
             startY: y,
-            name: selectedZone.value
-          };
-
-          var startX = x / 600 * canvas.width;
-          var startY = y / 400 * canvas.height;
-          var endX = (5) / 600 * canvas.width;
-          var endY = (5) / 400 * canvas.height;
-          ctx.fillStyle = "rgb(255, 0, 0)";
-          ctx.fillRect(startX, startY, endX, endY);
+            orginalwidth: floorplan.width,
+            orginalheight: floorplan.height,
+          }
+          ctx.fillStyle = "rgb(0, 0, 0)";
+          ctx.beginPath();
+          ctx.arc(x, y, 2, 0, 2 * Math.PI);
+          ctx.fill();
+        } else if (!zones[selectedZone].endX) {
+          zones[selectedZone].endX = x;
+          zones[selectedZone].endY = y;
         }
-      } else if (shape == "poly") {
-        if (zones[selectedZone.value].com == 0) {
-          var startX = x / 600 * canvas.width;
-          var startY = y / 400 * canvas.height;
-          var endX = (5) / 600 * canvas.width;
-          var endY = (5) / 400 * canvas.height;
-          ctx.fillStyle = "rgb(255, 0, 0)";
-          ctx.fillRect(startX, startY, endX, endY);
-          if (x < zones[selectedZone.value].xCords[0] + 10 &&
-            x > zones[selectedZone.value].xCords[0] - 10 &&
-            y < zones[selectedZone.value].yCords[0] + 10 &&
-            y > zones[selectedZone.value].yCords[0] - 10 && zones[selectedZone.value].xCords.length > 1) {
-            x = zones[selectedZone.value].xCords[0];
-            y = zones[selectedZone.value].yCords[0];
-            zones[selectedZone.value].shape = "poly";
-            zones[selectedZone.value].com = 1
-
+        if (zones[selectedZone].endX) {
+          var canvasID = "shadeCanvas";
+          var mapID = "testmap";
+          createZone(zones, canvasID);
+          return;
+        }
+      }
+      if (shape == "poly") {
+        if (!zones[selectedZone]) {
+          zones[selectedZone] = {
+            shape: "poly",
+            xCoords: [x],
+            yCoords: [y],
+            complete: false,
+            orginalheight: floorplan.height,
+            orginalwidth: floorplan.width,
           }
-          zones[selectedZone.value].xCords.push(x);
-          zones[selectedZone.value].yCords.push(y);
-          if (zones[selectedZone.value].com == 1) {
-            createShadenArea();
+          var complete = false;
+          ctx.fillStyle = "rgb(0, 0, 0)";
+          ctx.beginPath();
+          ctx.arc(x, y, 2, 0, 2 * Math.PI);
+          ctx.fill();
+        }
+        if (!zones[selectedZone].complete) {
+          if (zones[selectedZone].complete == false) {
+            if (x < zones[selectedZone].xCoords[0] + 10 &&
+              x > zones[selectedZone].xCoords[0] - 10 &&
+              y < zones[selectedZone].yCoords[0] + 10 &&
+              y > zones[selectedZone].yCoords[0] - 10 && zones[selectedZone].xCoords.length > 1) {
+              x = zones[selectedZone].xCoords[0];
+              y = zones[selectedZone].yCoords[0];
+              zones[selectedZone].shape = "poly";
+              zones[selectedZone].complete = true;
+
+            }
+            zones[selectedZone].xCoords.push(x);
+            zones[selectedZone].yCoords.push(y);
+            ctx.beginPath();
+              ctx.arc(x, y, 2, 0, 2 * Math.PI);
+              ctx.fill();
+            if (zones[selectedZone].complete) {
+              createZone();
+            }
           }
-
-
         }
 
       }
+
+      console.log(shape);
+
     })
 
+
+    function createZone(zones, canvasID) {
+      canvas = document.getElementById(canvasID);
+      ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (zone in zones) {
+        if (zones[zone].shape == "rect") {
+          ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+          if (zones[zone].shape == "rect") {
+            var area = document.createElement("area");
+            area.setAttribute("shape", "rect");
+            area.setAttribute("coords", zones[zone].startX + "," + zones[zone].startY + "," + zones[zone].endX + "," + zones[zone].endY);
+            var startX = zones[zone].startX * (canvas.width / zones[zone].orginalwidth);
+            var startY = zones[zone].startY * (canvas.height / zones[zone].orginalheight);
+            var endX = zones[zone].endX * (canvas.width / zones[zone].orginalwidth);
+            var endY = zones[zone].endY * (canvas.height / zones[zone].orginalheight);
+            var area = document.createElement("area");
+            area.setAttribute("shape", "rect");
+            area.setAttribute("coords", zones[zone].startX + "," + zones[zone].startY + "," + zones[zone].endX + "," + zones[zone].endY);
+            area.setAttribute("ID", zones[zone].name);
+            area.setAttribute("href", "#");
+            document.querySelector("map").appendChild(area);
+
+
+
+            ctx.fillStyle = "rgb(255, 0, 0)";
+            ctx.beginPath();
+            if (endX > startX) {
+              var width = Math.abs(endX - startX);
+              if (endY > startY) {
+                var height = Math.abs(endY - startY);
+                ctx.rect(startX, startY, width, height);
+              } else {
+                var height = Math.abs(startY - endY);
+                ctx.rect(startX, endY, width, height);
+              }
+            } else {
+              var width = Math.abs(startX - endX);
+              if (endY > startY) {
+                var height = Math.abs(endY - startY);
+                ctx.rect(endX, startY, width, height);
+              } else {
+                var height = Math.abs(startY - endY);
+                ctx.rect(endX, endY, width, height);
+              }
+            }
+            ctx.fill();
+          } else if (shape == poly) {
+            ctx.fillStyle = "rgba(255, 0, 0, )";
+
+          }
+        }
+      }
+    }
 
 
 
