@@ -5,14 +5,48 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <%- include('header') %>
-
+  <link rel="stylesheet" href="overviewStyle.css">
 </head>
 
 <body>
-  <script>
-    var ejsData = <%- JSON.stringify(data) %>;
-  </script>
+    <div class="row mt-1 mb-3">
+        <div class="col-12 justify-content-center">
+            <h1 class="text-center">Floor Plan Overview</h1>
+        </div>
+    </div>
+    <div class="row flex-nowrap Xoverflow ms-3 me-3" id="floorplan">
+        <!--floorplan image populate here-->
+    </div>
+  
+    <script>
+        var flooData = <%- JSON.stringify(data) %>;
+    </script>
+    <script>
+        $("#floorSelector").hide();
+    </script>
+    <script>
+        var imageRow = document.getElementById("floorplan");
+        for (var i = 0; i <= 10; i++) {
+            for (var floors in flooData) {
+                var floorCard = document.createElement("div");
+                floorCard.className = "col-3 col card m-3";
+                var floorCardTitle = document.createElement("div");
+                floorCardTitle.className = "card-title";
+                floorCardTitle.innerHTML = "Floor Name: " + flooData[floors].floorlevel;
+                floorCard.appendChild(floorCardTitle);
+                var floorcontainer = document.createElement("div");
+                floorcontainer.className = "card-body";
+                var floor = document.createElement("img");
+                floor.src = flooData[floors].floorplan;
+                floor.style.width = "100%";
+                floor.style.height = "auto";
+                floorcontainer.appendChild(floor);
+                floorCard.appendChild(floorcontainer);
+                imageRow.appendChild(floorCard);
 
+            }
+        }
+    </script>
 </body>
 
 </html>

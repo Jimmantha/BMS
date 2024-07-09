@@ -1,0 +1,15 @@
+.onePageWidth {
+    display: flex; /* Use flexbox to align child elements in a row */
+    width: 100% !important;
+    height: 30vh !important;
+    overflow-x: scroll !important; /* Enable horizontal scrolling */
+}
+
+.onePageWidth .col {
+    flex: 0 0 auto; /* Ensure the columns do not shrink or grow */
+    width: 100px; /* Set a fixed width for the columns */
+}
+
+.Xoverflow {
+    overflow-x: scroll !important; /* Enable horizontal scrolling */
+}
