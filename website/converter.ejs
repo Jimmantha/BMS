@@ -104,9 +104,6 @@
     </div>
   </div>
   <map name="testmap">
-    <area shape="rect" coords="0,0,50,50" href="page1.html" alt="Area 1">
-    <area shape="circle" coords="100,100,50" href="page2.html" alt="Area 2">
-    <area shape="poly" coords="200,200,250,250,200,300" href="page3.html" alt="Area 3">
   </map>
 
 
@@ -130,17 +127,22 @@
             var area = document.createElement("area");
             area.setAttribute("shape", "rect");
 
-            var startX = zones[zone].startX * (canvas.width / zones[zone].orginalwidth);
-            var startY = zones[zone].startY * (canvas.height / zones[zone].orginalheight);
-            var endX = zones[zone].endX * (canvas.width / zones[zone].orginalwidth);
-            var endY = zones[zone].endY * (canvas.height / zones[zone].orginalheight);
-            area.setAttribute("coords", zones[zone].startX + "," + zones[zone].startY + "," + zones[zone].endX + "," + zones[zone].endY );
+            var mapStartX = zones[zone].startX * (zones[zone].orginalwidth / zones[zone].orginalImageWidth);
+            var mapStartY = zones[zone].startY * (zones[zone].orginalheight / zones[zone].orginalImageHeight);
+            var mapEndX = zones[zone].endX * (zones[zone].orginalwidth / zones[zone].orginalImageWidth);
+            var mapEndY = zones[zone].endY * (zones[zone].orginalheight / zones[zone].orginalImageHeight);
+            area.setAttribute("coords", mapStartX + "," + mapStartY + "," + mapEndX + "," + mapEndY);
             area.setAttribute("ID", zones[zone].name);
             area.setAttribute("href", "#");
             document.querySelector("map").appendChild(area);
 
+           
 
-
+            var startX = zones[zone].startX * (canvas.width / zones[zone].orginalwidth);
+            var startY = zones[zone].startY * (canvas.height / zones[zone].orginalheight);
+            var endX = zones[zone].endX * (canvas.width / zones[zone].orginalwidth);
+            var endY = zones[zone].endY * (canvas.height / zones[zone].orginalheight);
+            
             ctx.fillStyle = "rgb(255, 0, 0)";
             ctx.beginPath();
             if (endX > startX) {
@@ -198,39 +200,35 @@
 
 
     function reinitializeMapster() {
+  console.log("Reinitializing mapster...");
 
-      // Unbind mapster
-      $("#new-floorplan").mapster("unbind");
-      // Bind mapster
-      $("#new-floorplan").mapster({
-        enableAutoResizeSupport: true,
-        autoResize: true,
-        stroke: true,
-        fillColor: "222222",
-        singleSelect: true,
-        mapKey: "id",
-        onClick: function(e) {
-          $("input[name='zone']").prop("checked", false);
-          $("input[name='zone'][id='" + zones[e.key].name + "']").prop("checked", true);
-        },
-        onAutoResize: function() {
-          try {
-            var image = document.getElementById("new-floorplan");
-            var width = image.clientWidth;
-            var height = image.clientHeight;
-            var canvas = document.getElementById("shadeCanvas");
-            canvas.width = width;
-            canvas.height = height;
-          } catch (error) {
-            console.log(error);
-          }
-          createZone(zones, "shadeCanvas");
-        }
-      });
+  // Unbind mapster
+  $("#new-floorplan").mapster("unbind");
+  console.log("Mapster unbound.");
 
-      // Set opacity
-      $("#mapster_el").css("opacity", "0.5");
+  // Bind mapster
+  $("#new-floorplan").mapster({
+    enableAutoResizeSupport: true,
+    autoResize: true,
+    stroke: true,
+    fillColor: "FF0000",
+    onAutoResize: function() {
+      try {
+        var image = document.getElementById("new-floorplan");
+        var width = image.clientWidth;
+        var height = image.clientHeight;
+        var canvas = document.getElementById("shadeCanvas");
+        canvas.width = width;
+        canvas.height = height;
+      } catch (error) {
+        console.log(error);
+      }
+      createZone(zones, "shadeCanvas");
     }
+  });
+
+  console.log("Mapster bound.");
+}
 
     var el = document.getElementById("picture");
     var vanilla = new Croppie(el, {
@@ -496,6 +494,8 @@
             startY: y,
             orginalwidth: floorplan.width,
             orginalheight: floorplan.height,
+            orginalImageWidth: floorplan.clientWidth,
+            orginalImageHeight: floorplan.clientHeight,
           }
           ctx.fillStyle = "rgb(0, 0, 0)";
           ctx.beginPath();
