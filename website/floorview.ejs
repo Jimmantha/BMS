@@ -207,27 +207,7 @@
     poupulateFloorSelector("floorSelector");
     var energyData = {};
 
-    var url = new URL(window.location.href);
-    var floorlevel = url.searchParams.get("floorname");
-    console.log(floorlevel);  
-    var floorSelector = document.getElementById("floorSelector");
-    if(!floorlevel == "null"){
-      cacheData("floorlevel", floorlevel);
-      floorSelector.value = floorlevel;
-    }else{
-      console.log("Cache result is null")
-      var floorlevel = retrieveData("floorlevel");
-      console.log("floorlevel from cache: " + floorlevel )
-      if(!floorlevel == null){
-        floorSelector.value = floorlevel;
-      }
-      if(floorlevel == null){
-        floorSelector.selectedIndex  = 0;
-        var change = new Event('change');
-        floorSelector.dispatchEvent(change);
-        console.log("floor Selector set to inex 0")
-      }
-    }
+
 
 
 
@@ -589,6 +569,8 @@
   </script>
   <script>
     $('#floorSelector').on('change', () => {
+      var floor = $('#floorSelector').val();
+      cacheData("pastFloorSelection", floor);
       document.getElementById("moreDetails").innerHTML = "-click on a zone to view details-";
 
       document.getElementById("gaugeTable").innerHTML = "-click on a zone to view details-";
@@ -597,6 +579,15 @@
       updatetemperature();
       dynamicCharts = {};
     })
+
+    //load past floor data from cache
+    var pastFloorSelection = retrieveData("pastFloorSelection");
+    if (pastFloorSelection) {
+      $('#floorSelector').val(pastFloorSelection);
+      loadData();
+      createArea();
+      updatetemperature();
+    }
 
     function loadTempChart(key) {
       var temp = [];
