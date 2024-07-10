@@ -10,6 +10,19 @@
     width: 100px; /* Set a fixed width for the columns */
 }
 
-.Xoverflow {
-    overflow-x: scroll !important; /* Enable horizontal scrolling */
+.yoverflow {
+    overflow-y: scroll !important; /* Enable horizontal scrolling */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.floorplans{
+    height: 80vh;
+}
+
+.shade{
+    position: absolute;
+    top: 0;
+    left: 0;
 }

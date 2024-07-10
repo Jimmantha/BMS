@@ -127,6 +127,13 @@
   </div>
   <script>
     //function 
+    // Check for redirected floor
+    var url = new URL(window.location.href);
+    var floorname = url.searchParams.get("floorname");
+    if (floorname) {
+      cacheData("pastFloorSelection", floorname);
+
+    }
 
     function monthNameToNumber(monthName) {
       // Mapping of month names to their respective numbers
@@ -558,26 +565,33 @@
     updatetemperature();
   </script>
   <script>
-    $('#floorSelector').on('change', () => {
-      var floor = $('#floorSelector').val();
-      cacheData("pastFloorSelection", floor);
-      document.getElementById("moreDetails").innerHTML = "-click on a zone to view details-";
+    $(document).ready(function() {
+      const initializeFloor = () => {
+        var floor = $('#floorSelector').val();
+        $("img").mapster('unbind');
+        cacheData("pastFloorSelection", floor);
+        document.getElementById("moreDetails").innerHTML = "-click on a zone to view details-";
+        document.getElementById("gaugeTable").innerHTML = "-click on a zone to view details-";
+        loadData();
+        createArea();
+        updatetemperature();
+        dynamicCharts = {};
+      };
 
-      document.getElementById("gaugeTable").innerHTML = "-click on a zone to view details-";
-      loadData();
-      createArea();
-      updatetemperature();
-      dynamicCharts = {};
-    })
+      $('#floorSelector').on('change', initializeFloor);
 
-    //load past floor data from cache
-    var pastFloorSelection = retrieveData("pastFloorSelection");
-    if (pastFloorSelection) {
-      $('#floorSelector').val(pastFloorSelection);
-      loadData();
-      createArea();
-      updatetemperature();
-    }
+      // Load past floor data from cache
+      var pastFloorSelection = retrieveData("pastFloorSelection");
+      if (pastFloorSelection) {
+        console.log("Loaded past floor selection: " + pastFloorSelection);
+        $('#floorSelector').val(pastFloorSelection);
+        initializeFloor();
+      }
+
+
+    });
+
+
 
     function loadTempChart(key) {
       var temp = [];

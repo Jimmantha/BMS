@@ -16,7 +16,7 @@
 
 
   </div>
-  <div class="row flex-nowrap Xoverflow ms-3 me-3" id="floorplan">
+  <div class="row yoverflow ms-3 me-3 floorplans" id="floorplan">
     <!--floorplan image populate here-->
   </div>
 
@@ -31,7 +31,7 @@
     }
     function createFloorCard (floor) {
         var floorCard = document.createElement("div");
-        floorCard.className = "col-3 col card m-3";
+        floorCard.className = "col-5 col card m-3";
         floorCard.setAttribute("floorname", floor.floorlevel);
 
         var floorCardTitle = document.createElement("div");
@@ -40,12 +40,19 @@
         floorCard.appendChild(floorCardTitle);
 
         var floorCardBody = document.createElement("div");
-        floorCardBody.className = "card-body";
+        floorCardBody.classList.add("card-body" "")
 
         var floorImage = document.createElement("img");
         floorImage.src = floor.floorplan;
         floorImage.style.width = "100%";
         floorImage.style.height = "auto";
+        
+        var floorCanvas = document.createElement("canvas");
+        floorCanvas.classList.add("shade");
+        floorCanvas.id = floor.floorlevel;
+
+        
+        floorCardBody.appendChild(floorCanvas);
         floorCardBody.appendChild(floorImage);
         floorCard.appendChild(floorCardBody);
 
