@@ -1,12 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <%- include('header') %>
-    
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <%- include('header') %>
+  <link rel="stylesheet" href="overviewStyle.css">
 </head>
+
 <body>
-    
+  <div class="row mt-1 mb-3">
+    <div class="col-12 justify-content-center">
+      <h1 class="text-center">Floor Plan Overview</h1>
+    </div>
+
+
+  </div>
+  <div class="row yoverflow ms-3 me-3 floorplans" id="floorplan">
+    <!--floorplan image populate here-->
+  </div>
+
+  <script>
+    var floorData = <%- JSON.stringify(data) %>;
+  </script>
+  <script>
+    $("#floorSelector").hide();
+    var imageRow = document.getElementById("floorplan");
+    for (var floor of floorData) {
+      createFloorCard(floor);
+    }
+    function createFloorCard (floor) {
+        var floorCard = document.createElement("div");
+        floorCard.className = "col-5 col card m-3";
+        floorCard.setAttribute("floorname", floor.floorlevel);
+
+        var floorCardTitle = document.createElement("div");
+        floorCardTitle.className = "card-title text-center mt-2";
+        floorCardTitle.innerHTML = "Floor Name: " + floor.floorlevel;
+        floorCard.appendChild(floorCardTitle);
+
+        var floorCardBody = document.createElement("div");
+        floorCardBody.classList.add("card-body" "")
+
+        var floorImage = document.createElement("img");
+        floorImage.src = floor.floorplan;
+        floorImage.style.width = "100%";
+        floorImage.style.height = "auto";
+        
+        var floorCanvas = document.createElement("canvas");
+        floorCanvas.classList.add("shade");
+        floorCanvas.id = floor.floorlevel;
+
+        
+        floorCardBody.appendChild(floorCanvas);
+        floorCardBody.appendChild(floorImage);
+        floorCard.appendChild(floorCardBody);
+
+        imageRow.appendChild(floorCard);
+
+        floorCard.addEventListener("click", function(event) {
+          var floorName = floorCard.getAttribute("floorname");
+            window.location.href = "/floorview?floorname=" + floorName; 
+        });
+      }
+  </script>
 </body>
+
 </html>
