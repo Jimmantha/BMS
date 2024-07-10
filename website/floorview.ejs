@@ -210,11 +210,6 @@
 
 
 
-
-
-
-
-
     function loadData() {
       // Clear alerts
       $("#alertMessageList").empty();
@@ -226,7 +221,7 @@
         });
       }
 
-      
+
       floorlevel = $("#floorSelector").val();
       zones = ejsData.find(obj => obj.floorlevel == floorlevel).zones;
       try {
@@ -430,7 +425,7 @@
         showToolTip: true,
         mapKey: "id",
         singleSelect: true,
-
+        toolTipContainer: '<div style="padding: 10px; background-color: white; color: black; border: 2px solid red;"></div>',
         enableAutoResizeSupport: true,
         autoResize: true,
 
@@ -451,9 +446,7 @@
       try {
         var areaOptions = {
           key: zones[zone].name,
-          toolTip: "temperature Set: " +
-            sensorData[zones[zone].name][0].setTemperature +
-            "C",
+          toolTip: zones[zone].name + "<br> Aircon State:   " + (zones[zone].airconState ? "ON" : "OFF") + " <br> Light State: " + (zones[zone].lightState ? "ON" : "OFF") + "<br> SetTemperature:" + zones[zone].setTemperature + "°C",
         };
 
         $("img").mapster("set_options", {
@@ -479,9 +472,7 @@
         try {
           var areaOptions = {
             key: zones[zone].name,
-            toolTip: "temperature Set: " +
-              sensorData[zones[zone].name][0].setTemperature +
-              "C",
+            toolTip: zones[zone].name + "<br> Aircon State:   " + (zones[zone].airconState ? "ON" : "OFF") + " <br> Light State: " + (zones[zone].lightState ? "ON" : "OFF") + "<br> SetTemperature:" + zones[zone].setTemperature + "°C",
           };
 
           $("img").mapster("set_options", {
@@ -512,8 +503,7 @@
             var blue = Math.round(255 * (1 - temperatureGradient));
             ctx.fillStyle = "rgba(" + red / 2 + ", 255, " + blue + ", 0.5)";
           } catch (error) {
-            console,
-            log("Error setting temperature gradient:", error);
+            console.log("Error setting temperature gradient:", error);
             ctx.fillStyle = "rgba(255, 255, 255, 1)"; // Set fillStyle to grey
           }
         } else if (zoneDetails.airconState == false) {
