@@ -39,6 +39,16 @@
                   </div>
                 </div>
               </div>
+              <div class="row">
+                <div class="col-6 ms-5">
+                  <div class="row">
+                    <div class="col-1 m-0 text-center">cold</div>
+                    <div class="col-3" id="grad"></div>
+                    <div class="col-1 text-center">hot</div>
+                  </div>
+                </div>
+
+              </div>
             </div>
           </div>
           <div class="row title mt-3">
@@ -501,17 +511,26 @@
         var zoneDetails = getZone($('#floorSelector').val(), zones[zone].name);
         if (zoneDetails.airconState == true) {
           try {
-            var temperatureGradient =
-              (sensorData[zones[zone].name][0].temperature -
-                sensorData[zones[zone].name][0].lowerMargin) /
-              (sensorData[zones[zone].name][0].upperMargin -
-                sensorData[zones[zone].name][0].lowerMargin);
-            var red = Math.round(255 * temperatureGradient);
-            var blue = Math.round(255 * (1 - temperatureGradient));
-            ctx.fillStyle = "rgba(" + red / 2 + ", 255, " + blue + ", 0.5)";
+            var setTemp = zoneDetails.setTemperature;
+            var temp = sensorData[zones[zone].name][0].temperature;
+            var upperMargin = sensorData[zones[zone].name][0].upperMargin;
+            var lowerMargin = sensorData[zones[zone].name][0].lowerMargin;
+            var upper = setTemp + upperMargin;
+            var lower = setTemp - lowerMargin;
+            if (temp <= upper && temp > lower) {
+              ctx.fillStyle = "green"
+            } else if (temp > upper) {
+              ctx.fillStyle = "red"
+            } else if (temp < lower) {
+              ctx.fillStyle = "blue"
+            }
+
+
+
+
           } catch (error) {
             console.log("Error setting temperature gradient:", error);
-            ctx.fillStyle = "rgba(255, 255, 255, 1)"; // Set fillStyle to grey
+            ctx.fillStyle = "rgba(128, 128, 128, 0.5)"; // Set fillStyle to grey
           }
         } else if (zoneDetails.airconState == false) {
           console.log("zone is off");
@@ -575,7 +594,6 @@
         loadData();
         createArea();
         updatetemperature();
-        dynamicCharts = {};
       };
 
       $('#floorSelector').on('change', initializeFloor);
@@ -1241,13 +1259,7 @@
 
     }
 
-    function updateAlertCount() {
-      $('#warning').text("🠡 Alerts(" + alertCount + ")");
-    }
-
-
-
-    function loadEnergyChart() {
+ function loadEnergyChart() {
       var labels = [];
       var energyDataset = [];
       var floorlevel = $('#floorSelector').val();
@@ -1275,20 +1287,7 @@
           }, ]
         }
 
-        const annotation = {
-          type: 'line',
-          borderColor: 'black',
-          borderDash: [6, 6],
-          borderDashOffset: 0,
-          borderWidth: 3,
-          label: {
-            enabled: true,
-            content: (ctx) => 'Average: ' + average(ctx).toFixed(2),
-            position: 'end'
-          },
-          scaleID: 'y',
-          value: (ctx) => average(ctx)
-        };
+
 
         var energyConfig = {
           type: "bar",
@@ -1309,22 +1308,17 @@
                 display: true,
                 text: 'Energy used on ' + new Date(selectedDay).toLocaleDateString() + ' (kwh)',
               },
-              annotation: {
-                annotations: {
-                  line1: annotation
-                },
-              },
-            }
+
+            },
           },
-        };
+        }
 
         dynamicCharts["energyChart"] = new Chart(energyCtx, energyConfig);
         energyChartTitle(selectedDay)
         energyCanvas.addEventListener("click", energyClickHandler)
       } else {
 
-        [dayEnergyUsed, labels, average] = energyChartValue(timeGranularity, floorlevel, selectedDay)
-        console.log(dayEnergyUsed, average)
+        [dayEnergyUsed, labels] = energyChartValue(timeGranularity, floorlevel, selectedDay)
 
         dynamicCharts["energyChart"].config.data.labels = labels;
         dynamicCharts["energyChart"].config.data.datasets[0].data = dayEnergyUsed;
@@ -1333,6 +1327,37 @@
 
       }
     }
+
+    function energyClickHandler(click) {
+      var timeGranularity = $('#timeGranularity').val();
+      var date = $('#datepicker').val();
+      var date = new Date(date);
+      var month = date.getMonth();
+      var year = date.getFullYear();
+      const points = dynamicCharts["energyChart"].getElementsAtEventForMode(click, 'nearest', {
+        intersect: true
+      }, true);
+      if (points.length > 0) {
+        const firstPoint = points[0];
+        const label = dynamicCharts["energyChart"].data.labels[firstPoint.index];
+        const value = dynamicCharts["energyChart"].data.datasets[firstPoint.datasetIndex].data[firstPoint.index];
+        if (timeGranularity == "month") {
+          var tempTime = new Date(year, month, label + 1)
+          var datepicker = document.getElementById("datepicker");
+          datepicker.value = tempTime.toISOString().split('T')[0];
+          $('#timeGranularity').val("day")
+        } else if (timeGranularity == "year") {
+          var month = monthNameToNumber(label)
+          var tempTime = new Date(year, month, 1)
+          var datepicker = document.getElementById("datepicker");
+          datepicker.value = tempTime.toISOString().split('T')[0];
+          $('#timeGranularity').val("month")
+        }
+        loadEnergyChart()
+      }
+    }
+
+
 
     function energyClickHandler(click) {
       var timeGranularity = $('#timeGranularity').val();

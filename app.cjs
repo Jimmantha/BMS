@@ -322,7 +322,6 @@ app.get('/', async (req, res) => {
     var energyData = await getEnergyData();
 
     res.render('overview', { data: floorDetails, sensorData: sensorData, energyData: energyData });
-
 });
 
 app.get('/converter', (req, res) => {

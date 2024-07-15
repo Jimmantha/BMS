@@ -53,9 +53,11 @@ body {
     min-height: 100%
 }
 
+.transparent {
+    background-color: #bababa00!important;
+}
 
 .mapster_el {
-    opacity: 0.7 !important;
     opacity: 0.7 !important;
 }
 
@@ -146,3 +148,8 @@ body {
     background-color: green;
     border-color: green;
 }
+
+#grad {
+  background-image: linear-gradient(to right,blue,green,red);
+  height: 2vh
+} 
