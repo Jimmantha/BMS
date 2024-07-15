@@ -126,6 +126,12 @@ body {
     text-align: center;
 }
 
+.sensorTimeSelect{
+    width:6vw;
+    font-size:1.5vh;
+    text-align: center;
+}
+
 .offcanvas-title{
     height: 2vh;
 }

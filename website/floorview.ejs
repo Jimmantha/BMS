@@ -25,7 +25,7 @@
     </div>
     <div class="row">
       <div class="col-8">
-        <div class="table">
+        <div class="table mt-0">
           <div class="row">
             <div class="col">
               <div class="row" style="background-color: rgba(240, 248, 255, 0);">
@@ -34,7 +34,7 @@
                   <img src="https://placehold.co/600x400" alt="" id="floorplan" style="position: absolute; top: 0; left: 0;" usemap="#testmap" />
                 </div>
                 <div class="col m-3">
-                  <div class="table placeholder-text" id="gaugeTable">
+                  <div class="table placeholder-text" id="controlTable">
                     -click on a zone to view details-
                   </div>
                 </div>
@@ -590,7 +590,8 @@
         $("img").mapster('unbind');
         cacheData("pastFloorSelection", floor);
         document.getElementById("moreDetails").innerHTML = "-click on a zone to view details-";
-        document.getElementById("gaugeTable").innerHTML = "-click on a zone to view details-";
+        document.getElementById("controlTable").innerHTML = "-click on a zone to view details-";
+        document.getElementById("moreDetails").classList.add("text-center");
         loadData();
         createArea();
         updatetemperature();
@@ -620,6 +621,8 @@
 
       var dynamicChartName = "tempChart_" + key;
       var currentTime = new Date();
+      var timeGranularity = document.getElementById("sensorDataTimeGranuality").value;
+
 
 
       // Get the sensor data for the given zone key
@@ -629,11 +632,20 @@
         for (var i = 0; i < zoneData.length; i++) {
           temp.push(zoneData[i].temperature.toFixed(2));
           var tempTime = new Date(zoneData[i].timestamp);
-          if (tempTime.getTime() >= currentTime.getTime() - 3600000) {
-            labels.push(tempTime.getHours() + ":" + tempTime.getMinutes() + ":" + tempTime.getSeconds());
-            upper.push(zoneData[i].upperMargin);
-            lower.push(zoneData[i].lowerMargin);
-            set.push(zoneData[i].setTemperature);
+          if (timeGranularity == "hour") {
+            if (tempTime.getTime() >= currentTime.getTime() - 3600000) {
+              labels.push(tempTime.getHours() + ":" + tempTime.getMinutes() + ":" + tempTime.getSeconds());
+              upper.push(zoneData[i].upperMargin);
+              lower.push(zoneData[i].lowerMargin);
+              set.push(zoneData[i].setTemperature);
+            }
+          } else {
+            if (tempTime.getTime() >= currentTime.getTime() - (3600000 * 24)) {
+              labels.push(tempTime.getHours() + ":" + tempTime.getMinutes() + ":" + tempTime.getSeconds());
+              upper.push(zoneData[i].upperMargin);
+              lower.push(zoneData[i].lowerMargin);
+              set.push(zoneData[i].setTemperature);
+            }
           }
         }
       }
@@ -702,7 +714,12 @@
       };
       var tempContainer = document.createElement("div");
       tempContainer.id = "tempContainer";
-      tempContainer.textContent = "Temperature over past hour (°C)"
+      if(timeGranularity == "hour"){
+        tempContainer.textContent = "Temperature over past hour (°C)";
+      }
+      else{
+        tempContainer.textContent = "Temperature over past day (°C)";
+      } 
       tempContainer.classList.add("p-3", "text-center", "border")
       tempContainer.appendChild(tempChart);
 
@@ -714,15 +731,30 @@
 
 
     function loadHumidityChart(key) {
-      var HumidityChart = document.createElement("canvas");
+
       var HumidityChartContainer = document.createElement("div");
-      HumidityChartContainer.id = "energyUseContainer";
-      HumidityChartContainer.textContent = "Humidity over past hour (%Rh)";
+      var timeGranularity = document.getElementById("sensorDataTimeGranuality").value;
+      if(timeGranularity == "hour"){
+        HumidityChartContainer.textContent = "Humidity over past hour (RH%)";
+      }
+      else{
+        HumidityChartContainer.textContent = "Humidity over past day (RH%)";
+      }
+      HumidityChartContainer.id = "HumidityContainer";
+      var HumidityChart = document.createElement("canvas");
+      var HumidityCtx = HumidityChart.getContext("2d");
+
       HumidityChartContainer.classList.add("p-3", "mt-2", "text-center", "border")
       HumidityChartContainer.appendChild(HumidityChart);
 
+
+
+
       var moreDetails = document.getElementById("moreDetails");
+
       moreDetails.appendChild(HumidityChartContainer);
+      var humidityChart = document.createElement("canvas");
+      var humidityCtx = humidityChart.getContext("2d");
 
       var humi = [];
       var labels = [];
@@ -732,12 +764,20 @@
       var zoneData = sensorData[key];
       if (zoneData) {
         for (var i = 0; i < zoneData.length; i++) {
-          humi.push(zoneData[i].humidity.toFixed(2));
           var tempTime = new Date(zoneData[i].timestamp);
-          if (tempTime.getTime() >= currentTime.getTime() - 3600000) {
-            humi.push(zoneData[i].humidity.toFixed(2));
-            labels.push(tempTime.getHours() + ":" + tempTime.getMinutes() + ":" + tempTime.getSeconds());
+          if (timeGranularity == "hour") {
+            if (tempTime.getTime() >= currentTime.getTime() - 3600000) {
+              humi.push(zoneData[i].humidity.toFixed(2));
+              labels.push(tempTime.getHours() + ":" + tempTime.getMinutes() + ":" + tempTime.getSeconds());
+            }
           }
+          else {
+            if (tempTime.getTime() >= currentTime.getTime() - (3600000 * 24)) {
+              humi.push(zoneData[i].humidity.toFixed(2));
+              labels.push(tempTime.getHours() + ":" + tempTime.getMinutes() + ":" + tempTime.getSeconds());
+            }
+          }
+
         }
       }
       humi.reverse();
@@ -768,13 +808,15 @@
         },
       };
 
-      dynamicCharts[dynamicChartName] = new Chart(HumidityChart, config);
+      dynamicCharts[dynamicChartName] = new Chart(HumidityCtx, config);
+
+
     }
 
     function loadPIRChart(key) {
       var PIRChart = document.createElement("canvas");
       var PIRChartContainer = document.createElement("div");
-      PIRChartContainer.id = "energyUseContainer";
+      PIRChartContainer.id = "pirContainer";
       PIRChartContainer.textContent = "PIR triggered over past hour";
       PIRChartContainer.classList.add("p-3", "mt-2", "text-center", "border")
       PIRChartContainer.appendChild(PIRChart);
@@ -801,16 +843,46 @@
         col1.classList.add("col", "text-start");
 
         col2 = document.createElement("div");
-        col2.classList.add("col", "text-end");
+        col2.classList.add("col", "justify-content-end", "text-end", "d-flex");
 
-        var creationTime = document.createElement("div");
-        creationTime.classList.add("col", "text-end");
-        creationTime.id = "LastUpdatedTime";
-        creationTime.textContent = "Updated Time: " + new Date().toLocaleTimeString([], {
-          hour: '2-digit',
-          minute: '2-digit'
+        var sensorDataTimeGranuality = document.createElement("select");
+        sensorDataTimeGranuality.classList.add("form-select", "select", "sensorTimeSelect");
+        sensorDataTimeGranuality.id = "sensorDataTimeGranuality";
+        var sensorDataTimeGranualityOption1 = document.createElement("option");
+        sensorDataTimeGranualityOption1.value = "hour";
+        sensorDataTimeGranualityOption1.textContent = "Hour";
+        var sensorDataTimeGranualityOption2 = document.createElement("option");
+        sensorDataTimeGranualityOption2.value = "day";
+        sensorDataTimeGranualityOption2.textContent = "Day";
+        
+        sensorDataTimeGranuality.addEventListener("change", function() {
+          dynamicCharts["tempChart_" + currentClickedZone.key].destroy();
+          dynamicCharts["humidityChart_" + currentClickedZone.key].destroy();
+          try {
+            document.getElementById("tempContainer").remove();
+          } catch (error) {
+            console.log("Error removing tempContainer:", error);
+          }
+          try {
+            document.getElementById("HumidityContainer").remove();
+          } catch (error) {
+            console.log("Error removing HumidityContainer:", error);
+          }
+          try {
+            document.getElementById("pirContainer").remove();
+          } catch (error) {
+            console.log("Error removing PIRContainer:", error);
+          }
+          loadCharts(currentClickedZone.key);
         });
-        col2.appendChild(creationTime);
+
+        sensorDataTimeGranuality.appendChild(sensorDataTimeGranualityOption1);
+        sensorDataTimeGranuality.appendChild(sensorDataTimeGranualityOption2);
+
+
+
+
+        col2.appendChild(sensorDataTimeGranuality);
 
         var moreDetailsButton = document.createElement("submit");
         moreDetailsButton.classList.add("btn", "btn-primary");
@@ -830,7 +902,7 @@
 
 
 
-        var table = document.getElementById("gaugeTable")
+        var table = document.getElementById("controlTable")
         table.innerHTML = "";
         var zoneName = zone.key;
         var row1 = document.createElement("div");
@@ -1146,6 +1218,7 @@
       loadHumidityChart(key);
       loadPIRChart(key);
 
+
     }
 
 
@@ -1190,14 +1263,14 @@
           });
         });
         alertCount++;
-        
+
       } else if (currentTime - milisecondtempTime > 3600000) {
         console.log("updating energy");
         var timeDiffMin = Math.floor(((currentTime - milisecondtempTime) / 60000));
         energyAlert.textContent = "Energy Readings last updated " + new Date(energyData[floorlevel][0].timestamp);
         alertMessageList.appendChild(energyAlert);
         alertCount++;
-        
+
 
         var currentTime = new Date()
         var year = currentTime.getFullYear();
@@ -1259,7 +1332,7 @@
 
     }
 
- function loadEnergyChart() {
+    function loadEnergyChart() {
       var labels = [];
       var energyDataset = [];
       var floorlevel = $('#floorSelector').val();
@@ -1653,7 +1726,6 @@
 
     loadEnergyChart();
     updateEnergy();
-    
   </script>
   <script>
     $(document).ready(function() {
