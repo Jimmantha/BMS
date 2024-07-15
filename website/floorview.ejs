@@ -1190,14 +1190,14 @@
           });
         });
         alertCount++;
-        updateAlertCount();
+        
       } else if (currentTime - milisecondtempTime > 3600000) {
-
+        console.log("updating energy");
         var timeDiffMin = Math.floor(((currentTime - milisecondtempTime) / 60000));
         energyAlert.textContent = "Energy Readings last updated " + new Date(energyData[floorlevel][0].timestamp);
         alertMessageList.appendChild(energyAlert);
         alertCount++;
-        updateAlertCount();
+        
 
         var currentTime = new Date()
         var year = currentTime.getFullYear();
@@ -1653,7 +1653,7 @@
 
     loadEnergyChart();
     updateEnergy();
-    updateAlertCount();
+    
   </script>
   <script>
     $(document).ready(function() {
