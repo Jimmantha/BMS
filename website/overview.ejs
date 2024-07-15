@@ -50,6 +50,11 @@
         var floorCanvas = document.createElement("canvas");
         floorCanvas.classList.add("shade");
         floorCanvas.id = floor.floorlevel;
+        floorImage.addEventListener("resize", function() {
+          floorCanvas.width = floorImage.width;
+          floorCanvas.height = floorImage.height;
+          console.log("resize")
+        })
 
         
         floorCardBody.appendChild(floorCanvas);
