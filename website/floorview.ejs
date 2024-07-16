@@ -406,17 +406,21 @@
         if (zones[zone].shape == "rect") {
           var coordinates = zones[zone];
           var area = document.createElement("area");
+          startX = (coordinates.startX / coordinates.orginalImageWidth) * coordinates.orginalMapWidth;
+          startY = (coordinates.startY / coordinates.orginalImageHeight) * coordinates.orginalMapHeight;
+          endX = (coordinates.endX / coordinates.orginalImageWidth) * coordinates.orginalMapWidth;
+          endY = (coordinates.endY / coordinates.orginalImageHeight) * coordinates.orginalMapHeight;
 
           area.setAttribute("shape", "rect");
           area.setAttribute(
             "coords",
-            coordinates.startX +
+            startX +
             "," +
-            coordinates.startY +
+            startY +
             "," +
-            coordinates.endX +
+            endX +
             "," +
-            coordinates.endY
+            endY
           );
           area.setAttribute("href", "#");
           area.setAttribute("id", zones[zone].name);
@@ -428,7 +432,8 @@
           area.setAttribute("shape", "poly");
           var coords = "";
           for (var i = 0; i < zones[zone].xCords.length; i++) {
-            coords += zones[zone].xCords[i] + "," + zones[zone].yCords[i] + ",";
+            coords += zones[zone].xCords[i]/coordinates.orginalImageWidth * coordinates.orginalMapWidth + ","
+             + zones[zone].yCords[i]/coordinates.orginalImageHeight * coordinates.orginalMapHeight + ",";
           }
 
           coords = coords.slice(0, -1);
@@ -503,10 +508,12 @@
         }
         if (zones[zone].shape == "rect") {
           var zonePosition = zones[zone];
-          var startX = (zonePosition.startX / 600) * shadeCanvas.width;
-          var startY = (zonePosition.startY / 400) * shadeCanvas.height;
-          var endX = (zonePosition.endX / 600) * shadeCanvas.width;
-          var endY = (zonePosition.endY / 400) * shadeCanvas.height;
+          console.log(shadeCanvas.width, shadeCanvas.height);
+          var startX = (zonePosition.startX / zonePosition.orginalImageWidth) * shadeCanvas.width;
+          var startY = (zonePosition.startY / zonePosition.orginalImageWidth) * shadeCanvas.width;
+          var endX = (zonePosition.endX / zonePosition.orginalImageHeight) * shadeCanvas.height;
+          var endY = (zonePosition.endY / zonePosition.orginalImageHeight) * shadeCanvas.height;
+          console.log(startX, startY, endX, endY);
         }
         var zoneDetails = getZone($('#floorSelector').val(), zones[zone].name);
         if (zoneDetails.airconState == true) {
@@ -540,41 +547,27 @@
         }
         if (zones[zone].shape == "rect") {
           ctx.beginPath();
-          if (endX > startX) {
-            var width = Math.abs(endX - startX);
-            if (endY > startY) {
-              var height = Math.abs(endY - startY);
-              ctx.rect(startX, startY, width, height);
-            } else {
-              var height = Math.abs(startY - endY);
-              ctx.rect(startX, endY, width, height);
-            }
-          } else {
-            var width = Math.abs(startX - endX);
-            if (endY > startY) {
-              var height = Math.abs(endY - startY);
-              ctx.rect(endX, startY, width, height);
-            } else {
-              var height = Math.abs(startY - endY);
-              ctx.rect(endX, endY, width, height);
-            }
-          }
+          ctx.rect(startX, startY, endX - startX, endY - startY);
           ctx.fill();
+
+
         } else if (zones[zone].shape == "poly") {
           var zonePosition = zones[zone];
+          var orginalImageHeight = zonePosition.orginalImageHeight;
+          var orginalImageWidth = zonePosition.orginalImageWidth;
+          var orginalMapHeight = zonePosition.orginalMapHeight;
+          var orginalMapWidth = zonePosition.orginalMapWidth;
+          console.log("poly");
           ctx.beginPath();
-          ctx.moveTo(
-            (zonePosition.xCords[0] / 600) * shadeCanvas.width,
-            (zonePosition.yCords[0] / 400) * shadeCanvas.height
-          );
+          ctx.moveTo(zonePosition.xCords[0] / orginalImageWidth * shadeCanvas.width, zonePosition.yCords[0] / orginalImageHeight * shadeCanvas.height);
           for (var i = 1; i < zonePosition.xCords.length; i++) {
-            ctx.lineTo(
-              (zonePosition.xCords[i] / 600) * shadeCanvas.width,
-              (zonePosition.yCords[i] / 400) * shadeCanvas.height
-            );
+            ctx.lineTo(zonePosition.xCords[i] / orginalImageWidth * shadeCanvas.width, zonePosition.yCords[i] / orginalImageHeight * shadeCanvas.height);
           }
           ctx.closePath();
           ctx.fill();
+
+          
+
         }
       }
     }
@@ -714,12 +707,11 @@
       };
       var tempContainer = document.createElement("div");
       tempContainer.id = "tempContainer";
-      if(timeGranularity == "hour"){
+      if (timeGranularity == "hour") {
         tempContainer.textContent = "Temperature over past hour (°C)";
-      }
-      else{
+      } else {
         tempContainer.textContent = "Temperature over past day (°C)";
-      } 
+      }
       tempContainer.classList.add("p-3", "text-center", "border")
       tempContainer.appendChild(tempChart);
 
@@ -734,10 +726,9 @@
 
       var HumidityChartContainer = document.createElement("div");
       var timeGranularity = document.getElementById("sensorDataTimeGranuality").value;
-      if(timeGranularity == "hour"){
+      if (timeGranularity == "hour") {
         HumidityChartContainer.textContent = "Humidity over past hour (RH%)";
-      }
-      else{
+      } else {
         HumidityChartContainer.textContent = "Humidity over past day (RH%)";
       }
       HumidityChartContainer.id = "HumidityContainer";
@@ -770,8 +761,7 @@
               humi.push(zoneData[i].humidity.toFixed(2));
               labels.push(tempTime.getHours() + ":" + tempTime.getMinutes() + ":" + tempTime.getSeconds());
             }
-          }
-          else {
+          } else {
             if (tempTime.getTime() >= currentTime.getTime() - (3600000 * 24)) {
               humi.push(zoneData[i].humidity.toFixed(2));
               labels.push(tempTime.getHours() + ":" + tempTime.getMinutes() + ":" + tempTime.getSeconds());
@@ -854,7 +844,7 @@
         var sensorDataTimeGranualityOption2 = document.createElement("option");
         sensorDataTimeGranualityOption2.value = "day";
         sensorDataTimeGranualityOption2.textContent = "Day";
-        
+
         sensorDataTimeGranuality.addEventListener("change", function() {
           dynamicCharts["tempChart_" + currentClickedZone.key].destroy();
           dynamicCharts["humidityChart_" + currentClickedZone.key].destroy();
