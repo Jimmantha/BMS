@@ -71,7 +71,7 @@
             </div>
           </div>
           <div class="position-relative transparent">
-            <canvas class="p-0" id="shadeCanvas" style="position: absolute; z-index: -1;  "></canvas>
+            <canvas class="p-0" id="shade-Canvas" style="position: absolute; z-index: -1;  "></canvas>
             <img src="https://placehold.co/600x400" alt="" id="new-floorplan" style="position: absolute; top: 0; left: 0;" usemap="#testmap" />
           </div>
 
@@ -103,15 +103,84 @@
 
       </div>
     </div>
-    <map name="testmap">
-      <area shape="rect" coords="34,44,270,350" href="#" alt="Sun" />
-      <area shape="rect" coords="290,172,333,250" href="#" alt="Sun" />
+    <map name="testmap" id="testMap">
     </map>
     <script>
       function createArea() {
-
+        var image = document.getElementById("new-floorplan");
+        var map = document.getElementById("testMap");
+        map.innerHTML = "";
+        console.log("Creating area");
+        $("img").mapster("unbind");
+        for (zone in zones) {
+          console.log(zones[zone])
+          var zoneDetail = zones[zone];
+          var orginalMapWidth = zoneDetail.orginalMapWidth;
+          var orginalMapHeight = zoneDetail.orginalMapHeight;
+          var orginalImageWidth = zoneDetail.orginalImageWidth;
+          var orginalImageHeight = zoneDetail.orginalImageHeight;
+          console.log(zoneDetail)
+          if (zoneDetail.shape == "rect") {
+            console.log("rect: creating area")
+            var area = document.createElement("area");
+            var startX = zoneDetail.startX / orginalImageWidth * orginalMapWidth;
+            var startY = zoneDetail.startY / orginalImageHeight * orginalMapHeight;
+            var endX = zoneDetail.endX / orginalImageWidth * orginalMapWidth;
+            var endY = zoneDetail.endY / orginalImageHeight * orginalMapHeight;
+            area.setAttribute("shape", "rect");
+            area.setAttribute("coords", startX + "," + startY + "," + endX + "," + endY);
+            area.setAttribute("href", "#");
+            area.setAttribute("alt", zoneDetail.name);
+            area.setAttribute("data-key", zoneDetail.name);
+            map.appendChild(area);
+          } else if (zoneDetail.shape == "poly") {
+            console.log("poly: creating area")
+            var area = document.createElement("area");
+            var coords = "";
+            for (var i = 0; i < zoneDetail.xCords.length; i++) {
+              var x = zoneDetail.xCords[i] / orginalImageWidth * orginalMapWidth;
+              var y = zoneDetail.yCords[i] / orginalImageHeight * orginalMapHeight;
+              coords += x + "," + y + ",";
+            }
+            coords = coords.slice(0, -1);
+            area.setAttribute("shape", "poly");
+            area.setAttribute("coords", coords);
+            area.setAttribute("href", "#");
+            area.setAttribute("alt", zoneDetail.name);
+            area.setAttribute("data-key", zoneDetail.name);
+            map.appendChild(area);
+          }
+        }
       }
 
+
+
+      function createShade() {
+        var canvas = document.getElementById("shade-Canvas");
+        var ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (zone in zones) {
+          var zoneDetail = zones[zone];
+          var orginalImageHeight = zoneDetail.orginalImageHeight;
+          var orginalImageWidth = zoneDetail.orginalImageWidth;
+          var canvasHeight = canvas.height;
+          var canvasWidth = canvas.width;
+          if (zoneDetail.shape == "rect") {
+            console.log("rect: creating shade")
+            var startX = zoneDetail.startX / orginalImageWidth * canvasWidth;
+            var startY = zoneDetail.startY / orginalImageHeight * canvasHeight;
+            var endX = zoneDetail.endX / orginalImageWidth * canvasWidth;
+            var endY = zoneDetail.endY / orginalImageHeight * canvasHeight;
+            ctx.beginPath();
+            ctx.rect(startX, startY, endX - startX, endY - startY);
+            ctx.fillStyle = "rgba(0, 255, 0, 1)";
+            ctx.fill();
+            ctx.closePath();
+          } else if (zoneDetail.shape == "poly") {
+            console.log("poly: creating shade")
+          }
+        }
+      }
 
       var zonelist;
       var imageData;
@@ -125,56 +194,9 @@
 
       function reinitializeMapster() {
         console.log("Reinitializing mapster...");
-        var canvas = document.getElementById("shadeCanvas");
-        var image = document.getElementById("new-floorplan");
+        var canvas = document.getElementById("shade-Canvas");
         var ctx = canvas.getContext("2d");
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        for (zone in zones) {
-          var zone = zones[zone];
-          if (zone.shape == "rect") {
-            var startX = zone.startX * (image.width / zone.orginalImageWidth);
-            var startY = zone.startY * (image.height / zone.orginalImageHeight);
-            var endX = zone.endX * (image.width / zone.orginalImageWidth);
-            var endY = zone.endY * (image.height / zone.orginalImageHeight);
-            ctx.fillStyle = "rgb(0, 255, 0)";
-            ctx.beginPath();
-            if (endX > startX) {
-              var width = Math.abs(endX - startX);
-              if (endY > startY) {
-                var height = Math.abs(endY - startY);
-                ctx.rect(startX, startY, width, height);
-              } else {
-                var height = Math.abs(startY - endY);
-                ctx.rect(startX, endY, width, height);
-              }
-            } else {
-              var width = Math.abs(startX - endX);
-              if (endY > startY) {
-                var height = Math.abs(endY - startY);
-                ctx.rect(endX, startY, width, height);
-              } else {
-                var height = Math.abs(startY - endY);
-                ctx.rect(endX, endY, width, height);
-              }
-            }
-            ctx.fill();
-            console.log(zone)
-            startX = zone.startX/ orginalImageWidth * orginalMapWidth;
-            startY = zone.startY / orginalImageHeight * orginalMapHeight;
-            endX = zone.endX / orginalImageWidth * orginalMapWidth;
-            endY = zone.endY / orginalImageHeight * orginalMapHeight;
-            
-
-            //create area
-            var area = document.createElement("area");
-            area.shape = "rect";
-            area.coords = `${startX},${startY},${endX},${endY}`;
-            area.href = "#";
-            area.alt = zone.name;
-            area.setAttribute("data-mapster-key", zone.shape);
-            $("map").append(area);
-          }
-        }
 
         // Unbind mapster
         $("#new-floorplan").mapster("unbind");
@@ -188,16 +210,21 @@
           enableAutoResizeSupport: true,
           autoResize: true,
           stroke: true,
+          singleSelect: true,
+          mapKey: "data-key",
           fillColor: "FF0000",
+          onClick: function(data) {
+            var radioOption = document.getElementById(data.key);
+            radioOption.checked = true;
+          },
           onAutoResize: function() {
             try {
               var image = document.getElementById("new-floorplan");
               var width = image.clientWidth;
               var height = image.clientHeight;
-              var canvas = document.getElementById("shadeCanvas");
+              var canvas = document.getElementById("shade-Canvas");
               canvas.width = width;
               canvas.height = height;
-              createArea(zones, "shadeCanvas");
             } catch (error) {
               console.log(error);
             }
@@ -209,8 +236,12 @@
           $("#new-floorplan").mapster('resize');
         });
 
+        // Re-draw shaded areas
+        createShade();
+
         console.log("Mapster bound.");
       }
+
 
 
       var el = document.getElementById("picture");
@@ -415,9 +446,10 @@
           radioGroup.remove();
           var zoneName = radioInput.value;
           namelist.splice(namelist.indexOf(zoneName), 1);
-          //document.querySelector("map").innerHTML = "";
+          document.querySelector("map").innerHTML = "";
           delete zones[zoneName];
-          createArea(zones, "shadeCanvas");
+          createArea();
+          reinitializeMapster();
         });
 
         col1.appendChild(radioInput);
@@ -437,9 +469,8 @@
       createRadio();
       var zoneCounter = 1;
       $("#addZone").on("click", () => {
-        reinitializeMapster();
         createRadio();
-        createArea(zones, "shadeCanvas");
+        reinitializeMapster();
       })
       $("#zoneList").on("change", "input[name='zone']", function() {
         console.log($(this).val());
@@ -465,21 +496,23 @@
           alert("Please select a zone.");
           return;
         }
-        var canvas = document.getElementById("shadeCanvas");
+        var canvas = document.getElementById("shade-Canvas");
         var ctx = canvas.getContext("2d");
         ctx.fillstyle = "black";
         console.log(selectedZone, shape, coords);
-        if (shape = "rect") {
+        console.log(shape)
+        if (shape == "rect") {
+          console.log("rect: point clicked")
           if (zones[selectedZone] == null) {
             zones[selectedZone] = {
               name: selectedZone,
               shape: shape,
               startX: coords.x,
               startY: coords.y,
-              orginalMapwidth: document.getElementById("new-floorplan").naturalWidth,
-              orginalMapheight: document.getElementById("new-floorplan").naturalHeight,
-              orginalImageWidth: document.getElementById("shadeCanvas").width,
-              orginalImageHeight: document.getElementById("shadeCanvas").height
+              orginalMapWidth: document.getElementById("new-floorplan").naturalWidth,
+              orginalMapHeight: document.getElementById("new-floorplan").naturalHeight,
+              orginalImageWidth: document.getElementById("shade-Canvas").width,
+              orginalImageHeight: document.getElementById("shade-Canvas").height
             };
             ctx.beginPath();
             ctx.arc(coords.x, coords.y, 2, 0, 2 * Math.PI);
@@ -495,47 +528,89 @@
             ctx.fill();
             ctx.closePath();
             createArea();
+            reinitializeMapster(); //have to be placed here wont display dot other wise
+            createShade();
+            return;
           }
-
-
+        } else if (shape == "poly") {
+          console.log("poly: point clicked")
+          if (zones[selectedZone] == null) {
+            zones[selectedZone] = {
+              name: selectedZone,
+              shape: shape,
+              xCords: [coords.x],
+              yCords: [coords.y],
+              complete: false,
+              orginalMapWidth: document.getElementById("new-floorplan").naturalWidth,
+              orginalMapHeight: document.getElementById("new-floorplan").naturalHeight,
+              orginalImageWidth: document.getElementById("shade-Canvas").width,
+              orginalImageHeight: document.getElementById("shade-Canvas").height
+            }
+            ctx.beginPath();
+            ctx.arc(coords.x, coords.y, 2, 0, 2 * Math.PI);
+            ctx.fillStyle = "black";
+            ctx.fill();
+            ctx.closePath();
+            console.log("poly: inital point")
+          } else if (zones[selectedZone].complete == false) {
+            if (zones[selectedZone].xCords[0] >= coords.x - 5 &&
+              zones[selectedZone].xCords[0] <= coords.x + 5 &&
+              zones[selectedZone].yCords[0] >= coords.y - 5 &&
+              zones[selectedZone].yCords[0] <= coords.y + 5) { //5px tolerance
+              zones[selectedZone].complete = true;
+              zones[selectedZone].xCords.push(coords.x);
+              zones[selectedZone].yCords.push(coords.y);
+              console.log("poly: end point, creating areas")
+              createArea();
+              reinitializeMapster();
+              return;
+            }
+            zones[selectedZone].xCords.push(coords.x);
+            zones[selectedZone].yCords.push(coords.y);
+            ctx.beginPath();
+            ctx.arc(coords.x, coords.y, 2, 0, 2 * Math.PI);
+            ctx.fillStyle = "black";
+            ctx.fill();
+            ctx.closePath();
+            console.log("poly: point added")
+          }
         }
-        reinitializeMapster();
       })
 
 
 
-
-      $("#submit").click(async function() {
-        if (!document.getElementById("floorLevel").value) {
-          alert("Please enter a floor name before submitting.");
-          return;
+      $(document).ready(function() {
+        function getFloorNames() {
+          return new Promise((resolve) => {
+            socket.emit("getFloorNames");
+            socket.once("names", (data) => {
+              resolve(data.floorlevel);
+            });
+          });
         }
-        floorlevel = document.getElementById("floorLevel").value;
-        socket.emit("getFloorNames")
-        await socket.on("floorNames", function(data) {
-          console.log(data);
-          if (data.data.find((floor) => floor.floorlevel == floorlevel)) {
-            alert("Floor already exists. Please enter a different floor level.");
+
+        $("#submit").click(async function() {
+          var floorLevelInput = document.getElementById("floorLevel").value;
+          if (!floorLevelInput) {
+            alert("Please enter a floor name before submitting.");
             return;
           }
-        })
-        if (floorDetails == null || zones == null) {
-          alert("Please upload a floorplan and create zones before submitting.");
-          return;
-        }
 
-        if (confirm("Are you sure you want to submit?")) {
-          var data = {};
-          data.floorplan = floorDetails;
-          data.zones = zones;
-          data.floorlevel = floorlevel;
-
-
-          socket.emit("floorplan", data, {});
-          window.location.href = "/floorview";
-        } else {
-          return;
-        }
+          const floorNames = await getFloorNames();
+          if (floorNames.includes(floorLevelInput)) {
+            alert("Floor name already in use. Please enter a different name.");
+          } else {
+            if (confirm("Are you sure you want to submit?")) {
+              var data = {};
+              data.floorplan = floorDetails;
+              data.zones = zones;
+              data.floorlevel = floorLevelInput;
+              socket.emit("submit", data);
+            } else {
+              return;
+            }
+          }
+        });
       });
 
 

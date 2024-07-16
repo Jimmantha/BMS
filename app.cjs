@@ -29,12 +29,15 @@ const ZoneSchema = new Schema({
     airconState: { type: Boolean, required: false },
     setTemperature: { type: Number, required: false },
     lightState: { type: Boolean, required: false },
+    orginalMapWidth: { type: Number, required: false },
+    orginalMapHeight: { type: Number, required: false },
+    orginalImageWidth: { type: Number, required: false },
+    orginalImageHeight: { type: Number, required: false },
 });
 
 const floorplan = new Schema({
     floorplan: { type: String, required: false },
     floorlevel: { type: String, required: false },
-
     zones: [ZoneSchema]
 });
 
@@ -126,10 +129,10 @@ io.on('connection', async (socket) => {
         await updateZoneTemperature(data.floor, data.zone, setTemp);
         await updateZoneAirconState(data.floor, data.zone, data.airconState);
         await updateZoneLightState(data.floor, data.zone, data.lightState);
-        io.emit('floorDetails', { floorlevel: data.floor, zone: data.zone, setTemperature: setTemp, airconState: data.airconState,lightState: data.lightState });
+        io.emit('floorDetails', { floorlevel: data.floor, zone: data.zone, setTemperature: setTemp, airconState: data.airconState, lightState: data.lightState });
     });
 
-    socket.on('floorplan', async (data) => {
+    socket.on('submit', async (data) => {
         console.log('floorplan', data);
         const { floorplan, zones, floorlevel } = data;
         FinZone = [];
@@ -149,10 +152,16 @@ io.on('connection', async (socket) => {
             floorlevel: floorlevel,
         })
         await newFloor.save();
-        console.log('newFloor', newFloor)
         socket.emit("ready", { message: "Floorplan saved" });
 
     });
+
+    socket.on("getFloorNames", async () => {
+        var data = await floorDetails.find({}, 'floorlevel');
+        var floorlevels = data.map((item) => item.floorlevel);
+
+        socket.emit("names", { floorlevel: floorlevels });
+    })
 
 
     sensorData = await getSensorData();
