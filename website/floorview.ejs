@@ -468,7 +468,7 @@
       try {
         var areaOptions = {
           key: zones[zone].name,
-          toolTip: zones[zone].name + "<br> Aircon State:   " + (zones[zone].airconState ? "ON" : "OFF") + " <br> Light State: " + (zones[zone].lightState ? "ON" : "OFF") + "<br> SetTemperature:" + zones[zone].setTemperature + "°C",
+          toolTip: zones[zone].name + "<br> Aircon State:   " + (zones[zone].airconState ? "ON" : "OFF") + " <br> Light State: " + (zones[zone].lightState ? "ON" : "OFF") + "<br> Set Temperature:" + zones[zone].setTemperature + "°C",
         };
 
         $("img").mapster("set_options", {
@@ -494,7 +494,7 @@
         try {
           var areaOptions = {
             key: zones[zone].name,
-            toolTip: zones[zone].name + "<br> Aircon State:   " + (zones[zone].airconState ? "ON" : "OFF") + " <br> Light State: " + (zones[zone].lightState ? "ON" : "OFF") + "<br> SetTemperature:" + zones[zone].setTemperature + "°C",
+            toolTip: zones[zone].name + "<br> Aircon State:   " + (zones[zone].airconState ? "ON" : "OFF") + " <br> Light State: " + (zones[zone].lightState ? "ON" : "OFF") + "<br> Set Temperature: " + zones[zone].setTemperature + "°C",
           };
 
           $("img").mapster("set_options", {
@@ -513,7 +513,6 @@
           var startY = (zonePosition.startY / zonePosition.orginalImageWidth) * shadeCanvas.width;
           var endX = (zonePosition.endX / zonePosition.orginalImageHeight) * shadeCanvas.height;
           var endY = (zonePosition.endY / zonePosition.orginalImageHeight) * shadeCanvas.height;
-          console.log(startX, startY, endX, endY);
         }
         var zoneDetails = getZone($('#floorSelector').val(), zones[zone].name);
         if (zoneDetails.airconState == true) {
@@ -557,7 +556,6 @@
           var orginalImageWidth = zonePosition.orginalImageWidth;
           var orginalMapHeight = zonePosition.orginalMapHeight;
           var orginalMapWidth = zonePosition.orginalMapWidth;
-          console.log("poly");
           ctx.beginPath();
           ctx.moveTo(zonePosition.xCords[0] / orginalImageWidth * shadeCanvas.width, zonePosition.yCords[0] / orginalImageHeight * shadeCanvas.height);
           for (var i = 1; i < zonePosition.xCords.length; i++) {

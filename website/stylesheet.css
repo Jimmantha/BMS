@@ -159,3 +159,7 @@ body {
   background-image: linear-gradient(to right,blue,green,red);
   height: 2vh
 } 
+
+.menu{
+    font-size: 1vw!important;
+}
