@@ -342,7 +342,6 @@
             var reader = new FileReader();
             reader.onload = function() {
               var b64 = reader.result;
-              console.log(b64);
               floorDetails = b64;
             };
             reader.readAsDataURL(newImage);

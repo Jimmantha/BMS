@@ -158,8 +158,9 @@ io.on('connection', async (socket) => {
 
     socket.on('deleteFloor', async (data) => {
         console.log('delete', data)
-        await floorDetails.deleteOne({ 'floorlevel': data.floorlevel });
+        await floorDetails.deleteOne({ 'floorlevel?': data.floorlevel });
         socket.emit("delete", { message: "Floorplan deleted" });
+        
     });
 
     socket.on("getFloorNames", async () => {

@@ -404,6 +404,7 @@
       }
       for (var zone in zones) {
         if (zones[zone].shape == "rect") {
+          var image = document.getElementById("floorplan");
           var coordinates = zones[zone];
           var area = document.createElement("area");
           startX = (coordinates.startX / coordinates.orginalImageWidth) * coordinates.orginalMapWidth;

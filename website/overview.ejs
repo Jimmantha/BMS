@@ -44,10 +44,13 @@
         var deleteButton = document.createElement("button");
         deleteButton.classList.add("btn", "btn-danger", "delete-button");
         deleteButton.innerHTML = "Delete";
-        deleteButton.addEventListener("click", function(event) {
+        deleteButton.addEventListener("click", async function(event) {
           console.log("delete button clicked");
           console.log(floor.floorlevel);
           socket.emit("deleteFloor", floor.floorlevel);
+          await socket.on("deleteFloor", (data) => {
+            location.reload();
+          });
           
         });
         deleteButtonContainer.appendChild(deleteButton);
