@@ -604,6 +604,7 @@
               data.zones = zones;
               data.floorlevel = floorLevelInput;
               socket.emit("submit", data);
+              window.location.href = "/";
             } else {
               return;
             }
