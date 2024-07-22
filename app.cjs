@@ -8,11 +8,9 @@ const app = express();
 const socketIO = require('socket.io');
 const port = 8000;
 var data
-var moment = require('moment-timezone');
 const EventEmitter = require('events');
 const server = http.createServer(app);
 const io = socketIO(server);
-const emitter = new EventEmitter();
 const Schema = mongoose.Schema;
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb' }));
@@ -56,10 +54,10 @@ mongoose.connect('mongodb+srv://pleasepeople123:VfLWNiTsHAUOZjkY@cluster0.75o7ls
     console.log('connected to db');
 }).catch(err => console.log(err));
 
-//172.23.18.169:1883 dev mqtt broker address 
+//172.23.17.173:1883 dev mqtt broker address 
 //172.23.16.143:1883 dev mqtt broker address 
 // Connect to the MQTT broker
-const client = mqtt.connect('mqtt://localhost:1883');
+const client = mqtt.connect('mqtt://172.23.17.173:1883');
 
 // Create a schema for the sensor data
 const sensorDataSchema = new mongoose.Schema({
@@ -106,7 +104,7 @@ io.on('connection', async (socket) => {
 
 
     socket.on('test', () => {
-        console.log('test');
+        console.log("test");
 
     })
 
@@ -122,9 +120,11 @@ io.on('connection', async (socket) => {
             client.publish('coolerControl', 'off');
         }
         if (data.lightState == "true" || data.lightState == true) {
-            client.publish('lightControl', 'on');
+            client.publish('coolerControl', 'led1_on');
+            client.publish('coolerControl', 'led2_on');
         } else {
-            client.publish('lightControl', 'off');
+            client.publish('coolerControl', 'led1_off');
+            client.publish('coolerControl', 'led2_off');
         }
         await updateZoneTemperature(data.floor, data.zone, setTemp);
         await updateZoneAirconState(data.floor, data.zone, data.airconState);
@@ -158,9 +158,9 @@ io.on('connection', async (socket) => {
 
     socket.on('deleteFloor', async (data) => {
         console.log('delete', data)
-        await floorDetails.deleteOne({ 'floorlevel?': data.floorlevel });
+        await floorDetails.deleteOne({ 'floorlevel?': data.f });
         socket.emit("delete", { message: "Floorplan deleted" });
-        
+
     });
 
     socket.on("getFloorNames", async () => {
@@ -233,35 +233,44 @@ client.on('message', async (topic, message) => {
     if (topic == 'sensorReadings') {
         data = JSON.parse(message);
         var date = new Date(Date.now());
-        var status = data.aircon_status;
-        var floor = data.Floor.toString();
+        var status = data.ac;
+        var floor = data.f.toString();
         var zones = await floorDetails.find({ 'floorlevel': floor }, { 'zones.setTemperature': 1, 'zones.airconState': 1, "_id": 0 });
         zones = JSON.parse(JSON.stringify(zones)); //need convert to json
         var setTemp = zones[0].zones[0].setTemperature;
         var airconState = zones[0].zones[0].airconState;
-        if (setTemp != data.temperature_set_to) {
+        var lightState = zones[0].zones[0].lightState;
+        if (setTemp != data.ts) {
             console.log('set_temp_' + setTemp)
             client.publish('coolerControl', 'set_temp_' + setTemp);
         }
-        if (airconState != data.aircon_status_) {
-            if (data.aircon_status_ == true) {
+        if (airconState != status) {
+            if (status == true) {
                 client.publish('coolerControl', 'on');
             } else {
                 client.publish('coolerControl', 'off');
             }
         }
+        if (lightState != data.ls) {
+            if (lightState == true) {
+                client.publish('coolerControl', 'led1_on');
+            } else {
+                client.publish('coolerControl', 'led1_off');
+            }
+        }
         const newSensorData = new SensorData({
             metaData: {
                 floor: floor,
-                zone: data.zone
+                zone: data.z
             },
-            temperature: data.temperature,
+            temperature: data.t,
             timestamp: date,
-            setTemperature: data.temperature_set_to,
-            upperMargin: data.upper_margin,
-            lowerMargin: data.lower_margin,
-            humidity: data.humidity,
-            airconState: airconState
+            setTemperature: data.ts,
+            upperMargin: data.uh,
+            lowerMargin: data.ul,
+            humidity: data.h,
+            airconState: airconState,
+            lightState: lightState,
         });
 
         // Save the sensor data to MongoDB  

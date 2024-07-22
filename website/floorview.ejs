@@ -433,8 +433,8 @@
           area.setAttribute("shape", "poly");
           var coords = "";
           for (var i = 0; i < zones[zone].xCords.length; i++) {
-            coords += zones[zone].xCords[i]/coordinates.orginalImageWidth * coordinates.orginalMapWidth + ","
-             + zones[zone].yCords[i]/coordinates.orginalImageHeight * coordinates.orginalMapHeight + ",";
+            coords += (zones[zone].xCords[i] / coordinates.orginalImageWidth * coordinates.orginalMapWidth) + "," +
+              (zones[zone].yCords[i] / coordinates.orginalImageHeight * coordinates.orginalMapHeight) + ",";
           }
 
           coords = coords.slice(0, -1);
@@ -565,7 +565,7 @@
           ctx.closePath();
           ctx.fill();
 
-          
+
 
         }
       }
@@ -1144,6 +1144,7 @@
           zoneData = getZone(floorlevel, currentClickedZone.key);
           tempreading.textContent = zoneData.setTemperature + "C";
           zone = currentClickedZone.key;
+          var timeGranularity = document.getElementById("sensorDataTimeGranuality").value;
 
 
           var oldDatasest = dynamicCharts["tempChart_" + zone].config.data.datasets;
@@ -1157,12 +1158,22 @@
           if (zoneData) {
             for (var i = 0; i < zoneData.length; i++) {
               var tempTime = new Date(zoneData[i].timestamp);
-              if (tempTime.getTime() >= currentTime.getTime() - 3600000) {
-                temp.push(zoneData[i].temperature.toFixed(2));
-                labels.push(tempTime.getHours() + ":" + tempTime.getMinutes() + ":" + tempTime.getSeconds());
-                upper.push(zoneData[i].upperMargin);
-                lower.push(zoneData[i].lowerMargin);
-                set.push(zoneData[i].setTemperature);
+              if (timeGranularity == "hour") {
+                if (tempTime.getTime() >= currentTime.getTime() - 3600000) {
+                  temp.push(zoneData[i].temperature.toFixed(2));
+                  labels.push(tempTime.getHours() + ":" + tempTime.getMinutes() + ":" + tempTime.getSeconds());
+                  upper.push(zoneData[i].upperMargin);
+                  lower.push(zoneData[i].lowerMargin);
+                  set.push(zoneData[i].setTemperature);
+                }
+              } else {
+                if (tempTime.getTime() >= currentTime.getTime() - 8640000) {
+                  temp.push(zoneData[i].temperature.toFixed(2));
+                  labels.push(tempTime.getHours() + ":" + tempTime.getMinutes() + ":" + tempTime.getSeconds());
+                  upper.push(zoneData[i].upperMargin);
+                  lower.push(zoneData[i].lowerMargin);
+                  set.push(zoneData[i].setTemperature);
+                }
               }
             }
           }
@@ -1185,9 +1196,16 @@
           for (data in zoneData) {
             humi.push(zoneData[data].humidity.toFixed(2));
             var tempTime = new Date(zoneData[data].timestamp);
-            if (tempTime.getTime() >= currentTime.getTime() - 3600000) {
-              humi.push(zoneData[data].humidity.toFixed(2));
-              humiLabels.push(tempTime.getHours() + ":" + tempTime.getMinutes() + ":" + tempTime.getSeconds());
+            if (timeGranularity == "hour") {
+              if (tempTime.getTime() >= currentTime.getTime() - 3600000) {
+                humi.push(zoneData[data].humidity.toFixed(2));
+                humiLabels.push(tempTime.getHours() + ":" + tempTime.getMinutes() + ":" + tempTime.getSeconds());
+              }
+            } else {
+              if (tempTime.getTime() >= currentTime.getTime() - 8640000) {
+                humi.push(zoneData[data].humidity.toFixed(2));
+                humiLabels.push(tempTime.getHours() + ":" + tempTime.getMinutes() + ":" + tempTime.getSeconds());
+              }
             }
           }
           humi.reverse();
