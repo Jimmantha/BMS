@@ -50,14 +50,16 @@ async function fetchFloorDetails() {
     }
 }
 
-mongoose.connect('mongodb+srv://pleasepeople123:VfLWNiTsHAUOZjkY@cluster0.75o7lsi.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0').then(() => {
+mongoose.connect('mongodb://admin:pass123@localhost:27017/myDatabase', {
+    authSource: 'admin'
+}).then(() => {
     console.log('connected to db');
 }).catch(err => console.log(err));
 
 //172.23.17.115:1883 dev mqtt broker address 
 //172.23.16.143:1883 dev mqtt broker address 
 // Connect to the MQTT broker
-const client = mqtt.connect('mqtt://localhost:1883');
+const client = mqtt.connect('mqtt://13.213.207.72:1883');
 
 // Create a schema for the sensor data
 const sensorDataSchema = new mongoose.Schema({
@@ -235,7 +237,7 @@ client.on('message', async (topic, message) => {
         var date = new Date(Date.now());
         var status = data.aircon_status;
         var floor = data.Floor;
-        var zones = await floorDetails.find({ 'floorlevel': floor }, { 'zones.setTemperature': 1, 'zones.airconState': 1, 'zones.lightState':1,"_id": 0 });
+        var zones = await floorDetails.find({ 'floorlevel': floor }, { 'zones.setTemperature': 1, 'zones.airconState': 1, 'zones.lightState': 1, "_id": 0 });
         zones = JSON.parse(JSON.stringify(zones)); //need convert to json
         var setTemp = zones[0].zones[0].setTemperature;
         var airconState = zones[0].zones[0].airconState;
@@ -252,7 +254,7 @@ client.on('message', async (topic, message) => {
                 client.publish('coolerControl', 'off');
             }
         }
-        if(lightState != data.LED1_status){
+        if (lightState != data.LED1_status) {
             if (lightState == true) {
                 client.publish('coolerControl', 'led1_on');
             } else {

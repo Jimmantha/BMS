@@ -540,7 +540,7 @@
           } catch (error) {
             console.log(zones[zone].name + " has no sensor data");
             console.log("Error setting temperature gradient:", error);
-            
+
             ctx.fillStyle = "rgba(128, 128, 128, 0.5)"; // Set fillStyle to grey
           }
         } else if (zoneDetails.airconState == false) {
@@ -1238,6 +1238,7 @@
 
     function updateEnergy() {
       try {
+
         var energyAlert = document.createElement("li");
         energyAlert.id = "energyAlert";
         var currentTime = new Date();
@@ -1281,6 +1282,7 @@
           console.log("updating energy");
           var timeDiffMin = Math.floor(((currentTime - milisecondtempTime) / 60000));
           energyAlert.textContent = "Energy Readings last updated " + new Date(energyData[floorlevel][0].timestamp);
+          alertMessageList.innerHTML = "";
           alertMessageList.appendChild(energyAlert);
           alertCount++;
 
@@ -1342,19 +1344,10 @@
           energyMeter.textContent = energyUsed + "kwh";
         }
         //  console.log(tempTime)
-      }
-      catch (error) {
+      } catch (error) {
+        alertMessageList.innerHTML = "";
         energyMeter.textContent = "ERROR";
-        energyAlert.textContent = "Error updating energy: No energy Readings Avaliable For this Floor";
         alertMessageList.appendChild(energyAlert);
-        energyMeter.addEventListener("click", function() {
-          $('#offcanvas').offcanvas('show')
-          energyAlert.classList.add('highlight');
-          alertMessageList.appendChild(energyAlert);
-          $('#offcanvas').on('hidden.bs.offcanvas', function() {
-            energyAlert.classList.remove('highlight');
-          });
-        });
         console.log("Error updating energy:", error);
       }
     }
@@ -1757,7 +1750,7 @@
   <script>
     $(document).ready(function() {
       $('#warning').on('click', function() {
-        $('#warning').text("🠡 Alerts(" + alertCount + ")");
+        $('#warning').text("🠡 Alerts");
         $('#offcanvas').offcanvas('show')
       });
     });
