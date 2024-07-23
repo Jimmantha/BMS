@@ -509,7 +509,6 @@
         }
         if (zones[zone].shape == "rect") {
           var zonePosition = zones[zone];
-          console.log(shadeCanvas.width, shadeCanvas.height);
           var startX = (zonePosition.startX / zonePosition.orginalImageWidth) * shadeCanvas.width;
           var startY = (zonePosition.startY / zonePosition.orginalImageWidth) * shadeCanvas.width;
           var endX = (zonePosition.endX / zonePosition.orginalImageHeight) * shadeCanvas.height;
@@ -518,25 +517,30 @@
         var zoneDetails = getZone($('#floorSelector').val(), zones[zone].name);
         if (zoneDetails.airconState == true) {
           try {
+            console.log(zones[zone].name);
             var setTemp = zoneDetails.setTemperature;
             var temp = sensorData[zones[zone].name][0].temperature;
-            var upperMargin = sensorData[zones[zone].name][0].upperMargin;
-            var lowerMargin = sensorData[zones[zone].name][0].lowerMargin;
-            var upper = setTemp + upperMargin;
-            var lower = setTemp - lowerMargin;
-            if (temp <= upper && temp > lower) {
-              ctx.fillStyle = "green"
-            } else if (temp > upper) {
-              ctx.fillStyle = "red"
-            } else if (temp < lower) {
-              ctx.fillStyle = "blue"
+            var upper = sensorData[zones[zone].name][0].upperMargin;
+            var lower = sensorData[zones[zone].name][0].lowerMargin;
+            console.log("temp", temp, "upper", upper, "lower", lower, "setTemp", setTemp);
+
+            // Corrected condition
+            if (temp <= upper && temp >= lower) {
+              ctx.fillStyle = "green"; // Set fillStyle to green
+              console.log("green");
             }
-
-
-
-
+            if (temp > upper) {
+              ctx.fillStyle = "red";
+              console.log(upperTemp, temp, "differece", temp - upperTemp);
+            }
+            if (temp < lower) {
+              ctx.fillStyle = "blue";
+              console.log(lowerTemp, temp, "differece", temp - lowerTemp);
+            }
           } catch (error) {
+            console.log(zones[zone].name + " has no sensor data");
             console.log("Error setting temperature gradient:", error);
+            
             ctx.fillStyle = "rgba(128, 128, 128, 0.5)"; // Set fillStyle to grey
           }
         } else if (zoneDetails.airconState == false) {
@@ -585,6 +589,7 @@
         document.getElementById("controlTable").innerHTML = "-click on a zone to view details-";
         document.getElementById("moreDetails").classList.add("text-center");
         loadData();
+        updateEnergy();
         createArea();
         updatetemperature();
       };
@@ -1232,25 +1237,115 @@
 
 
     function updateEnergy() {
-      var energyAlert = document.createElement("li");
-      energyAlert.id = "energyAlert";
-      var currentTime = new Date();
-      //    console.log(currentTime)
-      currentTime = currentTime.getTime();
-      energyMeter = document.getElementById("energyMeter");
-      var alertList = document.getElementById("alertMessageList");
-      alertList.style.listStyle = "none";
       try {
-        var tempTime = new Date(energyData["1"][0].timestamp)
-        var milisecondtempTime = tempTime.getTime();
-      } catch {
-        //nothing
-      }
+        var energyAlert = document.createElement("li");
+        energyAlert.id = "energyAlert";
+        var currentTime = new Date();
+        //    console.log(currentTime)
+        currentTime = currentTime.getTime();
+        energyMeter = document.getElementById("energyMeter");
+        var alertList = document.getElementById("alertMessageList");
+        alertList.style.listStyle = "none";
+        try {
+          var tempTime = new Date(energyData["1"][0].timestamp)
+          var milisecondtempTime = tempTime.getTime();
+        } catch {
+          //nothing
+        }
 
-      floor = $('#floorSelector').val();
-      if (!energyData[floor] || !energyData) {
+        floor = $('#floorSelector').val();
+        if (!energyData[floor] || !energyData) {
+          energyMeter.textContent = "ERROR";
+          energyAlert.textContent = "No Energy Reading available for this floor";
+          alertMessageList.appendChild(energyAlert);
+          energyMeter.addEventListener("click", function() {
+            $('#offcanvas').offcanvas('show')
+            energyAlert.classList.add('highlight');
+            alertMessageList.appendChild(energyAlert);
+            $('#offcanvas').on('hidden.bs.offcanvas', function() {
+              energyAlert.classList.remove('highlight');
+            });
+          });
+          var energyCanvas = document.getElementById("energyChart");
+          energyCanvas.addEventListener("click", function() {
+            $('#offcanvas').offcanvas('show')
+            energyAlert.classList.add('highlight');
+            alertMessageList.appendChild(energyAlert);
+            $('#offcanvas').on('hidden.bs.offcanvas', function() {
+              energyAlert.classList.remove('highlight');
+            });
+          });
+          alertCount++;
+
+        } else if (currentTime - milisecondtempTime > 3600000) {
+          console.log("updating energy");
+          var timeDiffMin = Math.floor(((currentTime - milisecondtempTime) / 60000));
+          energyAlert.textContent = "Energy Readings last updated " + new Date(energyData[floorlevel][0].timestamp);
+          alertMessageList.appendChild(energyAlert);
+          alertCount++;
+
+
+          var currentTime = new Date()
+          var year = currentTime.getFullYear();
+          var month = currentTime.getMonth();
+          var energyDataset = energyData[floor];
+
+          var endEnergyUsed
+          for (data in energyDataset) {
+            var tempTime = new Date(energyDataset[data].timestamp)
+            if (tempTime.getMonth() == month && tempTime.getFullYear() == year) {
+              endEnergyUsed = energyDataset[data].energy
+              break
+            }
+          }
+          energyDataset.reverse()
+
+          var initalEnergyUsed
+          for (data in energyDataset) {
+            var tempTime = new Date(energyDataset[data].timestamp)
+            if (tempTime.getMonth() == month && tempTime.getFullYear() == year) {
+              initalEnergyUsed = energyDataset[data].energy
+              break
+            }
+          }
+          energyDataset.reverse()
+          var energyUsed = (endEnergyUsed - initalEnergyUsed).toFixed(2);
+          energyMeter.textContent = energyUsed + "kwh";
+
+        } else {
+          //   console.log("updating energy");
+          var currentTime = new Date()
+          var year = currentTime.getFullYear();
+          var month = currentTime.getMonth();
+          var energyDataset = energyData[floor];
+
+          var endEnergyUsed
+          for (data in energyDataset) {
+            var tempTime = new Date(energyDataset[data].timestamp)
+            if (tempTime.getMonth() == month && tempTime.getFullYear() == year) {
+              endEnergyUsed = energyDataset[data].energy
+              break
+            }
+          }
+          energyDataset.reverse()
+
+          var initalEnergyUsed
+          for (data in energyDataset) {
+            var tempTime = new Date(energyDataset[data].timestamp)
+            if (tempTime.getMonth() == month && tempTime.getFullYear() == year) {
+              initalEnergyUsed = energyDataset[data].energy
+              break
+            }
+          }
+          energyDataset.reverse()
+          var energyUsed = (endEnergyUsed - initalEnergyUsed).toFixed(2);
+          energyMeter.textContent = energyUsed + "kwh";
+        }
+        //  console.log(tempTime)
+      }
+      catch (error) {
         energyMeter.textContent = "ERROR";
-        energyAlert.textContent = "No Energy Reading available for this floor";
+        energyAlert.textContent = "Error updating energy: No energy Readings Avaliable For this Floor";
         alertMessageList.appendChild(energyAlert);
         energyMeter.addEventListener("click", function() {
           $('#offcanvas').offcanvas('show')
@@ -1260,83 +1355,8 @@
             energyAlert.classList.remove('highlight');
           });
         });
-        var energyCanvas = document.getElementById("energyChart");
-        energyCanvas.addEventListener("click", function() {
-          $('#offcanvas').offcanvas('show')
-          energyAlert.classList.add('highlight');
-          alertMessageList.appendChild(energyAlert);
-          $('#offcanvas').on('hidden.bs.offcanvas', function() {
-            energyAlert.classList.remove('highlight');
-          });
-        });
-        alertCount++;
-
-      } else if (currentTime - milisecondtempTime > 3600000) {
-        console.log("updating energy");
-        var timeDiffMin = Math.floor(((currentTime - milisecondtempTime) / 60000));
-        energyAlert.textContent = "Energy Readings last updated " + new Date(energyData[floorlevel][0].timestamp);
-        alertMessageList.appendChild(energyAlert);
-        alertCount++;
-
-
-        var currentTime = new Date()
-        var year = currentTime.getFullYear();
-        var month = currentTime.getMonth();
-        var energyDataset = energyData[floor];
-
-        var endEnergyUsed
-        for (data in energyDataset) {
-          var tempTime = new Date(energyDataset[data].timestamp)
-          if (tempTime.getMonth() == month && tempTime.getFullYear() == year) {
-            endEnergyUsed = energyDataset[data].energy
-            break
-          }
-        }
-        energyDataset.reverse()
-
-        var initalEnergyUsed
-        for (data in energyDataset) {
-          var tempTime = new Date(energyDataset[data].timestamp)
-          if (tempTime.getMonth() == month && tempTime.getFullYear() == year) {
-            initalEnergyUsed = energyDataset[data].energy
-            break
-          }
-        }
-        energyDataset.reverse()
-        var energyUsed = (endEnergyUsed - initalEnergyUsed).toFixed(2);
-        energyMeter.textContent = energyUsed + "kwh";
-
-      } else {
-        //   console.log("updating energy");
-        var currentTime = new Date()
-        var year = currentTime.getFullYear();
-        var month = currentTime.getMonth();
-        var energyDataset = energyData[floor];
-
-        var endEnergyUsed
-        for (data in energyDataset) {
-          var tempTime = new Date(energyDataset[data].timestamp)
-          if (tempTime.getMonth() == month && tempTime.getFullYear() == year) {
-            endEnergyUsed = energyDataset[data].energy
-            break
-          }
-        }
-        energyDataset.reverse()
-
-        var initalEnergyUsed
-        for (data in energyDataset) {
-          var tempTime = new Date(energyDataset[data].timestamp)
-          if (tempTime.getMonth() == month && tempTime.getFullYear() == year) {
-            initalEnergyUsed = energyDataset[data].energy
-            break
-          }
-        }
-        energyDataset.reverse()
-        var energyUsed = (endEnergyUsed - initalEnergyUsed).toFixed(2);
-        energyMeter.textContent = energyUsed + "kwh";
+        console.log("Error updating energy:", error);
       }
-      //  console.log(tempTime)
-
     }
 
     function loadEnergyChart() {

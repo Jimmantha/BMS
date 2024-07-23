@@ -22,20 +22,20 @@ const ZoneSchema = new Schema({
     startY: { type: Number, required: false },
     endX: { type: Number, required: false },
     endY: { type: Number, required: false },
-    name: { type: String, required: false },
+    name: { type: String, required: true },
     shape: { type: String, required: true },
-    airconState: { type: Boolean, required: false },
-    setTemperature: { type: Number, required: false },
-    lightState: { type: Boolean, required: false },
-    orginalMapWidth: { type: Number, required: false },
-    orginalMapHeight: { type: Number, required: false },
-    orginalImageWidth: { type: Number, required: false },
-    orginalImageHeight: { type: Number, required: false },
+    airconState: { type: Boolean, required: true },
+    setTemperature: { type: Number, required: true },
+    lightState: { type: Boolean, required: true },
+    orginalMapWidth: { type: Number, required: true },
+    orginalMapHeight: { type: Number, required: true },
+    orginalImageWidth: { type: Number, required: true },
+    orginalImageHeight: { type: Number, required: true },
 });
 
 const floorplan = new Schema({
-    floorplan: { type: String, required: false },
-    floorlevel: { type: String, required: false },
+    floorplan: { type: String, required: true },
+    floorlevel: { type: String, required: true },
     zones: [ZoneSchema]
 });
 
@@ -54,24 +54,24 @@ mongoose.connect('mongodb+srv://pleasepeople123:VfLWNiTsHAUOZjkY@cluster0.75o7ls
     console.log('connected to db');
 }).catch(err => console.log(err));
 
-//172.23.17.173:1883 dev mqtt broker address 
+//172.23.17.115:1883 dev mqtt broker address 
 //172.23.16.143:1883 dev mqtt broker address 
 // Connect to the MQTT broker
-const client = mqtt.connect('mqtt://172.23.17.173:1883');
+const client = mqtt.connect('mqtt://localhost:1883');
 
 // Create a schema for the sensor data
 const sensorDataSchema = new mongoose.Schema({
     metaData: {
-        floor: Schema.Types.Mixed,
-        zone: String
+        floor: { type: Schema.Types.Mixed, required: true },
+        zone: { type: String, required: true }
     },
-    temperature: Number,
-    timestamp: Date,
-    setTemperature: Number,
-    upperMargin: Number,
-    lowerMargin: Number,
-    humidity: Number,
-    Status: Boolean
+    temperature: { type: Number, required: true },
+    timestamp: { type: Date, required: true },
+    setTemperature: { type: Number, required: true },
+    upperMargin: { type: Number, required: true },
+    lowerMargin: { type: Number, required: true },
+    humidity: { type: Number, required: true },
+    Status: { type: Boolean, required: true }
 });
 
 const energyReading = new mongoose.Schema({
@@ -233,15 +233,16 @@ client.on('message', async (topic, message) => {
     if (topic == 'sensorReadings') {
         data = JSON.parse(message);
         var date = new Date(Date.now());
-        var status = data.ac;
-        var floor = data.f.toString();
-        var zones = await floorDetails.find({ 'floorlevel': floor }, { 'zones.setTemperature': 1, 'zones.airconState': 1, "_id": 0 });
+        var status = data.aircon_status;
+        var floor = data.Floor;
+        var zones = await floorDetails.find({ 'floorlevel': floor }, { 'zones.setTemperature': 1, 'zones.airconState': 1, 'zones.lightState':1,"_id": 0 });
         zones = JSON.parse(JSON.stringify(zones)); //need convert to json
         var setTemp = zones[0].zones[0].setTemperature;
         var airconState = zones[0].zones[0].airconState;
         var lightState = zones[0].zones[0].lightState;
-        if (setTemp != data.ts) {
-            console.log('set_temp_' + setTemp)
+        console.log(zones[0].zones[0])
+        if (setTemp != data.temperature_set_to) {
+            console.log(data.temperature_set_to, setTemp)
             client.publish('coolerControl', 'set_temp_' + setTemp);
         }
         if (airconState != status) {
@@ -251,24 +252,25 @@ client.on('message', async (topic, message) => {
                 client.publish('coolerControl', 'off');
             }
         }
-        if (lightState != data.ls) {
+        if(lightState != data.LED1_status){
             if (lightState == true) {
                 client.publish('coolerControl', 'led1_on');
             } else {
                 client.publish('coolerControl', 'led1_off');
             }
         }
+        console.log(data.LED1_status, lightState)
         const newSensorData = new SensorData({
             metaData: {
                 floor: floor,
-                zone: data.z
+                zone: data.zone
             },
-            temperature: data.t,
+            temperature: data.temperature,
             timestamp: date,
-            setTemperature: data.ts,
-            upperMargin: data.uh,
-            lowerMargin: data.ul,
-            humidity: data.h,
+            setTemperature: data.temperature_set_to,
+            upperMargin: data.upper_margin,
+            lowerMargin: data.lower_margin,
+            humidity: data.humidity,
             airconState: airconState,
             lightState: lightState,
         });
