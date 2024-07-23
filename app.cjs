@@ -50,9 +50,11 @@ async function fetchFloorDetails() {
     }
 }
 
-mongoose.connect('mongodb+srv://pleasepeople123:VfLWNiTsHAUOZjkY@cluster0.75o7lsi.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0').then(() => {
+mongoose.connect('mongodb://admin:pass123@localhost:27017/myDatabase', {
+	authSource: 'admin'
+}).then(() => {
     console.log('connected to db');
-}).catch(err => console.log(err));
+}).catch(err => console.log (err));
 
 //172.23.17.115:1883 dev mqtt broker address 
 //172.23.16.143:1883 dev mqtt broker address 
