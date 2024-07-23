@@ -50,11 +50,7 @@ async function fetchFloorDetails() {
     }
 }
 
-mongoose.connect('mongodb://admin:pass123@localhost:27017/myDatabase', {
-    authSource: 'admin'
-}).then(() => {
-    console.log('connected to db');
-}).catch(err => console.log(err));
+mongoose.connect("mongodb+srv://pleasepeople123:VfLWNiTsHAUOZjkY@cluster0.75o7lsi.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
 
 //172.23.17.115:1883 dev mqtt broker address
 //172.23.16.143:1883 dev mqtt broker address
@@ -139,7 +135,7 @@ io.on('connection', async (socket) => {
 
     socket.on('submit', async (data) => {
         console.log('floorplan', data);
-        const { floorplan, zones, floorlevel } = data;
+        var { floorplan, zones, floorlevel } = data;
         floorlevel = floorlevel.toString();
         FinZone = [];
         for (var zone in zones) {
@@ -311,7 +307,7 @@ client.on('message', async (topic, message) => {
         energy = data.energy.toFixed(2);
         voltage = data.voltage.toFixed(2);
         current = data.current.toFixed(2);
-        powerFactor = data.powerFactor.toFixed(2);
+        powerFactor = data.power_Factor.toFixed(2);
         console.log(data);
         var date = new Date(Date.now());
         date.setHours(date.getHours());
