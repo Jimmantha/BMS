@@ -50,12 +50,14 @@ async function fetchFloorDetails() {
     }
 }
 
-mongoose.connect('mongodb+srv://pleasepeople123:VfLWNiTsHAUOZjkY@cluster0.75o7lsi.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0').then(() => {
+mongoose.connect('mongodb://admin:pass123@localhost:27017/myDatabase', {
+    authSource: 'admin'
+}).then(() => {
     console.log('connected to db');
 }).catch(err => console.log(err));
 
-//172.23.17.115:1883 dev mqtt broker address 
-//172.23.16.143:1883 dev mqtt broker address 
+//172.23.17.115:1883 dev mqtt broker address
+//172.23.16.143:1883 dev mqtt broker address
 // Connect to the MQTT broker
 const client = mqtt.connect('mqtt://13.213.207.72:1883');
 
@@ -79,6 +81,9 @@ const energyReading = new mongoose.Schema({
         floor: Schema.Types.Mixed,
     },
     energy: Number,
+    voltage: Number,
+    current: Number,
+    powerFactor: Number,
     timestamp: Date,
     State: Boolean
 });
@@ -97,7 +102,7 @@ const EnergyReading = mongoose.model('energyreadings', energyReading);
 //"Decrease temperature" "down"
 //"Set temperature" "number" "max 30 min 16" DONE
 //  "Set upper margin" "set_error_high_"
-//  "Set lower margin" "set_error_low_" 
+//  "Set lower margin" "set_error_low_"
 
 //watch for changes on mongodb and emit the changes to the client
 io.on('connection', async (socket) => {
@@ -135,6 +140,7 @@ io.on('connection', async (socket) => {
     socket.on('submit', async (data) => {
         console.log('floorplan', data);
         const { floorplan, zones, floorlevel } = data;
+        floorlevel = floorlevel.toString();
         FinZone = [];
         for (var zone in zones) {
             var tempZone = zones[zone];
@@ -235,11 +241,21 @@ client.on('message', async (topic, message) => {
         var date = new Date(Date.now());
         var status = data.aircon_status;
         var floor = data.Floor.toString();
-        var zones = await floorDetails.find({ 'floorlevel': floor }, { 'zones.setTemperature': 1, 'zones.airconState': 1, 'zones.lightState':1,"_id": 0 });
+        var zones = await floorDetails.find({ 'floorlevel': floor }, { 'zones.setTemperature': 1, 'zones.airconState': 1, 'zones.lightState': 1, "_id": 0 });
+        console.log(zones)
         zones = JSON.parse(JSON.stringify(zones)); //need convert to json
-        var setTemp = zones[0].zones[0].setTemperature;
-        var airconState = zones[0].zones[0].airconState;
-        var lightState = zones[0].zones[0].lightState;
+        try {
+            var setTemp = zones[0].zones[0].setTemperature;
+            var airconState = zones[0].zones[0].airconState;
+            var lightState = zones[0].zones[0].lightState;
+        }
+        catch (error) {
+            var setTemp = 20
+            var airconState = false
+            var lightState = false
+            console.log(error)
+        }
+
         console.log(zones[0].zones[0])
         if (setTemp != data.temperature_set_to) {
             console.log(data.temperature_set_to, setTemp)
@@ -252,7 +268,7 @@ client.on('message', async (topic, message) => {
                 client.publish('coolerControl', 'off');
             }
         }
-        if(lightState != data.LED1_status){
+        if (lightState != data.LED1_status) {
             if (lightState == true) {
                 client.publish('coolerControl', 'led1_on');
             } else {
@@ -275,7 +291,7 @@ client.on('message', async (topic, message) => {
             lightState: lightState,
         });
 
-        // Save the sensor data to MongoDB  
+        // Save the sensor data to MongoDB
         var currenttime = new Date();
 
         if (currenttime - sensorSaveTime > 10000) { //300000ms = 5 minutes
@@ -293,6 +309,9 @@ client.on('message', async (topic, message) => {
     if (topic == 'energyReadings') {
         data = JSON.parse(message);
         energy = data.energy.toFixed(2);
+        voltage = data.voltage.toFixed(2);
+        current = data.current.toFixed(2);
+        powerFactor = data.powerFactor.toFixed(2);
         console.log(data);
         var date = new Date(Date.now());
         date.setHours(date.getHours());
@@ -302,6 +321,9 @@ client.on('message', async (topic, message) => {
                 zone: "Zone1"
             },
             energy: energy,
+            voltage: voltage,
+            current: current,
+            powerFactor: powerFactor,
             timestamp: new Date(),
         });
         var currenttime = new Date();
@@ -321,9 +343,9 @@ client.on('message', async (topic, message) => {
     }
 });
 
-// Fetch 50 latest sensor data from MongoDB 
+// Fetch 50 latest sensor data from MongoDB
 async function getSensorData() {
-    //limit to 1200 for 
+    //limit to 1200 for
     var data = await SensorData.find().sort({ timestamp: -1 });
     return data;
 }
