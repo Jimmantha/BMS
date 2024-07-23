@@ -22,20 +22,20 @@ const ZoneSchema = new Schema({
     startY: { type: Number, required: false },
     endX: { type: Number, required: false },
     endY: { type: Number, required: false },
-    name: { type: String, required: true },
-    shape: { type: String, required: true },
-    airconState: { type: Boolean, required: true },
-    setTemperature: { type: Number, required: true },
-    lightState: { type: Boolean, required: true },
-    orginalMapWidth: { type: Number, required: true },
-    orginalMapHeight: { type: Number, required: true },
-    orginalImageWidth: { type: Number, required: true },
-    orginalImageHeight: { type: Number, required: true },
+    name: { type: String, required: false },
+    shape: { type: String, required: false },
+    airconState: { type: Boolean, required: false },
+    setTemperature: { type: Number, required: false },
+    lightState: { type: Boolean, required: false },
+    orginalMapWidth: { type: Number, required: false },
+    orginalMapHeight: { type: Number, required: false },
+    orginalImageWidth: { type: Number, required: false },
+    orginalImageHeight: { type: Number, required: false },
 });
 
 const floorplan = new Schema({
-    floorplan: { type: String, required: true },
-    floorlevel: { type: String, required: true },
+    floorplan: { type: String, required: false },
+    floorlevel: { type: String, required: false },
     zones: [ZoneSchema]
 });
 
@@ -50,9 +50,7 @@ async function fetchFloorDetails() {
     }
 }
 
-mongoose.connect('mongodb://admin:pass123@localhost:27017/myDatabase', {
-    authSource: 'admin'
-}).then(() => {
+mongoose.connect('mongodb+srv://pleasepeople123:VfLWNiTsHAUOZjkY@cluster0.75o7lsi.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0').then(() => {
     console.log('connected to db');
 }).catch(err => console.log(err));
 
@@ -64,16 +62,16 @@ const client = mqtt.connect('mqtt://13.213.207.72:1883');
 // Create a schema for the sensor data
 const sensorDataSchema = new mongoose.Schema({
     metaData: {
-        floor: { type: Schema.Types.Mixed, required: true },
-        zone: { type: String, required: true }
+        floor: Schema.Types.Mixed,
+        zone: String
     },
-    temperature: { type: Number, required: true },
-    timestamp: { type: Date, required: true },
-    setTemperature: { type: Number, required: true },
-    upperMargin: { type: Number, required: true },
-    lowerMargin: { type: Number, required: true },
-    humidity: { type: Number, required: true },
-    Status: { type: Boolean, required: true }
+    temperature: Number,
+    timestamp: Date,
+    setTemperature: Number,
+    upperMargin: Number,
+    lowerMargin: Number,
+    humidity: Number,
+    Status: Boolean
 });
 
 const energyReading = new mongoose.Schema({
@@ -237,7 +235,7 @@ client.on('message', async (topic, message) => {
         var date = new Date(Date.now());
         var status = data.aircon_status;
         var floor = data.Floor;
-        var zones = await floorDetails.find({ 'floorlevel': floor }, { 'zones.setTemperature': 1, 'zones.airconState': 1, 'zones.lightState': 1, "_id": 0 });
+        var zones = await floorDetails.find({ 'floorlevel': floor }, { 'zones.setTemperature': 1, 'zones.airconState': 1, 'zones.lightState':1,"_id": 0 });
         zones = JSON.parse(JSON.stringify(zones)); //need convert to json
         var setTemp = zones[0].zones[0].setTemperature;
         var airconState = zones[0].zones[0].airconState;
@@ -254,7 +252,7 @@ client.on('message', async (topic, message) => {
                 client.publish('coolerControl', 'off');
             }
         }
-        if (lightState != data.LED1_status) {
+        if(lightState != data.LED1_status){
             if (lightState == true) {
                 client.publish('coolerControl', 'led1_on');
             } else {
