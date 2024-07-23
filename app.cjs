@@ -307,7 +307,7 @@ client.on('message', async (topic, message) => {
         energy = data.energy.toFixed(2);
         voltage = data.voltage.toFixed(2);
         current = data.current.toFixed(2);
-        powerFactor = data.power_Factor.toFixed(2);
+        powerFactor = data.power_factor.toFixed(2);
         console.log(data);
         var date = new Date(Date.now());
         date.setHours(date.getHours());
