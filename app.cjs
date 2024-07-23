@@ -239,8 +239,15 @@ client.on('message', async (topic, message) => {
         var date = new Date(Date.now());
         var status = data.aircon_status;
         var floor = data.Floor.toString();
+        try{
         var zones = await floorDetails.find({ 'floorlevel': floor }, { 'zones.setTemperature': 1, 'zones.airconState': 1, 'zones.lightState': 1, "_id": 0 });
         console.log(zones)
+        }
+        catch (error) {
+            console.log("floor and/or zone not found in database")
+            return
+        }
+   
         zones = JSON.parse(JSON.stringify(zones)); //need convert to json
         try {
             var setTemp = zones[0].zones[0].setTemperature;
@@ -253,8 +260,6 @@ client.on('message', async (topic, message) => {
             var lightState = false
             console.log(error)
         }
-
-        console.log(zones[0].zones[0])
         if (setTemp != data.temperature_set_to) {
             console.log(data.temperature_set_to, setTemp)
             client.publish('coolerControl', 'set_temp_' + setTemp);
