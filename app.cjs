@@ -50,11 +50,9 @@ async function fetchFloorDetails() {
     }
 }
 
-mongoose.connect('mongodb://admin:pass123@localhost:27017/myDatabase', {
-	authSource: 'admin'
-}).then(() => {
+mongoose.connect('mongodb+srv://pleasepeople123:VfLWNiTsHAUOZjkY@cluster0.75o7lsi.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0').then(() => {
     console.log('connected to db');
-}).catch(err => console.log (err));
+}).catch(err => console.log(err));
 
 //172.23.17.115:1883 dev mqtt broker address 
 //172.23.16.143:1883 dev mqtt broker address 
@@ -236,7 +234,7 @@ client.on('message', async (topic, message) => {
         data = JSON.parse(message);
         var date = new Date(Date.now());
         var status = data.aircon_status;
-        var floor = data.Floor;
+        var floor = data.Floor.toString();
         var zones = await floorDetails.find({ 'floorlevel': floor }, { 'zones.setTemperature': 1, 'zones.airconState': 1, 'zones.lightState':1,"_id": 0 });
         zones = JSON.parse(JSON.stringify(zones)); //need convert to json
         var setTemp = zones[0].zones[0].setTemperature;
