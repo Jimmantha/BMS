@@ -50,10 +50,10 @@ async function fetchFloorDetails() {
     }
 }
 mongoose.connect('mongodb://admin:pass123@localhost:27017/myDatabase', {
-	authSource: 'admin'
+    authSource: 'admin'
 }).then(() => {
     console.log('connected to db');
-}).catch(err => console.log (err));
+}).catch(err => console.log(err));
 //172.23.17.115:1883 dev mqtt broker address
 //172.23.16.143:1883 dev mqtt broker address
 // Connect to the MQTT broker
@@ -124,10 +124,8 @@ io.on('connection', async (socket) => {
         }
         if (data.lightState == "true" || data.lightState == true) {
             client.publish('coolerControl', 'led1_on');
-            client.publish('coolerControl', 'led2_on');
         } else {
             client.publish('coolerControl', 'led1_off');
-            client.publish('coolerControl', 'led2_off');
         }
         await updateZoneTemperature(data.floor, data.zone, setTemp);
         await updateZoneAirconState(data.floor, data.zone, data.airconState);
@@ -239,27 +237,22 @@ client.on('message', async (topic, message) => {
         var date = new Date(Date.now());
         var status = data.aircon_status;
         var floor = data.Floor.toString();
-        try{
-        var zones = await floorDetails.find({ 'floorlevel': floor }, { 'zones.setTemperature': 1, 'zones.airconState': 1, 'zones.lightState': 1, "_id": 0 });
-        console.log(zones)
+        try {
+            var zones = await floorDetails.find({ 'floorlevel': floor }, { 'zones.setTemperature': 1, 'zones.airconState': 1, 'zones.lightState': 1, "_id": 0 });
+            console.log(zones)
         }
         catch (error) {
             console.log("floor and/or zone not found in database")
             return
         }
-   
+
         zones = JSON.parse(JSON.stringify(zones)); //need convert to json
-        try {
-            var setTemp = zones[0].zones[0].setTemperature;
-            var airconState = zones[0].zones[0].airconState;
-            var lightState = zones[0].zones[0].lightState;
-        }
-        catch (error) {
-            var setTemp = 20
-            var airconState = false
-            var lightState = false
-            console.log(error)
-        }
+
+        var setTemp = zones[0].zones[0].setTemperature;
+        var airconState = zones[0].zones[0].airconState;
+        var lightState = zones[0].zones[0].lightState;
+
+
         if (setTemp != data.temperature_set_to) {
             console.log(data.temperature_set_to, setTemp)
             client.publish('coolerControl', 'set_temp_' + setTemp);
@@ -349,7 +342,9 @@ client.on('message', async (topic, message) => {
 // Fetch 50 latest sensor data from MongoDB
 async function getSensorData() {
     //limit to 1200 for
-    var data = await SensorData.find().sort({ timestamp: -1 });
+    var twentyFourHoursAgo = new Date();
+    twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+    var data = await SensorData.find({ timestamp: { $gte: twentyFourHoursAgo } }).sort({ timestamp: -1 });
     return data;
 }
 
