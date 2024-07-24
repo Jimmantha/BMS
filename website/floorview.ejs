@@ -592,6 +592,7 @@
       };
 
       $('#floorSelector').on('change', initializeFloor);
+      loadEnergyChart();
 
       // Load past floor data from cache
       var pastFloorSelection = retrieveData("pastFloorSelection");
@@ -707,7 +708,7 @@
             },
           },
           animation: false,
-  
+
         },
       };
       var tempContainer = document.createElement("div");

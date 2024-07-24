@@ -130,6 +130,7 @@ io.on('connection', async (socket) => {
         await updateZoneTemperature(data.floor, data.zone, setTemp);
         await updateZoneAirconState(data.floor, data.zone, data.airconState);
         await updateZoneLightState(data.floor, data.zone, data.lightState);
+        sensorSaveTime = undefined;
         io.emit('floorDetails', { floorlevel: data.floor, zone: data.zone, setTemperature: setTemp, airconState: data.airconState, lightState: data.lightState });
     });
 
