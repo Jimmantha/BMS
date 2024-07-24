@@ -585,7 +585,7 @@
         document.getElementById("moreDetails").innerHTML = "-click on a zone to view details-";
         document.getElementById("controlTable").innerHTML = "-click on a zone to view details-";
         document.getElementById("moreDetails").classList.add("text-center");
-
+  
         loadData();
         updateEnergy();
         createArea();
@@ -594,7 +594,7 @@
       };
 
       $('#floorSelector').on('change', initializeFloor);
-
+   
 
       // Load past floor data from cache
       var pastFloorSelection = retrieveData("pastFloorSelection");
@@ -696,11 +696,11 @@
           },
         ],
       };
-      temp.reverse();
-      labels.reverse();
-      upper.reverse();
-      lower.reverse();
-      set.reverse();
+                temp.reverse();
+          labels.reverse();
+          upper.reverse();
+          lower.reverse();
+          set.reverse();
       var tempConfig = {
         type: "line",
         data: data,
@@ -1187,6 +1187,12 @@
               }
             }
           }
+          temp.reverse();
+          labels.reverse();
+          upper.reverse();
+          lower.reverse();
+          set.reverse();
+          
 
           //[0,1,2,3] = [temp, upper, lower, set] datasets
           oldDatasest[0].data = temp;
