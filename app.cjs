@@ -49,11 +49,15 @@ async function fetchFloorDetails() {
         console.error('Error:', err);
     }
 }
-mongoose.connect('mongodb+srv://pleasepeople123:VfLWNiTsHAUOZjkY@cluster0.75o7lsi.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0');
+mongoose.connect('mongodb://admin:pass123@localhost:27017/myDatabase', {
+	authSource: 'admin'
+}).then(() => {
+    console.log('connected to db');
+}).catch(err => console.log (err));
 //172.23.17.115:1883 dev mqtt broker address
 //172.23.16.143:1883 dev mqtt broker address
 // Connect to the MQTT broker
-const client = mqtt.connect('mqtt://localhost:1883');
+const client = mqtt.connect('mqtt://13.213.207.72:1883');
 
 // Create a schema for the sensor data
 const sensorDataSchema = new mongoose.Schema({
