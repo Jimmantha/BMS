@@ -49,15 +49,16 @@ async function fetchFloorDetails() {
         console.error('Error:', err);
     }
 }
-mongoose.connect('mongodb://admin:pass123@localhost:27017/myDatabase', {
-	authSource: 'admin'
-}).then(() => {
-    console.log('connected to db');
-}).catch(err => console.log (err));
+//mongoose.connect('mongodb://admin:pass123@13.213.207.72:27017/myDatabase', {
+//	authSource: 'admin'
+//}).then(() => {
+//    console.log('connected to db');
+//}).catch(err => console.log (err));
+mongoose.connect('mongodb+srv://pleasepeople123:VfLWNiTsHAUOZjkY@cluster0.75o7lsi.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0')
 //172.23.17.115:1883 dev mqtt broker address
 //172.23.16.143:1883 dev mqtt broker address
 // Connect to the MQTT broker
-const client = mqtt.connect('mqtt://13.213.207.72:1883');
+const client = mqtt.connect('mqtt://localhost:1883');
 
 // Create a schema for the sensor data
 const sensorDataSchema = new mongoose.Schema({
@@ -298,8 +299,10 @@ client.on('message', async (topic, message) => {
                 io.emit('sensorData', { sensorData: data });
             });
         } else if (sensorSaveTime == undefined) {
-            await newSensorData.save().then(() => {
+            await newSensorData.save().then(async () => {
                 sensorSaveTime = new Date();
+                data = await getSensorData();
+                io.emit('sensorData', { sensorData: data });
             });
         }
 
@@ -327,18 +330,21 @@ client.on('message', async (topic, message) => {
         });
         var currenttime = new Date();
         if (currenttime - energySaveTime > 10000) { //300000ms = 5 minutes
-            await newEnergyReading.save().then(() => {
+            await newEnergyReading.save().then(async () => {
                 energySaveTime = new Date();
+                data = await getEnergyData();
+                io.emit('energyData', { energyData: data });
             });
             console.log('saved energy reading');
         } else if (energySaveTime == undefined) {
-            await newEnergyReading.save().then(() => {
+            await newEnergyReading.save().then(async () => {
                 energySaveTime = new Date();
+                data = await getEnergyData();
+                io.emit('energyData', { energyData: data });
             });
             console.log('saved undefined');
         }
-        data = await getEnergyData();
-        io.emit('energyData', { energyData: data });
+
     }
 });
 
