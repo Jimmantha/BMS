@@ -49,7 +49,7 @@ async function fetchFloorDetails() {
         console.error('Error:', err);
     }
 }
-mongoose.connect('mongodb://admin:pass123@13.213.207.72:27017/myDatabase', {
+mongoose.connect('mongodb://admin:pass123@localhost:27017/myDatabase', {
     authSource: 'admin'
 }).then(() => {
     console.log('connected to db');
@@ -238,7 +238,7 @@ client.on('message', async (topic, message) => {
         data = JSON.parse(message);
         var date = new Date(Date.now());
         var status = data.aircon_status;
-        var floor = data.Floor.toString();
+        var floor = data.Floor;
         try {
             var zones = await floorDetails.find({ 'floorlevel': floor }, { 'zones.setTemperature': 1, 'zones.airconState': 1, 'zones.lightState': 1, "_id": 0 });
             console.log(zones)
@@ -257,6 +257,7 @@ client.on('message', async (topic, message) => {
 
         if (setTemp != data.temperature_set_to) {
             console.log(data.temperature_set_to, setTemp)
+        console.log("set temp to", setTemp)
             client.publish('coolerControl', 'set_temp_' + setTemp);
         }
         if (airconState != status) {
@@ -291,8 +292,8 @@ client.on('message', async (topic, message) => {
 
         // Save the sensor data to MongoDB
         var currenttime = new Date();
-
-        if (currenttime - sensorSaveTime > 5000) { //300000ms = 5 minutes
+        console.log(currenttime, sensorSaveTime, data.temperature_set_to)
+        if (currenttime - sensorSaveTime > 60000) { //300000ms = 5 minutes
             await newSensorData.save().then(async () => {
                 sensorSaveTime = new Date();
                 data = await getSensorData();
@@ -329,7 +330,7 @@ client.on('message', async (topic, message) => {
             timestamp: new Date(),
         });
         var currenttime = new Date();
-        if (currenttime - energySaveTime > 10000) { //300000ms = 5 minutes
+        if (currenttime - energySaveTime > 60000) { //300000ms = 5 minutes
             await newEnergyReading.save().then(async () => {
                 energySaveTime = new Date();
                 data = await getEnergyData();
