@@ -647,6 +647,7 @@
         }
       }
 
+
       var tempChart = document.createElement("canvas");
       var tempCtx = tempChart.getContext("2d");
       var time = new Date().toISOString().split("T")[1].substring(0, 8);
@@ -1181,11 +1182,6 @@
               }
             }
           }
-          temp.reverse();
-          labels.reverse();
-          upper.reverse();
-          lower.reverse();
-          set.reverse();
           //[0,1,2,3] = [temp, upper, lower, set] datasets
           oldDatasest[0].data = temp;
           oldDatasest[1].data = upper;
