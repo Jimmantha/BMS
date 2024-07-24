@@ -290,7 +290,7 @@ client.on('message', async (topic, message) => {
         // Save the sensor data to MongoDB
         var currenttime = new Date();
 
-        if (currenttime - sensorSaveTime > 10000) { //300000ms = 5 minutes
+        if (currenttime - sensorSaveTime > 60000) { //300000ms = 5 minutes
             await newSensorData.save().then(() => {
                 sensorSaveTime = new Date();
             });
