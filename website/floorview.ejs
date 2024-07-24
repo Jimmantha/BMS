@@ -363,7 +363,6 @@
     socket.on("sensorData", function(data) {
       orginalSensorData = data.sensorData;
       console.log("received sensor data");
-      alertCount = 0;
       loadData();
       createArea();
       if (currentClickedZone) {
@@ -664,7 +663,7 @@
             tension: 0.1,
             pointStyle: "none",
             pointRadius: 1,
-
+            spanGaps: true // Enable span gaps
           },
           {
             label: "uppermargin",
@@ -674,6 +673,7 @@
             tension: 0.1,
             pointRadius: 1,
             pointStyle: "dash",
+            spanGaps: true // Enable span gaps
           },
           {
             label: "lowermargin",
@@ -683,6 +683,7 @@
             tension: 0.1,
             pointRadius: 1,
             pointstyle: "dash",
+            spanGaps: true // Enable span gaps
           },
           {
             label: "set Temperature",
@@ -692,6 +693,7 @@
             tension: 0.1,
             pointRadius: 1,
             pointstyle: "dash",
+            spanGaps: true // Enable span gaps
           },
         ],
       };
@@ -704,7 +706,8 @@
               display: false, // Remove legend
             },
           },
-          animation: false
+          animation: false,
+  
         },
       };
       var tempContainer = document.createElement("div");
@@ -784,6 +787,7 @@
           borderColor: "rgb(75, 192, 192)",
           tension: 0.1,
           pointStyle: "none",
+          spanGaps: false,
           pointRadius: 1,
         }, ],
       };
@@ -1148,7 +1152,7 @@
           tempreading.textContent = zoneData.setTemperature + "C";
           zone = currentClickedZone.key;
           var timeGranularity = document.getElementById("sensorDataTimeGranuality").value;
-
+          console.log("reusing chart", "tempChart_" + zone, "timeGranularity", timeGranularity);
 
           var oldDatasest = dynamicCharts["tempChart_" + zone].config.data.datasets;
           var temp = [];
@@ -1160,18 +1164,17 @@
           var zoneData = sensorData[zone];
           if (zoneData) {
             for (var i = 0; i < zoneData.length; i++) {
+              temp.push(zoneData[i].temperature.toFixed(2));
               var tempTime = new Date(zoneData[i].timestamp);
               if (timeGranularity == "hour") {
                 if (tempTime.getTime() >= currentTime.getTime() - 3600000) {
-                  temp.push(zoneData[i].temperature.toFixed(2));
                   labels.push(tempTime.getHours() + ":" + tempTime.getMinutes() + ":" + tempTime.getSeconds());
                   upper.push(zoneData[i].upperMargin);
                   lower.push(zoneData[i].lowerMargin);
                   set.push(zoneData[i].setTemperature);
                 }
               } else {
-                if (tempTime.getTime() >= currentTime.getTime() - 8640000) {
-                  temp.push(zoneData[i].temperature.toFixed(2));
+                if (tempTime.getTime() >= currentTime.getTime() - (3600000 * 24)) {
                   labels.push(tempTime.getHours() + ":" + tempTime.getMinutes() + ":" + tempTime.getSeconds());
                   upper.push(zoneData[i].upperMargin);
                   lower.push(zoneData[i].lowerMargin);
@@ -1205,7 +1208,7 @@
                 humiLabels.push(tempTime.getHours() + ":" + tempTime.getMinutes() + ":" + tempTime.getSeconds());
               }
             } else {
-              if (tempTime.getTime() >= currentTime.getTime() - 8640000) {
+              if (tempTime.getTime() >= currentTime.getTime() - (3600000 * 24)) {
                 humi.push(zoneData[data].humidity.toFixed(2));
                 humiLabels.push(tempTime.getHours() + ":" + tempTime.getMinutes() + ":" + tempTime.getSeconds());
               }
