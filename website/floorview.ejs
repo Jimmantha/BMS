@@ -585,14 +585,16 @@
         document.getElementById("moreDetails").innerHTML = "-click on a zone to view details-";
         document.getElementById("controlTable").innerHTML = "-click on a zone to view details-";
         document.getElementById("moreDetails").classList.add("text-center");
+  
         loadData();
         updateEnergy();
         createArea();
         updatetemperature();
+        loadEnergyChart();
       };
 
       $('#floorSelector').on('change', initializeFloor);
-      loadEnergyChart();
+   
 
       // Load past floor data from cache
       var pastFloorSelection = retrieveData("pastFloorSelection");
