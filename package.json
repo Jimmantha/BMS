@@ -1,6 +1,6 @@
 {
   "name": "energyoptemisation",
-  "module": "index.ts",
+  "module": "app.cjs",
   "type": "module",
   "devDependencies": {
     "@types/bun": "latest"

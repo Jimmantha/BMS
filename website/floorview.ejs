@@ -627,7 +627,6 @@
       if (zoneData) {
         // Iterate over the sensor data and push to temp and labels arrays
         for (var i = 0; i < zoneData.length; i++) {
-          temp.push(zoneData[i].temperature.toFixed(2));
           var tempTime = new Date(zoneData[i].timestamp);
           if (timeGranularity == "hour") {
             if (tempTime.getTime() >= currentTime.getTime() - 3600000) {
@@ -635,6 +634,7 @@
               upper.push(zoneData[i].upperMargin);
               lower.push(zoneData[i].lowerMargin);
               set.push(zoneData[i].setTemperature);
+              temp.push(zoneData[i].temperature.toFixed(2));
             }
           } else {
             if (tempTime.getTime() >= currentTime.getTime() - (3600000 * 24)) {
@@ -642,6 +642,7 @@
               upper.push(zoneData[i].upperMargin);
               lower.push(zoneData[i].lowerMargin);
               set.push(zoneData[i].setTemperature);
+              temp.push(zoneData[i].temperature.toFixed(2));
             }
           }
         }
