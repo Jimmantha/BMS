@@ -40,7 +40,8 @@ const floorplan = new Schema({
 });
 
 const floorDetails = mongoose.model('floors', floorplan);
-EventEmitter.defaultMaxListeners = 20;
+EventEmitter.defaultMaxListeners = 20;//socket: increase max listeners
+
 async function fetchFloorDetails() {
     try {
         const data = await floorDetails.find({});
@@ -49,6 +50,8 @@ async function fetchFloorDetails() {
         console.error('Error:', err);
     }
 }
+
+
 mongoose.connect('mongodb://admin:pass123@localhost:27017/myDatabase', {
     authSource: 'admin'
 }).then(() => {

@@ -358,7 +358,7 @@
       }
       loadData();
       createArea();
-      updatetemperature();
+      updateTemperature();
     })
     socket.on("sensorData", function(data) {
       orginalSensorData = data.sensorData;
@@ -368,20 +368,20 @@
       if (currentClickedZone) {
         loadDetails(currentClickedZone);
       }
-      updatetemperature();
+      updateTemperature();
     });
     socket.on("energyData", function(data) {
       originalEnergyData = data.energyData;
       alertCount = 0;
       loadData();
       createArea();
-      updatetemperature();
+      updateTemperature();
       updateEnergy();
       loadEnergyChart()
       console.log("received energy data");
     });
     createArea();
-    updatetemperature();
+    updateTemperature();
 
     function openModal() {
       modal.style.display = "block";
@@ -462,7 +462,7 @@
           var canvas = document.getElementById("shadeCanvas");
           canvas.width = width;
           canvas.height = height;
-          updatetemperature(); // imagemapster clears canvas on resize thus need redraw
+          updateTemperature(); // imagemapster clears canvas on resize thus need redraw
         }
       });
       try {
@@ -482,7 +482,7 @@
       }
     }
 
-    function updatetemperature() {
+    function updateTemperature() {
       ctx.clearRect(0, 0, shadeCanvas.width, shadeCanvas.height);
       var temp;
       for (var zone in zones) {
@@ -574,7 +574,7 @@
 
 
 
-    updatetemperature();
+    updateTemperature();
   </script>
   <script>
     $(document).ready(function() {
@@ -585,16 +585,16 @@
         document.getElementById("moreDetails").innerHTML = "-click on a zone to view details-";
         document.getElementById("controlTable").innerHTML = "-click on a zone to view details-";
         document.getElementById("moreDetails").classList.add("text-center");
-  
+
         loadData();
         updateEnergy();
         createArea();
-        updatetemperature();
+        updateTemperature();
         loadEnergyChart();
       };
 
       $('#floorSelector').on('change', initializeFloor);
-   
+
 
       // Load past floor data from cache
       var pastFloorSelection = retrieveData("pastFloorSelection");
@@ -697,11 +697,11 @@
           },
         ],
       };
-                temp.reverse();
-          labels.reverse();
-          upper.reverse();
-          lower.reverse();
-          set.reverse();
+      temp.reverse();
+      labels.reverse();
+      upper.reverse();
+      lower.reverse();
+      set.reverse();
       var tempConfig = {
         type: "line",
         data: data,
@@ -826,7 +826,7 @@
       moreDetails.appendChild(PIRChartContainer);
     }
 
-    updatetemperature();
+    updateTemperature();
   </script>
   <script>
     function loadDetails(zone) {
@@ -1169,10 +1169,11 @@
           var zoneData = sensorData[zone];
           if (zoneData) {
             for (var i = 0; i < zoneData.length; i++) {
-              temp.push(zoneData[i].temperature.toFixed(2));
+      
               var tempTime = new Date(zoneData[i].timestamp);
               if (timeGranularity == "hour") {
                 if (tempTime.getTime() >= currentTime.getTime() - 3600000) {
+                  temp.push(zoneData[i].temperature.toFixed(2));
                   labels.push(tempTime.getHours() + ":" + tempTime.getMinutes() + ":" + tempTime.getSeconds());
                   upper.push(zoneData[i].upperMargin);
                   lower.push(zoneData[i].lowerMargin);
@@ -1180,6 +1181,7 @@
                 }
               } else {
                 if (tempTime.getTime() >= currentTime.getTime() - (3600000 * 24)) {
+                  temp.push(zoneData[i].temperature.toFixed(2));
                   labels.push(tempTime.getHours() + ":" + tempTime.getMinutes() + ":" + tempTime.getSeconds());
                   upper.push(zoneData[i].upperMargin);
                   lower.push(zoneData[i].lowerMargin);
@@ -1193,7 +1195,7 @@
           upper.reverse();
           lower.reverse();
           set.reverse();
-          
+
 
           //[0,1,2,3] = [temp, upper, lower, set] datasets
           oldDatasest[0].data = temp;
