@@ -98,13 +98,6 @@ const EnergyReading = mongoose.model('energyreadings', energyReading);
 // Handle sending command to MQTT broker
 // from req.body
 // Send the command to the MQTT broker
-// To Include:
-// message pairs (topic: :"coolerControl")
-//"Increase temperature" "up"
-//"Decrease temperature" "down"
-//"Set temperature" "number" "max 30 min 16" DONE
-//  "Set upper margin" "set_error_high_"
-//  "Set lower margin" "set_error_low_"
 
 //watch for changes on mongodb and emit the changes to the client
 io.on('connection', async (socket) => {
@@ -135,6 +128,7 @@ io.on('connection', async (socket) => {
         await updateZoneAirconState(data.floor, data.zone, data.airconState);
         await updateZoneLightState(data.floor, data.zone, data.lightState);
         sensorSaveTime = undefined;
+        repeat = 3;
         io.emit('floorDetails', { floorlevel: data.floor, zone: data.zone, setTemperature: setTemp, airconState: data.airconState, lightState: data.lightState });
     });
 
@@ -233,6 +227,7 @@ client.on('connect', () => {
 });
 
 var sensorSaveTime
+var repeat = 0;
 var energySaveTime
 // Listen for messages on the sensorReadings topic
 client.on('message', async (topic, message) => {
@@ -296,7 +291,14 @@ client.on('message', async (topic, message) => {
         // Save the sensor data to MongoDB
         var currenttime = new Date();
         console.log(currenttime, sensorSaveTime, data.temperature_set_to)
-        if (currenttime - sensorSaveTime > 60000) { //300000ms = 5 minutes
+        if(repeat > 0){
+            await newSensorData.save().then(async () => {
+                sensorSaveTime = new Date();
+                data = await getSensorData();
+                io.emit('sensorData', { sensorData: data });
+            });
+        }
+        else if (currenttime - sensorSaveTime > 60000) { //300000ms = 5 minutes
             await newSensorData.save().then(async () => {
                 sensorSaveTime = new Date();
                 data = await getSensorData();
