@@ -297,6 +297,7 @@ client.on('message', async (topic, message) => {
                 data = await getSensorData();
                 io.emit('sensorData', { sensorData: data });
                 repeat--;
+                console.log('repeat', repeat)
             });
         }
         else if (currenttime - sensorSaveTime > 60000) { //300000ms = 5 minutes
@@ -304,12 +305,14 @@ client.on('message', async (topic, message) => {
                 sensorSaveTime = new Date();
                 data = await getSensorData();
                 io.emit('sensorData', { sensorData: data });
+                console.log('saved sensor reading');
             });
         } else if (sensorSaveTime == undefined) {
             await newSensorData.save().then(async () => {
                 sensorSaveTime = new Date();
                 data = await getSensorData();
                 io.emit('sensorData', { sensorData: data });
+                console.log('saved when save time undefined');
             });
         }
 
