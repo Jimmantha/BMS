@@ -296,6 +296,7 @@ client.on('message', async (topic, message) => {
                 sensorSaveTime = new Date();
                 data = await getSensorData();
                 io.emit('sensorData', { sensorData: data });
+                repeat--;
             });
         }
         else if (currenttime - sensorSaveTime > 60000) { //300000ms = 5 minutes
