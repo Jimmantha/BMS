@@ -1033,8 +1033,10 @@
           increaseButton.classList.add("btn", "btn-success");
           increaseButton.textContent = "+";
           increaseButton.addEventListener("click", function() {
-            editTemp += 1;
-            tempReading.textContent = editTemp + "C";
+            if (editTemp < 30) {
+              editTemp += 1;
+              tempReading.textContent = editTemp + "C";
+            }
           });
           increaseButtonContianer.appendChild(increaseButton);
 
