@@ -1045,7 +1045,7 @@
           decreaseButton.classList.add("btn", "btn-danger");
           decreaseButton.textContent = "-";
           decreaseButton.addEventListener("click", function() {
-            if (editTemp >= 16) {
+            if (editTemp > 16) {
               editTemp -= 1;
               tempReading.textContent = editTemp + "C";
             }
