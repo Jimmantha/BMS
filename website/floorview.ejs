@@ -1045,8 +1045,10 @@
           decreaseButton.classList.add("btn", "btn-danger");
           decreaseButton.textContent = "-";
           decreaseButton.addEventListener("click", function() {
-            editTemp -= 1;
-            tempReading.textContent = editTemp + "C";
+            if (editTemp >= 16) {
+              editTemp -= 1;
+              tempReading.textContent = editTemp + "C";
+            }
           });
           decreaseButtonContianer.appendChild(decreaseButton);
 
@@ -1169,7 +1171,7 @@
           var zoneData = sensorData[zone];
           if (zoneData) {
             for (var i = 0; i < zoneData.length; i++) {
-      
+
               var tempTime = new Date(zoneData[i].timestamp);
               if (timeGranularity == "hour") {
                 if (tempTime.getTime() >= currentTime.getTime() - 3600000) {
@@ -1238,7 +1240,7 @@
       var creationTime = document.getElementById("creationTime");
       loadTempChart(key);
       loadHumidityChart(key);
-  
+
 
     }
 
