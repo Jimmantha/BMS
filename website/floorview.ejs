@@ -1158,6 +1158,10 @@
           floorlevel = $('#floorSelector').val();
           var tempreading = document.getElementById("tempReading");
           zoneData = getZone(floorlevel, currentClickedZone.key);
+          airconStateIndicatorInput = document.getElementById("airconStateIndicatorInput")
+          airconStateIndicatorInput.checked = zoneData.airconState;
+          lightStateIndicatorInput = document.getElementById("lightStateIndicatorInput")
+          lightStateIndicatorInput.checked = zoneData.lightState;
           tempreading.textContent = zoneData.setTemperature + "C";
           zone = currentClickedZone.key;
           var timeGranularity = document.getElementById("sensorDataTimeGranuality").value;
