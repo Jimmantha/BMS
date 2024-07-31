@@ -61,7 +61,12 @@ mongoose.connect('mongodb://admin:pass123@localhost:27017/myDatabase', {
 //172.23.17.115:1883 dev mqtt broker address
 //172.23.16.143:1883 dev mqtt broker address
 // Connect to the MQTT broker
-const client = mqtt.connect('mqtt://localhost:1883');
+const client = mqtt.connect('mqtt://localhost:1883', {
+
+    username: 'admin',
+    password: 'pass123',
+    clean: false
+});
 
 // Create a schema for the sensor data
 const sensorDataSchema = new mongoose.Schema({
