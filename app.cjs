@@ -62,7 +62,7 @@ mongoose.connect('mongodb://admin:pass123@localhost:27017/myDatabase', {
 //172.23.16.143:1883 dev mqtt broker address
 // Connect to the MQTT broker
 const client = mqtt.connect('mqtt://localhost:1883', {
-
+    clientId: 'mqttjs',
     username: 'admin',
     password: 'pass123',
     clean: false
