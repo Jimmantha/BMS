@@ -24,8 +24,6 @@ const ZoneSchema = new Schema({
     endY: { type: Number, required: false },
     name: { type: String, required: false },
     shape: { type: String, required: false },
-    mainFanState: { type: String, required: false },
-    houseFanState: { type: String, required: false },
     airconState: { type: Boolean, required: false },
     setTemperature: { type: Number, required: false },
     lightState: { type: Boolean, required: false },
@@ -82,7 +80,9 @@ const sensorDataSchema = new mongoose.Schema({
     upperMargin: Number,
     lowerMargin: Number,
     humidity: Number,
-    Status: Boolean
+    Status: Boolean,
+    mainFanState: String,
+    houseFanState: String,
 });
 
 const energyReading = new mongoose.Schema({
@@ -296,6 +296,8 @@ client.on('message', async (topic, message) => {
             airconState: airconState,
             lightState: lightState,
         });
+        console.log('newSensorData', data.main_fan_state,data.house_fan_state)
+        console.log('newSensorData', newSensorData)
 
         // Save the sensor data to MongoDB
         var currenttime = new Date();
