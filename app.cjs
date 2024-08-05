@@ -24,6 +24,8 @@ const ZoneSchema = new Schema({
     endY: { type: Number, required: false },
     name: { type: String, required: false },
     shape: { type: String, required: false },
+    mainFanState: { type: String, required: false },
+    houseFanState: { type: String, required: false },
     airconState: { type: Boolean, required: false },
     setTemperature: { type: Number, required: false },
     lightState: { type: Boolean, required: false },
@@ -65,7 +67,7 @@ const client = mqtt.connect('mqtt://localhost:1883', {
     clientId: 'mqttjs',
     username: 'admin',
     password: 'pass123',
-    clean: false
+    keyPath: '',
 });
 
 // Create a schema for the sensor data
@@ -289,6 +291,8 @@ client.on('message', async (topic, message) => {
             upperMargin: data.upper_margin,
             lowerMargin: data.lower_margin,
             humidity: data.humidity,
+            mainFanState: data.main_fan_state,
+            houseFanState: data.house_fan_state,
             airconState: airconState,
             lightState: lightState,
         });
